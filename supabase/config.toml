@@ -1,0 +1,5 @@
+# Identificador da stack local; não é o ID de um projeto hospedado.
+project_id = "agrodireto-dev"
+
+[db.seed]
+enabled = false

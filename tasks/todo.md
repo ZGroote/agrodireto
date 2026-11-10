@@ -2,7 +2,7 @@
 
 Data: 10/11/2026. Plano e decisões: [plan.md](plan.md).
 
-Todas as tarefas abaixo estão pendentes. A auditoria não implementou funcionalidades.
+Etapa 0 iniciada em 10/11/2026. O estado de cada tarefa está na lista abaixo.
 
 ## Como executar
 
@@ -20,6 +20,8 @@ Todas as tarefas abaixo estão pendentes. A auditoria não implementou funcional
 
 - [ ] Concluída e verificada.
 
+**Estado:** recorte inicial registrado em [piloto.md](../DOC/piloto.md). Região e culturas ficam pendentes por decisão do usuário; demais decisões têm responsável proposto e marco de fechamento.
+
 **Responsável:** Produto/operação. **Dependências:** Nenhuma.
 
 **Entrega e aceite:** Registrar região, 2–4 culturas, participantes, unidades, aprovação, responsáveis, SLA e metas; registrar papel comercial, frete, perdas e decisão sobre paywall no piloto.
@@ -30,7 +32,9 @@ Todas as tarefas abaixo estão pendentes. A auditoria não implementou funcional
 
 ### A02 — Recuperar a origem versionada
 
-- [ ] Concluída e verificada.
+- [x] Concluída e verificada.
+
+**Resultado:** base recebida preservada no commit local `f1492b1`. Uma cópia limpa instalou as dependências pelo lockfile. Nenhum remoto foi vinculado; nenhum repositório correspondente foi encontrado na conta GitHub consultada.
 
 **Responsável:** Engenharia. **Dependências:** Nenhuma.
 
@@ -44,6 +48,8 @@ Todas as tarefas abaixo estão pendentes. A auditoria não implementou funcional
 
 - [ ] Concluída e verificada.
 
+**Estado:** [ambientes e setup](../DOC/ambientes.md) preparados. Não há projeto Supabase de desenvolvimento/homologação e o host não tem a CLI nem o runtime de contêiner disponíveis. Falta iniciar ou provisionar um ambiente e testar a conexão.
+
 **Responsável:** Backend. **Dependências:** A01, A02.
 
 **Entrega e aceite:** Separar desenvolvimento/homologação/piloto; obter acesso ao projeto Supabase correto; manter credenciais privilegiadas fora dos apps.
@@ -54,7 +60,9 @@ Todas as tarefas abaixo estão pendentes. A auditoria não implementou funcional
 
 ### A04 — Automatizar as verificações existentes
 
-- [ ] Concluída e verificada.
+- [x] Concluída e verificada localmente.
+
+**Resultado:** `npm run verify` passou em cópia limpa: tipos, lint, 42 testes (incluindo FFmpeg real) e export web dos quatro apps. Erro de TypeScript inserido somente na cópia descartável causou saída 2. Workflow preparado; primeira execução no GitHub depende de remoto.
 
 **Responsável:** Engenharia. **Dependências:** A02.
 
@@ -66,7 +74,7 @@ Todas as tarefas abaixo estão pendentes. A auditoria não implementou funcional
 
 ### Checkpoint da etapa 0
 
-- [ ] Critério do marco correspondente em plan.md demonstrado com dados persistidos e perfis autorizados.
+- [ ] Base reproduzida em cópia limpa e ambiente de integração validado. Dados persistidos e perfis autorizados serão demonstrados na Etapa 1.
 - [ ] Verificações relevantes aprovadas; limites de homologação registrados; próxima fase revisada.
 
 ## Etapa 1 — Identidade e cadastros

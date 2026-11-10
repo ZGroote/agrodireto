@@ -9,7 +9,10 @@
   ],
   "scripts": {
     "lint": "eslint apps packages services",
-    "typecheck": "npm run typecheck --workspaces --if-present"
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "build:web": "node scripts/export-web.mjs",
+    "verify": "npm run typecheck && npm run lint && npm test && npm run build:web"
   },
   "devDependencies": {
     "@types/react": "~19.3.0",

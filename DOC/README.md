@@ -18,6 +18,7 @@ Um arquivo por passo, em ordem. Nome: `AAAA-MM-DD_NNN_titulo-curto.md`.
 | 012 | 2026-11-05 | [Campos de envio de foto e vídeo + contrato de mídia compartilhado](2026-11-05_012_midias-compartilhadas-e-upload.md) |
 | 013 | 2026-11-05 | [Limites, formatos, retenção e otimização de mídia](2026-11-05_013_limites-formatos-retencao-e-otimizacao.md) |
 | 001 | 2026-11-10 | [Auditoria do projeto e plano de desenvolvimento para piloto real](2026-11-10_001_auditoria-e-plano-piloto.md) |
+| 002 | 2026-11-10 | [Início da Etapa 0 — preparação do piloto](2026-11-10_002_inicio-etapa-0.md) |
 
 ## Documentos de referência
 
