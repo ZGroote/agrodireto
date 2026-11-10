@@ -1,16 +1,15 @@
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Home, MapPin, Ruler, Sprout } from 'lucide-react-native';
 import { AddMediaButton, AppText, Button, Foto, Screen, ScreenHeader, spacing, TextField } from '@agrodireto/ui';
 
-const chaveRascunho = '@agrodireto/agricultor/propriedade-rascunho/v1';
-const camposVazios = { nome: '', cidade: '', uf: '', area: '', culturas: '' };
-type Campo = keyof typeof camposVazios;
+import { camposPropriedadeVazios, lerRascunhoPropriedade, salvarRascunhoPropriedade, type RascunhoPropriedade } from '@/lib/rascunhoPropriedade';
+
+type Campo = keyof RascunhoPropriedade;
 
 /** 26 · Editar propriedade — nome, local, área, culturas e foto de capa. */
 export default function EditarPropriedadeScreen() {
-  const [campos, setCampos] = useState(camposVazios);
+  const [campos, setCampos] = useState(camposPropriedadeVazios);
   const [estado, setEstado] = useState<'carregando' | 'pronto' | 'erroLeitura'>('carregando');
   const [salvando, setSalvando] = useState(false);
   const [mensagem, setMensagem] = useState('');
@@ -20,15 +19,9 @@ export default function EditarPropriedadeScreen() {
     let ativo = true;
     async function carregar() {
       try {
-        const json = await AsyncStorage.getItem(chaveRascunho);
+        const rascunho = await lerRascunhoPropriedade();
         if (!ativo) return;
-        if (json !== null) {
-          const dados: unknown = JSON.parse(json);
-          if (!dados || typeof dados !== 'object' || !Object.keys(camposVazios).every(
-            (campo) => typeof Reflect.get(dados, campo) === 'string',
-          )) throw new Error('Rascunho inválido');
-          setCampos(dados as typeof camposVazios);
-        }
+        if (rascunho) setCampos(rascunho);
         setEstado('pronto');
       } catch {
         if (ativo) setEstado('erroLeitura');
@@ -48,7 +41,7 @@ export default function EditarPropriedadeScreen() {
     setSalvando(true);
     setMensagem('');
     try {
-      await AsyncStorage.setItem(chaveRascunho, JSON.stringify(campos));
+      await salvarRascunhoPropriedade(campos);
       setErro(false);
       setMensagem('Rascunho salvo neste dispositivo.');
     } catch {

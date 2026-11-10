@@ -143,7 +143,7 @@ Etapa 0 iniciada em 10/11/2026. O estado de cada tarefa está na lista abaixo.
 
 - [ ] Concluída e verificada.
 
-**Progresso:** rascunho local dos campos de propriedade implementado e verificado no navegador sem Supabase. Cadastro vinculado ao usuário, migração do rascunho e gravação remota continuam pendentes.
+**Progresso:** edição, resumo e checklist do cadastro leem o mesmo rascunho local. No navegador, o resumo atualizou ao voltar da edição e o checklist mostrou o rascunho após recarregar. Cadastro vinculado ao usuário, migração do rascunho e gravação remota continuam pendentes.
 
 **Responsável:** Agricultor + backend. **Dependências:** B02.
 

@@ -2,13 +2,15 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Camera, CircleCheck, ExternalLink, MapPin, Pencil, Ruler, Sprout } from 'lucide-react-native';
 import { AppText, colors, Divider, Foto, ListRow, Screen, ScreenHeader, sizes, spacing } from '@agrodireto/ui';
-import { useAgricultor } from '@/hooks/dados';
+import { useRascunhoPropriedade } from '@/hooks/useRascunhoPropriedade';
 import { rotasAgricultor } from '@/routes';
 
 /** 04 · Minha propriedade — capa, nome, local, área, culturas e status do cadastro. */
 export default function MinhaPropriedadeScreen() {
   const router = useRouter();
-  const a = useAgricultor();
+  const leitura = useRascunhoPropriedade();
+  const rascunho = leitura.estado === 'pronto' ? leitura.rascunho : null;
+  const local = rascunho ? [rascunho.cidade.trim(), rascunho.uf.trim()].filter(Boolean).join(' · ') : '';
 
   return (
     <Screen
@@ -24,46 +26,49 @@ export default function MinhaPropriedadeScreen() {
         <Foto tipo="sitio" height={150} />
       </Pressable>
 
-      <View style={styles.nome}>
-        <AppText variant="title">{a.propriedade}</AppText>
-        <View style={styles.linha}>
-          <MapPin size={sizes.iconSm} color={colors.textSecondary} />
-          <AppText variant="body" color="textSecondary">
-            {a.cidade} · {a.uf}
-          </AppText>
-        </View>
-      </View>
+      {leitura.estado === 'carregando' && <AppText>Carregando rascunho…</AppText>}
+      {leitura.estado === 'erro' && <AppText>Não foi possível abrir o rascunho. Volte e abra esta tela novamente.</AppText>}
+      {leitura.estado === 'pronto' && !rascunho && <AppText>Nenhum rascunho salvo. Toque em editar para começar.</AppText>}
+      {rascunho && (
+        <>
+          <View style={styles.nome}>
+            <AppText variant="title">{rascunho.nome.trim()}</AppText>
+            <View style={styles.linha}>
+              <MapPin size={sizes.iconSm} color={colors.textSecondary} />
+              <AppText variant="body" color="textSecondary">
+                {local || 'Local não informado'}
+              </AppText>
+            </View>
+          </View>
 
-      <View style={styles.info}>
-        <View style={styles.linha}>
-          <Ruler size={sizes.iconMd} color={colors.textSecondary} />
-          <AppText variant="bodyStrong">{a.areaHa} ha</AppText>
-        </View>
-        <View style={styles.linha}>
-          <Sprout size={sizes.iconMd} color={colors.textSecondary} />
-          <View>
-            <AppText variant="caption" color="textSecondary">
-              Culturas
-            </AppText>
-            <AppText variant="bodyStrong">{a.culturas.join(', ')}</AppText>
+          <View style={styles.info}>
+            <View style={styles.linha}>
+              <Ruler size={sizes.iconMd} color={colors.textSecondary} />
+              <AppText variant="bodyStrong">{rascunho.area.trim() ? `${rascunho.area.trim()} ha` : 'Área não informada'}</AppText>
+            </View>
+            <View style={styles.linha}>
+              <Sprout size={sizes.iconMd} color={colors.textSecondary} />
+              <View>
+                <AppText variant="caption" color="textSecondary">
+                  Culturas
+                </AppText>
+                <AppText variant="bodyStrong">{rascunho.culturas.trim() || 'Não informadas'}</AppText>
+              </View>
+            </View>
+            <View style={styles.linha}>
+              <CircleCheck size={sizes.iconMd} color={colors.primary} />
+              <AppText variant="bodyStrong" color="primary">Rascunho salvo neste dispositivo</AppText>
+            </View>
           </View>
-        </View>
-        {a.cadastroVerificado ? (
-          <View style={styles.linha}>
-            <CircleCheck size={sizes.iconMd} color={colors.primary} />
-            <AppText variant="bodyStrong" color="primary">
-              Cadastro verificado
-            </AppText>
-          </View>
-        ) : null}
-      </View>
+        </>
+      )}
 
       <Divider />
       {/* Não está no mockup: único acesso à tela 05 · Fotos e vídeos. */}
       <ListRow icon={Camera} title="Fotos e vídeos" onPress={() => router.push(rotasAgricultor.midias)} />
       <Divider />
       <ListRow
-        title="Ver perfil público"
+        title="Ver exemplo de perfil público"
         tone="textPrimary"
         trailing={<ExternalLink size={sizes.iconMd} color={colors.textPrimary} />}
         chevron={false}

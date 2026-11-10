@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import { FileText } from 'lucide-react-native';
 import { AlertBanner, Button, Card, ChecklistRow, Screen, ScreenHeader, TextLink } from '@agrodireto/ui';
 import { useDocumentoPendente, useEtapasCadastro } from '@/hooks/dados';
+import { useRascunhoPropriedade } from '@/hooks/useRascunhoPropriedade';
 import { rotasAgricultor } from '@/routes';
 import type { EtapaCadastro } from '@/types';
 
@@ -13,11 +14,16 @@ export default function SeuCadastroScreen() {
   const router = useRouter();
   const etapas = useEtapasCadastro();
   const pendente = useDocumentoPendente();
+  const propriedade = useRascunhoPropriedade();
 
   const destino = (e: EtapaCadastro) =>
     e.id === 'identificacao' ? rotasAgricultor.documentos : e.id === 'propriedade' ? rotasAgricultor.propriedade : rotasAgricultor.dadosBancarios;
 
-  const concluidas = etapas.filter((e) => e.status === 'verificado').length;
+  const concluidas = etapas.filter((e) => e.id !== 'propriedade' && e.status === 'verificado').length;
+  const temRascunho = propriedade.estado === 'pronto' && propriedade.rascunho !== null;
+  const rotuloPropriedade = propriedade.estado === 'carregando'
+    ? 'Carregando'
+    : propriedade.estado === 'erro' ? 'Rascunho indisponível' : temRascunho ? 'Rascunho local' : 'Não enviado';
 
   return (
     <Screen
@@ -38,7 +44,12 @@ export default function SeuCadastroScreen() {
     >
       {etapas.map((e) => (
         <Card key={e.id}>
-          <ChecklistRow title={e.titulo} status={status[e.status]} statusLabel={rotulo[e.status]} onPress={() => router.push(destino(e))} />
+          <ChecklistRow
+            title={e.titulo}
+            status={e.id === 'propriedade' ? (temRascunho ? 'pending' : 'todo') : status[e.status]}
+            statusLabel={e.id === 'propriedade' ? rotuloPropriedade : rotulo[e.status]}
+            onPress={() => router.push(destino(e))}
+          />
         </Card>
       ))}
       <AlertBanner
