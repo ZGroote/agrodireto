@@ -1,0 +1,11 @@
+{
+  "name": "@agrodireto/ui",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Design system compartilhado pelos 4 apps AgroDireto (tokens, componentes, templates).",
+  "main": "index.ts",
+  "types": "index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  }
+}

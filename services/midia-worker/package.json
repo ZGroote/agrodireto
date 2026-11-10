@@ -1,0 +1,19 @@
+{
+  "name": "@agrodireto/midia-worker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Worker de otimização automática de fotos e vídeos (sharp/libvips, FFmpeg, SVT-AV1/x265, VMAF).",
+  "engines": { "node": ">=24" },
+  "scripts": {
+    "start": "node src/servidor.ts",
+    "otimizar": "node src/cli.ts",
+    "test": "node --test \"test/*.test.ts\"",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@agrodireto/dominio": "*",
+    "@supabase/supabase-js": "^2.45.0",
+    "sharp": "^0.34.0"
+  }
+}

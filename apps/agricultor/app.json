@@ -1,0 +1,45 @@
+{
+  "expo": {
+    "name": "AgroDireto Agricultor",
+    "slug": "agrodireto-agricultor",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "scheme": "agrodireto-agricultor",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.agrodireto.agricultor"
+    },
+    "android": {
+      "package": "com.agrodireto.agricultor",
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "expo-status-bar",
+      "expo-splash-screen",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "O AgroDireto precisa acessar suas fotos e vídeos para anexar à propriedade, às culturas e aos lotes.",
+          "cameraPermission": "O AgroDireto precisa da câmera para registrar fotos e vídeos da sua produção.",
+          "microphonePermission": "O AgroDireto precisa do microfone para gravar o áudio dos vídeos."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

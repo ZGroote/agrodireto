@@ -1,0 +1,13 @@
+{
+  "name": "@agrodireto/dominio",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Contratos compartilhados pelos 4 apps AgroDireto: tipos, regras e formatadores do domínio (sem UI).",
+  "main": "index.ts",
+  "types": "index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "node --test \"test/*.test.ts\""
+  }
+}
