@@ -28,7 +28,7 @@ const ILUSTRACOES: FotoTipo[] = ['tomate', 'caixas'];
 /** 12 · Padrão do lote (2/3) — padrão, calibre, embalagem e evidências (até 100 fotos e 100 vídeos). */
 export default function PadraoLoteScreen() {
   const router = useRouter();
-  const { draft, update } = useLoteDraft();
+  const { id, draft, update } = useLoteDraft();
   const catalogo = useCatalogo();
   const msg = 'Selecione um produto com padrões cadastrados.';
   const [adicionar, setAdicionar] = useState(false);
@@ -70,8 +70,8 @@ export default function PadraoLoteScreen() {
 
   return (
     <Screen
-      header={<ScreenHeader title="Padrão do lote" step="2/3" subtitle="Defina o padrão e a embalagem." />}
-      footer={<LoteDraftFooter label="Continuar" onAvancar={() => router.push(rotasAgricultor.precoLote)} />}
+      header={<ScreenHeader title="Padrão do lote" step="2/3" subtitle="Defina o padrão e a embalagem." onBack={() => router.dismissTo(rotasAgricultor.rascunhoLote(id, 'novo'))} />}
+      footer={<LoteDraftFooter etapa="padrao" proxima="preco" />}
     >
       <SelectField label="Padrão" value={draft.padrao} options={opcoes(catalogo.padroes)} onChange={(padrao) => update({ padrao })} emptyMessage={msg} />
       <SelectField label="Calibre" value={draft.calibre} options={opcoes(catalogo.calibres)} onChange={(calibre) => update({ calibre })} emptyMessage={msg} />

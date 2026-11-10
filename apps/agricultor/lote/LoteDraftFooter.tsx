@@ -1,28 +1,33 @@
+import { useRouter } from 'expo-router';
 import { AppText, Button } from '@agrodireto/ui';
+import { rotasAgricultor } from '@/routes';
 import { useLoteDraft } from './LoteDraftContext';
+import type { EtapaLote } from './rascunhosLote';
 
-export function LoteDraftFooter({ label, onAvancar, disabled }: {
+export function LoteDraftFooter({ etapa, proxima, label = 'Continuar', disabled }: {
+  etapa: EtapaLote;
+  proxima?: EtapaLote;
   label?: string;
-  onAvancar?: () => void;
   disabled?: boolean;
 }) {
-  const { salvar, operacao } = useLoteDraft();
+  const router = useRouter();
+  const { id, salvar, operacao } = useLoteDraft();
   const gravando = operacao === 'gravando';
 
   async function salvarEAvancar() {
-    if (await salvar()) onAvancar?.();
+    if (proxima && await salvar(proxima)) router.push(rotasAgricultor.rascunhoLote(id, proxima));
   }
 
   return (
     <>
       {operacao === 'salvo' && <AppText variant="caption" accessibilityLiveRegion="polite">Rascunho salvo no dispositivo.</AppText>}
       {operacao === 'erro' && <AppText variant="caption" accessibilityLiveRegion="polite">Não foi possível gravar a alteração. Tente novamente.</AppText>}
-      {onAvancar && label && <Button label={label} disabled={disabled || gravando} onPress={() => void salvarEAvancar()} />}
+      {proxima && <Button label={label} disabled={disabled || gravando} onPress={() => void salvarEAvancar()} />}
       <Button
         label="Salvar rascunho"
-        variant={onAvancar ? 'secondary' : 'primary'}
+        variant={proxima ? 'secondary' : 'primary'}
         loading={gravando}
-        onPress={() => void salvar()}
+        onPress={() => void salvar(etapa)}
       />
     </>
   );

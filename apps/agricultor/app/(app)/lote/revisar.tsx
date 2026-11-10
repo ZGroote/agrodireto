@@ -1,1 +1,5 @@
-export { default } from '@/screens/14-revisar-oferta/RevisarOfertaScreen';
+import { AbrirNovoRascunho } from '@/lote/AbrirNovoRascunho';
+
+export default function RotaLote() {
+  return <AbrirNovoRascunho etapa="revisar" />;
+}

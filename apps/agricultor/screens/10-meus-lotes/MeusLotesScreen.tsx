@@ -4,7 +4,7 @@ import { Package, Plus } from 'lucide-react-native';
 import { AppText, Card, EmptyState, ListRow, Screen, ScreenHeader, SegmentedControl, VStack } from '@agrodireto/ui';
 import { LoteItem } from '@/components/LoteItem';
 import { useLotes } from '@/hooks/dados';
-import { lerRascunhoLote, type LoteDraft } from '@/lote/LoteDraftContext';
+import { lerRascunhosLote, nomesEtapas, type RascunhoSalvo } from '@/lote/rascunhosLote';
 import { rotasAgricultor } from '@/routes';
 
 type Aba = 'disponiveis' | 'historico';
@@ -13,12 +13,17 @@ type Aba = 'disponiveis' | 'historico';
 export default function MeusLotesScreen() {
   const router = useRouter();
   const [aba, setAba] = useState<Aba>('disponiveis');
-  const [rascunho, setRascunho] = useState<LoteDraft | null>(null);
+  const [rascunhos, setRascunhos] = useState<RascunhoSalvo[]>([]);
+  const [erroRascunhos, setErroRascunhos] = useState(false);
   useFocusEffect(useCallback(() => {
     let ativo = true;
-    void lerRascunhoLote().then(
-      (lote) => { if (ativo) setRascunho(lote); },
-      () => { if (ativo) setRascunho(null); },
+    void lerRascunhosLote().then(
+      (registros) => {
+        if (!ativo) return;
+        setRascunhos(registros);
+        setErroRascunhos(false);
+      },
+      () => { if (ativo) setErroRascunhos(true); },
     );
     return () => { ativo = false; };
   }, []));
@@ -34,13 +39,22 @@ export default function MeusLotesScreen() {
       header={
         <ScreenHeader
           title="Meus lotes"
-          action={{ icon: Plus, label: rascunho ? 'Retomar rascunho' : 'Novo lote', onPress: () => router.push(rotasAgricultor.novoLote) }}
+          action={{ icon: Plus, label: 'Novo lote', onPress: () => router.push(rotasAgricultor.novoLote) }}
         />
       }
     >
-      {rascunho && (
+      {erroRascunhos && <AppText>Não foi possível abrir os rascunhos deste dispositivo.</AppText>}
+      {!erroRascunhos && rascunhos.length > 0 && (
         <Card>
-          <ListRow title="Retomar rascunho" subtitle={rascunho.produto?.trim() || 'Lote em preparação'} onPress={() => router.push(rotasAgricultor.novoLote)} />
+          <AppText variant="heading">Rascunhos neste dispositivo</AppText>
+          {rascunhos.map(({ id, etapa, campos }) => (
+            <ListRow
+              key={id}
+              title={campos.produto?.trim() || 'Lote em preparação'}
+              subtitle={nomesEtapas[etapa]}
+              onPress={() => router.push(rotasAgricultor.rascunhoLote(id, etapa))}
+            />
+          ))}
         </Card>
       )}
       <SegmentedControl

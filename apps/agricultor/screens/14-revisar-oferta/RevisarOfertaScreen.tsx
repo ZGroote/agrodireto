@@ -1,7 +1,9 @@
 import { StyleSheet, View } from 'react-native';
+import { useRouter } from 'expo-router';
 import { AppText, Card, EMPTY, KeyValueRow, Screen, ScreenHeader, spacing } from '@agrodireto/ui';
 import { useLoteDraft } from '@/lote/LoteDraftContext';
 import { LoteDraftFooter } from '@/lote/LoteDraftFooter';
+import { rotasAgricultor } from '@/routes';
 
 const MESES = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
 
@@ -15,12 +17,13 @@ function retiradaCurta(texto: string): string {
 
 /** 14 · Revisar oferta — resumo do rascunho antes de publicar. */
 export default function RevisarOfertaScreen() {
-  const { draft } = useLoteDraft();
+  const router = useRouter();
+  const { id, draft } = useLoteDraft();
 
   return (
     <Screen
-      header={<ScreenHeader title="Revisar oferta" subtitle="Confira os dados do lote antes de guardar o rascunho." />}
-      footer={<LoteDraftFooter />}
+      header={<ScreenHeader title="Revisar oferta" subtitle="Confira os dados do lote antes de guardar o rascunho." onBack={() => router.dismissTo(rotasAgricultor.rascunhoLote(id, 'preco'))} />}
+      footer={<LoteDraftFooter etapa="revisar" />}
     >
       <Card>
         <View style={styles.produto}>

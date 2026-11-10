@@ -1,7 +1,7 @@
 # Memória — última ação
 
-Em 10/11/2026, às 20h04 (America/Sao_Paulo), o Agricultor ganhou previsão local por cultura, com data, quantidade em quilos e faixa opcional declarada. Minha produção exibe os dados e destaca a colheita no calendário.
+Em 10/11/2026, às 20h15 (America/Sao_Paulo), foram agrupadas entregas de vários rascunhos de lote, retomada na etapa gravada e uso opcional da previsão de uma cultura cadastrada.
 
-Tipos, lint, 45 testes e exportação web do Agricultor passaram. No navegador, foram verificados o bloqueio de faixa inválida, a persistência e a preservação da previsão após editar a cultura.
+Tipos, lint, 45 testes e exportação web do Agricultor passaram. O navegador confirmou dois rascunhos separados, retomada com os dados gravados e uso da data prevista. Uma verificação de armazenamento confirmou compatibilidade com o formato anterior e descarte isolado.
 
-Foram alterados o módulo culturasLocais, as telas 08 e 09, tasks/todo.md, DOC/README.md, DOC/2026-11-10_007_previsao-safra-local.md e esta memória. D01 permanece parcialmente concluída. Histórico com autoria, catálogo e sincronização ficam para a integração.
+Os arquivos alterados constam em DOC/2026-11-10_008_rascunhos-e-previsao.md. D02 avançou. Evidências duráveis, identidade e publicação seguem para integração.

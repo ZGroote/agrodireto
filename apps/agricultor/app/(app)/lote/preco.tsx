@@ -1,1 +1,5 @@
-export { default } from '@/screens/13-preco-retirada/PrecoRetiradaScreen';
+import { AbrirNovoRascunho } from '@/lote/AbrirNovoRascunho';
+
+export default function RotaLote() {
+  return <AbrirNovoRascunho etapa="preco" />;
+}

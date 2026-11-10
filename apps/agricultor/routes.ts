@@ -1,4 +1,5 @@
 import type { Href } from 'expo-router';
+import type { EtapaLote } from '@/lote/rascunhosLote';
 
 /**
  * Rotas do app Agricultor — fonte única. Telas navegam SEMPRE por aqui, nunca por string solta.
@@ -56,6 +57,10 @@ export const rotasAgricultor = {
   padraoLote: '/lote/padrao',
   precoLote: '/lote/preco',
   revisarLote: '/lote/revisar',
+  rascunhoLote: (rascunhoId: string, etapa: EtapaLote): Href => ({
+    pathname: `/lote/[rascunhoId]/${etapa}` as const,
+    params: { rascunhoId },
+  }),
 
   // Lote, venda e entrega
   detalheLote: (params: { id?: string } = {}): Href => ({ pathname: '/detalhe-lote', params }),

@@ -214,7 +214,7 @@ Etapa 0 iniciada em 10/11/2026. O estado de cada tarefa está na lista abaixo.
 
 - [ ] Concluída e verificada.
 
-**Progresso:** um rascunho por dispositivo com origem selecionada da propriedade local, gravação ao avançar, revisão dos campos salvos e retomada em Meus lotes. Publicação, vinculação remota e persistência das evidências seguem pendentes.
+**Progresso:** vários rascunhos por dispositivo, com retomada na etapa salva em Meus lotes e compatibilidade com o rascunho anterior. Cada lote pode usar a propriedade, uma cultura cadastrada e a data de sua previsão. Publicação, vinculação remota e persistência das evidências seguem pendentes.
 
 **Responsável:** Agricultor + backend. **Dependências:** D01.
 
