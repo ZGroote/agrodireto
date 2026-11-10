@@ -2,14 +2,13 @@ import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Camera, Film, Image as ImageIcon, Video } from 'lucide-react-native';
-import { contarMidias, LIMITES_MIDIA, RETENCAO_DIAS_APOS_ENCERRAMENTO, validarNovasMidias, type ArquivoRecusado } from '@agrodireto/dominio';
+import { contarMidias, LIMITES_MIDIA, validarNovasMidias, type ArquivoRecusado } from '@agrodireto/dominio';
 import {
   AcaoSheet,
   ActionSheet,
   AddMediaButton,
   AlertBanner,
   AppText,
-  Button,
   type FotoTipo,
   Screen,
   ScreenHeader,
@@ -21,6 +20,7 @@ import { useCatalogo } from '@/hooks/dados';
 import { opcoes } from '@/lib/opcoes';
 import { escolherDaGaleria, usarCamera, type ArquivoEscolhido } from '@/lib/selecionarMidia';
 import { useLoteDraft, type EvidenciaDraft } from '@/lote/LoteDraftContext';
+import { LoteDraftFooter } from '@/lote/LoteDraftFooter';
 import { rotasAgricultor } from '@/routes';
 
 const ILUSTRACOES: FotoTipo[] = ['tomate', 'caixas'];
@@ -71,7 +71,7 @@ export default function PadraoLoteScreen() {
   return (
     <Screen
       header={<ScreenHeader title="Padrão do lote" step="2/3" subtitle="Defina o padrão e a embalagem." />}
-      footer={<Button label="Continuar" onPress={() => router.push(rotasAgricultor.precoLote)} />}
+      footer={<LoteDraftFooter label="Continuar" onAvancar={() => router.push(rotasAgricultor.precoLote)} />}
     >
       <SelectField label="Padrão" value={draft.padrao} options={opcoes(catalogo.padroes)} onChange={(padrao) => update({ padrao })} emptyMessage={msg} />
       <SelectField label="Calibre" value={draft.calibre} options={opcoes(catalogo.calibres)} onChange={(calibre) => update({ calibre })} emptyMessage={msg} />
@@ -95,7 +95,7 @@ export default function PadraoLoteScreen() {
           <AddMediaButton onPress={() => setAdicionar(true)} />
         </View>
         <AppText variant="caption" color="textSecondary">
-          As fotos e os vídeos do lote são apagados {RETENCAO_DIAS_APOS_ENCERRAMENTO} dias depois que a produção é encerrada.
+          As evidências ficam disponíveis nesta sessão. O rascunho salva os dados do lote.
         </AppText>
       </View>
 

@@ -1,41 +1,52 @@
+import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MapPin, User, Warehouse } from 'lucide-react-native';
-import { Button, mascaraMilhar, Screen, ScreenHeader, SelectField, spacing, TextField } from '@agrodireto/ui';
-import { useCatalogo } from '@/hooks/dados';
+import { AppText, Button, Card, mascaraMilhar, Screen, ScreenHeader, SelectField, spacing, TextField, TextLink } from '@agrodireto/ui';
+import { useRascunhoPropriedade } from '@/hooks/useRascunhoPropriedade';
 import { opcoes } from '@/lib/opcoes';
 import { UNIDADES, useLoteDraft, type Unidade } from '@/lote/LoteDraftContext';
+import { LoteDraftFooter } from '@/lote/LoteDraftFooter';
 import { rotasAgricultor } from '@/routes';
 
 /** 11 · Novo lote (1/3) — produto, origem, quantidade e unidade. */
 export default function NovoLoteScreen() {
   const router = useRouter();
-  const { draft, update } = useLoteDraft();
-  const catalogo = useCatalogo();
+  const { draft, update, descartar, operacao } = useLoteDraft();
+  const [confirmarDescarte, setConfirmarDescarte] = useState(false);
+  const propriedade = useRascunhoPropriedade();
+  const origemLocal = propriedade.estado === 'pronto' ? propriedade.rascunho?.nome.trim() : undefined;
 
-  const valido = !!draft.produto && !!draft.origem && Number(draft.quantidade.replace(/\D/g, '')) > 0;
+  const quantidade = Number(draft.quantidade.replace(/\D/g, ''));
+  const valido = !!draft.produto?.trim() && !!origemLocal && draft.origem === origemLocal
+    && Number.isSafeInteger(quantidade) && quantidade > 0;
+
+  async function apagar() {
+    if (await descartar()) setConfirmarDescarte(false);
+  }
 
   return (
     <Screen
       header={<ScreenHeader title="Novo lote" step="1/3" subtitle="Informe os dados básicos do lote." />}
-      footer={<Button label="Continuar" disabled={!valido} onPress={() => router.push(rotasAgricultor.padraoLote)} />}
+      footer={<LoteDraftFooter label="Continuar" disabled={!valido} onAvancar={() => router.push(rotasAgricultor.padraoLote)} />}
     >
-      <SelectField
+      <TextField
         label="Produto"
         icon={Warehouse}
-        value={draft.produto}
-        options={opcoes(catalogo.produtos)}
-        onChange={(produto) => update({ produto })}
-        emptyMessage="Catálogo de produtos ainda não carregado."
+        value={draft.produto ?? ''}
+        onChangeText={(produto) => update({ produto })}
       />
       <SelectField
         label="Origem"
         icon={MapPin}
         value={draft.origem}
-        options={opcoes(catalogo.origens)}
+        options={opcoes(origemLocal ? [origemLocal] : [])}
         onChange={(origem) => update({ origem })}
         emptyMessage="Cadastre sua propriedade para escolher a origem."
       />
+      {propriedade.estado === 'pronto' && !origemLocal && (
+        <TextLink label="Cadastrar propriedade" onPress={() => router.push(rotasAgricultor.editarPropriedade)} />
+      )}
       <View style={styles.row}>
         <View style={styles.qty}>
           <TextField
@@ -51,6 +62,15 @@ export default function NovoLoteScreen() {
           <SelectField<Unidade> label="Unidade" value={draft.unidade} options={UNIDADES} onChange={(unidade) => update({ unidade })} />
         </View>
       </View>
+      {confirmarDescarte ? (
+        <Card>
+          <AppText>Descartar os dados e evidências do rascunho?</AppText>
+          <Button label="Confirmar descarte" variant="danger" disabled={operacao === 'gravando'} onPress={() => void apagar()} />
+          <Button label="Manter rascunho" variant="secondary" onPress={() => setConfirmarDescarte(false)} />
+        </Card>
+      ) : (
+        <TextLink label="Descartar rascunho" onPress={() => setConfirmarDescarte(true)} />
+      )}
     </Screen>
   );
 }

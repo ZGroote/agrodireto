@@ -1,9 +1,10 @@
-import { useState } from 'react';
-import { useRouter } from 'expo-router';
+import { useCallback, useState } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { Package, Plus } from 'lucide-react-native';
-import { EmptyState, Screen, ScreenHeader, SegmentedControl, VStack } from '@agrodireto/ui';
+import { AppText, Card, EmptyState, ListRow, Screen, ScreenHeader, SegmentedControl, VStack } from '@agrodireto/ui';
 import { LoteItem } from '@/components/LoteItem';
 import { useLotes } from '@/hooks/dados';
+import { lerRascunhoLote, type LoteDraft } from '@/lote/LoteDraftContext';
 import { rotasAgricultor } from '@/routes';
 
 type Aba = 'disponiveis' | 'historico';
@@ -12,6 +13,15 @@ type Aba = 'disponiveis' | 'historico';
 export default function MeusLotesScreen() {
   const router = useRouter();
   const [aba, setAba] = useState<Aba>('disponiveis');
+  const [rascunho, setRascunho] = useState<LoteDraft | null>(null);
+  useFocusEffect(useCallback(() => {
+    let ativo = true;
+    void lerRascunhoLote().then(
+      (lote) => { if (ativo) setRascunho(lote); },
+      () => { if (ativo) setRascunho(null); },
+    );
+    return () => { ativo = false; };
+  }, []));
   const lotes = useLotes();
   const disponiveis = lotes.filter((l) => l.status !== 'encerrado');
   const historico = lotes.filter((l) => l.status === 'encerrado');
@@ -24,10 +34,15 @@ export default function MeusLotesScreen() {
       header={
         <ScreenHeader
           title="Meus lotes"
-          action={{ icon: Plus, label: 'Novo lote', onPress: () => router.push(rotasAgricultor.novoLote) }}
+          action={{ icon: Plus, label: rascunho ? 'Retomar rascunho' : 'Novo lote', onPress: () => router.push(rotasAgricultor.novoLote) }}
         />
       }
     >
+      {rascunho && (
+        <Card>
+          <ListRow title="Retomar rascunho" subtitle={rascunho.produto?.trim() || 'Lote em preparação'} onPress={() => router.push(rotasAgricultor.novoLote)} />
+        </Card>
+      )}
       <SegmentedControl
         value={aba}
         onChange={setAba}
@@ -40,6 +55,7 @@ export default function MeusLotesScreen() {
         <EmptyState icon={Package} title={aba === 'disponiveis' ? 'Nenhum lote disponível' : 'Nenhum lote no histórico'} />
       ) : (
         <VStack gap="md">
+          <AppText variant="caption" color="textSecondary">Lotes de demonstração</AppText>
           {lista.map((l) => (
             <LoteItem key={l.id} lote={l} onPress={() => router.push(rotasAgricultor.detalheLote({ id: l.id }))} />
           ))}
