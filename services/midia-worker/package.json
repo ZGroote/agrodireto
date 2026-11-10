@@ -8,6 +8,7 @@
   "scripts": {
     "start": "node src/servidor.ts",
     "otimizar": "node src/cli.ts",
+    "preparar-storage": "node --env-file-if-exists=.env src/preparar-storage.ts",
     "test": "node --test \"test/*.test.ts\"",
     "typecheck": "tsc --noEmit"
   },

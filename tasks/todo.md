@@ -214,7 +214,7 @@ Etapa 0 iniciada em 10/11/2026. O estado de cada tarefa está na lista abaixo.
 
 - [ ] Concluída e verificada.
 
-**Progresso:** vários rascunhos por dispositivo, com retomada na etapa salva em Meus lotes e compatibilidade com o rascunho anterior. Cada lote pode usar a propriedade, uma cultura cadastrada e a data de sua previsão. Publicação, vinculação remota e persistência das evidências seguem pendentes.
+**Progresso:** vários rascunhos por dispositivo, com retomada na etapa salva em Meus lotes e compatibilidade com o rascunho anterior. Cada lote pode usar a propriedade, uma cultura cadastrada e a data de sua previsão. Fotos e vídeos são recuperados no dispositivo. Publicação e vinculação remota seguem pendentes.
 
 **Responsável:** Agricultor + backend. **Dependências:** D01.
 
@@ -227,6 +227,8 @@ Etapa 0 iniciada em 10/11/2026. O estado de cada tarefa está na lista abaixo.
 ### D03 — Criar armazenamento privado de mídia
 
 - [ ] Concluída e verificada.
+
+**Progresso:** comando do worker para criar ou verificar o bucket privado `midias`, exercitado com um servidor HTTP de teste. Provisionamento no Supabase, políticas por usuário e cotas seguem pendentes.
 
 **Responsável:** Backend. **Dependências:** B01, D02.
 
@@ -277,6 +279,8 @@ Etapa 0 iniciada em 10/11/2026. O estado de cada tarefa está na lista abaixo.
 ### D07 — Conectar seleção a upload persistente
 
 - [ ] Concluída e verificada.
+
+**Progresso:** anexos copiados ao salvar o rascunho. Foto e vídeo recuperados após recarregar na web. Pacotes do Agricultor exportados para Android e iOS. Faltam teste em aparelho e upload integrado.
 
 **Responsável:** Agricultor. **Dependências:** D03, D04, D05, D06.
 

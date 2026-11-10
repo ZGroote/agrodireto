@@ -25,6 +25,7 @@ Um arquivo por passo, em ordem. Nome: `AAAA-MM-DD_NNN_titulo-curto.md`.
 | 006 | 2026-11-10 | [Culturas, rascunho de lote e gravação de mídia](2026-11-10_006_producao-local-e-midia.md) |
 | 007 | 2026-11-10 | [Previsão de safra por cultura](2026-11-10_007_previsao-safra-local.md) |
 | 008 | 2026-11-10 | [Vários rascunhos de lote e previsão da cultura](2026-11-10_008_rascunhos-e-previsao.md) |
+| 009 | 2026-11-10 | [Evidências persistentes e preparação do Storage](2026-11-10_009_evidencias-e-storage.md) |
 
 ## Documentos de referência
 

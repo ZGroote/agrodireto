@@ -42,6 +42,7 @@ Vídeo precisa do `ffmpeg` e do `ffprobe` no PATH, com libx265 e libvmaf (a imag
 - `GET /saude` — saúde.
 - `POST /webhook` — aviso de mídia nova (`Authorization: Bearer WORKER_TOKEN`), corpo `{ midiaId, bucket, caminho, nomeOriginal }`. Responde 202 e processa em segundo plano, com fila (`CONCORRENCIA`).
 - O adaptador `src/supabase.ts` grava o otimizado em um caminho exclusivo e confirma a atualização em `midias`. O original é preservado por padrão. Com `APAGAR_ORIGINAL_APOS_OTIMIZAR=true`, a remoção ocorre após a confirmação.
+- Com as variáveis do ambiente de desenvolvimento configuradas no worker, `npm run preparar-storage -w @agrodireto/midia-worker` cria ou confirma o bucket privado `midias`. O comando encerra com erro se encontrar um bucket público com o mesmo nome. Políticas de acesso, cotas e upload dependem da integração dos cadastros e lotes.
 
 ## O que NÃO foi testado
 
