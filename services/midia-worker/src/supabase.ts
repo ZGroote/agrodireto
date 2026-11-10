@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { createWriteStream } from 'node:fs';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { basename, extname, join } from 'node:path';
@@ -34,9 +35,6 @@ function exigir(nome: string): string {
 /** Evita que um nome com "../" escape da pasta temporária. */
 const nomeSeguro = (nome: string) => basename(nome).replace(/[^\w.\-]+/g, '_') || 'arquivo';
 
-/** "propriedade/ab/foto.heic" + ".webp" → "propriedade/ab/foto.webp" */
-const trocarExtensao = (caminho: string, extensao: string) => caminho.slice(0, caminho.length - extname(caminho).length) + extensao;
-
 /**
  * Baixa o original do Storage, otimiza, sobe o resultado e atualiza a linha em `midias`.
  * Com `apagarOriginalAposOtimizar`, o original é removido depois do sucesso, para não acumular volume.
@@ -44,11 +42,22 @@ const trocarExtensao = (caminho: string, extensao: string) => caminho.slice(0, c
 export async function processarMidiaDoStorage(trabalho: TrabalhoMidia): Promise<Resultado> {
   const supabase = createClient(exigir('SUPABASE_URL'), exigir('SUPABASE_SERVICE_ROLE_KEY'), { auth: { persistSession: false } });
   const pasta = await mkdtemp(join(config.pastaTemporaria, 'midia-'));
+  const storage = supabase.storage.from(trabalho.bucket);
+  let assumiu = false;
 
   try {
-    await supabase.from('midias').update({ processamento: 'otimizando' }).eq('id', trabalho.midiaId);
+    const inicio = await supabase.from('midias')
+      .update({ processamento: 'otimizando', motivo_processamento: null })
+      .eq('id', trabalho.midiaId)
+      .eq('arquivo', trabalho.caminho)
+      .in('processamento', ['aguardando', 'falhou'])
+      .select('id')
+      .maybeSingle();
+    if (inicio.error) throw new Error(inicio.error.message);
+    if (!inicio.data) return { status: 'mantida', bytesEntrada: 0, motivo: 'Trabalho já assumido, concluído ou substituído.' };
+    assumiu = true;
 
-    const baixado = await supabase.storage.from(trabalho.bucket).download(trabalho.caminho);
+    const baixado = await storage.download(trabalho.caminho);
     if (baixado.error || !baixado.data) throw new Error(baixado.error?.message ?? 'Não foi possível baixar o original.');
     const nome = nomeSeguro(trabalho.nomeOriginal);
     const entrada = join(pasta, nome);
@@ -60,19 +69,17 @@ export async function processarMidiaDoStorage(trabalho: TrabalhoMidia): Promise<
     let caminhoFinal = trabalho.caminho;
     if (resultado.status === 'pronta' && resultado.arquivoSaida) {
       const extensao = extname(resultado.arquivoSaida);
-      caminhoFinal = trocarExtensao(trabalho.caminho, extensao);
+      const pastaOriginal = trabalho.caminho.slice(0, trabalho.caminho.lastIndexOf('/') + 1);
+      caminhoFinal = `${pastaOriginal}otimizado-${randomUUID()}${extensao}`;
       // Arquivos muito grandes devem subir por upload retomável (tus); aqui o resultado já é menor que o original.
-      const enviado = await supabase.storage.from(trabalho.bucket).upload(caminhoFinal, await readFile(resultado.arquivoSaida), {
-        upsert: true,
+      const enviado = await storage.upload(caminhoFinal, await readFile(resultado.arquivoSaida), {
+        upsert: false,
         contentType: CONTENT_TYPE[extensao] ?? 'application/octet-stream',
       });
       if (enviado.error) throw new Error(enviado.error.message);
-      if (config.apagarOriginalAposOtimizar && caminhoFinal !== trabalho.caminho) {
-        await supabase.storage.from(trabalho.bucket).remove([trabalho.caminho]);
-      }
     }
 
-    await supabase
+    const atualizado = await supabase
       .from('midias')
       .update({
         processamento: resultado.status,
@@ -81,12 +88,34 @@ export async function processarMidiaDoStorage(trabalho: TrabalhoMidia): Promise<
         tamanho_final_bytes: resultado.bytesSaida ?? resultado.bytesEntrada,
         motivo_processamento: resultado.motivo ?? null,
       })
-      .eq('id', trabalho.midiaId);
+      .eq('id', trabalho.midiaId)
+      .eq('arquivo', trabalho.caminho)
+      .eq('processamento', 'otimizando')
+      .select('id')
+      .maybeSingle();
+    if (atualizado.error) throw new Error(atualizado.error.message);
+    if (!atualizado.data) throw new Error('A mídia mudou durante a otimização.');
 
+    if (config.apagarOriginalAposOtimizar && caminhoFinal !== trabalho.caminho) {
+      try {
+        const removido = await storage.remove([trabalho.caminho]);
+        if (removido.error) throw new Error(removido.error.message);
+      } catch (erro) {
+        console.warn('Otimização gravada. Falha ao remover original:', trabalho.midiaId, erro);
+      }
+    }
     return resultado;
   } catch (e) {
     const motivo = e instanceof Error ? e.message : 'Erro ao processar a mídia.';
-    await supabase.from('midias').update({ processamento: 'falhou', motivo_processamento: motivo }).eq('id', trabalho.midiaId);
+    if (assumiu) {
+      // Em caso de resposta ambígua, preserve os arquivos: a atualização pode ter sido aplicada.
+      const falha = await supabase.from('midias')
+        .update({ processamento: 'falhou', motivo_processamento: motivo })
+        .eq('id', trabalho.midiaId)
+        .eq('arquivo', trabalho.caminho)
+        .eq('processamento', 'otimizando');
+      if (falha.error) console.warn('Falha ao registrar erro de mídia:', trabalho.midiaId, falha.error.message);
+    }
     return { status: 'falhou', bytesEntrada: 0, motivo };
   } finally {
     await rm(pasta, { recursive: true, force: true });

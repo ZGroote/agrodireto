@@ -41,7 +41,7 @@ Vídeo precisa do `ffmpeg` e do `ffprobe` no PATH, com libx265 e libvmaf (a imag
 
 - `GET /saude` — saúde.
 - `POST /webhook` — aviso de mídia nova (`Authorization: Bearer WORKER_TOKEN`), corpo `{ midiaId, bucket, caminho, nomeOriginal }`. Responde 202 e processa em segundo plano, com fila (`CONCORRENCIA`).
-- O adaptador `src/supabase.ts` baixa o original, otimiza, sobe o resultado, atualiza `midias` e apaga o original (`APAGAR_ORIGINAL_APOS_OTIMIZAR`).
+- O adaptador `src/supabase.ts` grava o otimizado em um caminho exclusivo e confirma a atualização em `midias`. O original é preservado por padrão. Com `APAGAR_ORIGINAL_APOS_OTIMIZAR=true`, a remoção ocorre após a confirmação.
 
 ## O que NÃO foi testado
 

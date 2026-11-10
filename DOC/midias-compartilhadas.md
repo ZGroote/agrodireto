@@ -113,8 +113,8 @@ App ── envio (tus) ──► Storage (original)
                           ▼
                      midia-worker ── baixa ─► sharp/libvips (foto) ou FFmpeg (vídeo)
                           │                    └─ confere PSNR (foto) ou VMAF ≥ 95 (vídeo)
-                          ├─ sobe o otimizado (WebP ou MP4) e apaga o original
-                          └─ atualiza `midias`: processamento, arquivo, tamanhos
+                          ├─ sobe o otimizado (WebP ou MP4) em caminho exclusivo
+                          └─ confirma `midias` antes da remoção opcional do original
 ```
 
 Decisões do projeto para a otimização:

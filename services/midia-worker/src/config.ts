@@ -31,5 +31,5 @@ export const config = {
   /** Quantos arquivos processar ao mesmo tempo (vídeo é pesado: 1 por padrão) */
   concorrencia: numero(process.env.CONCORRENCIA, 1),
   /** Depois de otimizar com sucesso, apagar o original do Storage para não acumular volume */
-  apagarOriginalAposOtimizar: process.env.APAGAR_ORIGINAL_APOS_OTIMIZAR !== 'false',
+  apagarOriginalAposOtimizar: process.env.APAGAR_ORIGINAL_APOS_OTIMIZAR === 'true',
 } as const;
