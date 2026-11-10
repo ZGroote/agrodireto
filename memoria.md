@@ -1,9 +1,7 @@
 # Memória — última ação
 
-Em 10/11/2026, às 11h24 (America/Sao_Paulo), o rascunho de propriedade passou a aparecer no resumo da propriedade e no checklist do cadastro do Agricultor. As três telas usam a mesma chave e formato de armazenamento.
+Em 10/11/2026, às 11h30 (America/Sao_Paulo), o cadastro do Agricultor passou a mostrar a situação local de identificação, propriedade e dados bancários. O botão de continuar abre a propriedade até existir um rascunho e então abre documentos. Foi adicionada a prévia temporária de foto e o formulário bancário passou a abrir vazio em modo de teste.
 
-Tipos, lint, 42 testes e exportação web passaram. No navegador, os dados apareceram ao voltar da edição e o checklist conservou o estado após recarregar.
+As telas 03, 06, 25 e 27 foram alteradas, com categorias em apps/agricultor/lib/tiposDocumento.ts. DOC/2026-11-10_005_estados-locais-cadastro.md, o índice do DOC e esta memória registram a entrega.
 
-Foram alteradas as telas 03, 04 e 26, o backlog e o índice do DOC. Foram criados o módulo de armazenamento, o hook de leitura e DOC/2026-11-10_004_rascunho-no-cadastro.md.
-
-A tarefa C01 segue parcialmente concluída. Próximo passo local é tratar os demais estados do cadastro. Autenticação, sincronização e aprovação serão validadas na integração.
+Tipos, lint, 42 testes e exportação web passaram. Navegação, seleção e remoção de imagem e formulário bancário foram conferidos no navegador. Envio, aprovação e suporte a PDF ficam pendentes. Próxima fatia local pode avançar nas regras e no rascunho de lote enquanto a integração aguarda o Supabase.

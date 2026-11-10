@@ -21,6 +21,7 @@ Um arquivo por passo, em ordem. Nome: `AAAA-MM-DD_NNN_titulo-curto.md`.
 | 002 | 2026-11-10 | [Início da Etapa 0 — preparação do piloto](2026-11-10_002_inicio-etapa-0.md) |
 | 003 | 2026-11-10 | [Rascunho local de propriedade](2026-11-10_003_rascunho-local-propriedade.md) |
 | 004 | 2026-11-10 | [Rascunho no fluxo de cadastro](2026-11-10_004_rascunho-no-cadastro.md) |
+| 005 | 2026-11-10 | [Estados locais do cadastro do Agricultor](2026-11-10_005_estados-locais-cadastro.md) |
 
 ## Documentos de referência
 

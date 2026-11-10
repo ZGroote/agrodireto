@@ -1,8 +1,6 @@
 import { useState } from 'react';
-import { useRouter } from 'expo-router';
 import { Building2, CreditCard, FileText, Hash, User } from 'lucide-react-native';
-import { Button, Screen, ScreenHeader, SelectField, TextField, VerifiedBadge, VStack } from '@agrodireto/ui';
-import { useDadosBancarios } from '@/hooks/dados';
+import { Button, Screen, ScreenHeader, SelectField, TextField } from '@agrodireto/ui';
 import { opcoes } from '@/lib/opcoes';
 
 const BANCOS = ['Banco do Brasil', 'Caixa Econômica Federal', 'Bradesco', 'Itaú', 'Santander', 'Sicredi', 'Sicoob'];
@@ -10,27 +8,18 @@ const TIPOS = ['Conta corrente', 'Conta poupança'];
 
 /** 25 · Dados bancários — conta que recebe os repasses. Gravação no Supabase na fase de dados. */
 export default function DadosBancariosScreen() {
-  const router = useRouter();
-  const d = useDadosBancarios();
-  const [banco, setBanco] = useState<string | undefined>(d.banco);
-  const [agencia, setAgencia] = useState(d.agencia);
-  const [conta, setConta] = useState(d.conta);
-  const [tipo, setTipo] = useState<string | undefined>(d.tipo);
-  const [titular, setTitular] = useState(d.titular);
-  const [documento, setDocumento] = useState(d.documento);
-
-  const valido = !!banco && !!tipo && agencia.trim().length > 0 && conta.trim().length > 0 && titular.trim().length > 0;
+  const [banco, setBanco] = useState<string>();
+  const [agencia, setAgencia] = useState('');
+  const [conta, setConta] = useState('');
+  const [tipo, setTipo] = useState<string>();
+  const [titular, setTitular] = useState('');
+  const [documento, setDocumento] = useState('');
 
   return (
     <Screen
-      header={<ScreenHeader title="Dados bancários" subtitle="Informe a conta que vai receber seus repasses." />}
-      footer={<Button label="Salvar dados bancários" disabled={!valido} onPress={() => router.back()} />}
+      header={<ScreenHeader title="Dados bancários" subtitle="Prévia do formulário de repasse. Use apenas dados de teste." />}
+      footer={<Button label="Envio indisponível" disabled />}
     >
-      {d.verificado ? (
-        <VStack gap="xs">
-          <VerifiedBadge label="Verificado" />
-        </VStack>
-      ) : null}
       <SelectField label="Banco" icon={Building2} value={banco} options={opcoes(BANCOS)} onChange={setBanco} />
       <TextField label="Agência" icon={Hash} placeholder="0000" keyboardType="number-pad" value={agencia} onChangeText={setAgencia} />
       <TextField label="Conta" icon={CreditCard} placeholder="00000-0" keyboardType="numbers-and-punctuation" value={conta} onChangeText={setConta} />
