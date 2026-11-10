@@ -19,6 +19,7 @@ Um arquivo por passo, em ordem. Nome: `AAAA-MM-DD_NNN_titulo-curto.md`.
 | 013 | 2026-11-05 | [Limites, formatos, retenção e otimização de mídia](2026-11-05_013_limites-formatos-retencao-e-otimizacao.md) |
 | 001 | 2026-11-10 | [Auditoria do projeto e plano de desenvolvimento para piloto real](2026-11-10_001_auditoria-e-plano-piloto.md) |
 | 002 | 2026-11-10 | [Início da Etapa 0 — preparação do piloto](2026-11-10_002_inicio-etapa-0.md) |
+| 003 | 2026-11-10 | [Rascunho local de propriedade](2026-11-10_003_rascunho-local-propriedade.md) |
 
 ## Documentos de referência
 
