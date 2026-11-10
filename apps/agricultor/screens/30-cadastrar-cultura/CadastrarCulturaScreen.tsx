@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Camera, Image as ImageIcon, Ruler, Sprout, Trash2 } from 'lucide-react-native';
-import { classificarArquivo, RETENCAO_DIAS_APOS_ENCERRAMENTO } from '@agrodireto/dominio';
+import { classificarArquivo } from '@agrodireto/dominio';
 import {
   AcaoSheet,
   ActionSheet,
@@ -11,6 +11,7 @@ import {
   AppText,
   Button,
   DateField,
+  MediaThumb,
   Screen,
   ScreenHeader,
   SelectField,
@@ -18,28 +19,55 @@ import {
   TextField,
   TextLink,
 } from '@agrodireto/ui';
-import { CulturaFoto } from '@/components/CulturaFoto';
-import { useCatalogo, useCulturaRascunho } from '@/hooks/dados';
-import { definirFotoCultura, useFotoCultura } from '@/lib/fotoCultura';
+import { useCatalogo } from '@/hooks/dados';
+import { areaValida, lerCulturas, salvarCultura } from '@/lib/culturasLocais';
 import { opcoes } from '@/lib/opcoes';
 import { escolherDaGaleria, usarCamera, type ArquivoEscolhido } from '@/lib/selecionarMidia';
 
 /** 30 · Cadastrar cultura — foto (ícone da cultura), cultura, variedade, área, plantio e etapa. */
 export default function CadastrarCulturaScreen() {
+  const { id } = useLocalSearchParams<{ id?: string }>();
+  return <FormularioCultura key={id ?? 'nova'} id={id} />;
+}
+
+function FormularioCultura({ id }: { id?: string }) {
   const router = useRouter();
   const catalogo = useCatalogo();
-  const r = useCulturaRascunho();
-  const [cultura, setCultura] = useState<string | undefined>(r.cultura);
-  const [variedade, setVariedade] = useState(r.variedade);
-  const [area, setArea] = useState(r.area);
-  const [plantio, setPlantio] = useState(r.plantio);
-  const [etapa, setEtapa] = useState<string | undefined>(r.etapa);
-  const [foto, setFoto] = useState<string | undefined>(useFotoCultura(r.cultura));
+  const [cultura, setCultura] = useState('');
+  const [variedade, setVariedade] = useState('');
+  const [area, setArea] = useState('');
+  const [plantio, setPlantio] = useState('');
+  const [etapa, setEtapa] = useState<string>();
+  const [foto, setFoto] = useState<string>();
   const [escolher, setEscolher] = useState(false);
-
   const [erro, setErro] = useState<string | null>(null);
+  const [leitura, setLeitura] = useState<'carregando' | 'pronto' | 'erro'>(id ? 'carregando' : 'pronto');
+  const [salvando, setSalvando] = useState(false);
+  const gravando = useRef(false);
 
-  /** A foto da cultura é uma só (vira o ícone). Valida o formato e guarda o arquivo escolhido. */
+  useEffect(() => {
+    if (!id) return;
+    let ativo = true;
+    void lerCulturas().then((culturas) => {
+      if (!ativo) return;
+      const registro = culturas.find((item) => item.id === id);
+      if (!registro) {
+        setLeitura('erro');
+        return;
+      }
+      setCultura(registro.cultura);
+      setVariedade(registro.variedade);
+      setArea(registro.area);
+      setPlantio(registro.plantio);
+      setEtapa(registro.etapa || undefined);
+      setLeitura('pronto');
+    }, () => {
+      if (ativo) setLeitura('erro');
+    });
+    return () => { ativo = false; };
+  }, [id]);
+
+  /** A foto é uma prévia da sessão até o armazenamento de mídia ser conectado. */
   const receber = (arquivos: ArquivoEscolhido[]) => {
     const a = arquivos[0];
     if (!a) return;
@@ -63,36 +91,55 @@ export default function CadastrarCulturaScreen() {
     ...(foto ? [{ label: 'Remover foto', icon: Trash2, tone: 'danger' as const, onPress: () => setFoto(undefined) }] : []),
   ];
 
-  const salvar = () => {
-    if (cultura) definirFotoCultura(cultura, foto);
-    router.back();
-  };
+  const titulo = id ? 'Editar cultura' : 'Cadastrar cultura';
+  const valido = !!cultura.trim() && areaValida(area);
+  async function salvar() {
+    if (!valido || leitura !== 'pronto' || gravando.current) return;
+    gravando.current = true;
+    setSalvando(true);
+    setErro(null);
+    try {
+      await salvarCultura({ cultura, variedade, area, plantio, etapa: etapa ?? '' }, id);
+      router.back();
+    } catch {
+      setErro('Não foi possível salvar a cultura. Tente novamente.');
+    } finally {
+      gravando.current = false;
+      setSalvando(false);
+    }
+  }
+
+  if (leitura !== 'pronto') {
+    return (
+      <Screen header={<ScreenHeader title={titulo} />}>
+        <AppText>{leitura === 'carregando' ? 'Carregando cultura…' : 'Não foi possível abrir a cultura.'}</AppText>
+      </Screen>
+    );
+  }
 
   return (
     <Screen
-      header={<ScreenHeader title="Cadastrar cultura" subtitle="Cadastre o que você está plantando para acompanhar a safra." />}
-      footer={<Button label="Salvar cultura" disabled={!cultura || Number(area) <= 0} onPress={salvar} />}
+      header={<ScreenHeader title={titulo} subtitle="Os dados da cultura ficam neste dispositivo." />}
+      footer={<Button label="Salvar cultura" disabled={!valido} loading={salvando} onPress={() => void salvar()} />}
     >
       <View style={styles.foto}>
         <AppText variant="label">Foto da cultura</AppText>
         <View style={styles.linha}>
-          {foto && cultura ? <CulturaFoto cultura={cultura} tipo="tomate" size={76} /> : <AddMediaButton onPress={() => setEscolher(true)} />}
+          {foto ? <MediaThumb source={{ uri: foto }} /> : <AddMediaButton onPress={() => setEscolher(true)} />}
           <View style={styles.texto}>
             <AppText variant="caption" color="textSecondary">
-              Esta imagem aparece como ícone da cultura em Produção e na Previsão de safra.
+              Prévia da foto nesta tela.
             </AppText>
             <TextLink label={foto ? 'Trocar foto' : 'Adicionar foto'} align="left" onPress={() => setEscolher(true)} />
           </View>
         </View>
-        <AppText variant="caption" color="textSecondary">
-          A foto da cultura é apagada {RETENCAO_DIAS_APOS_ENCERRAMENTO} dias depois que a produção é encerrada.
-        </AppText>
-        {erro ? <AlertBanner tone="danger" title="Foto não adicionada" description={erro} onPress={() => setErro(null)} /> : null}
+        {erro ? <AlertBanner tone="danger" title={erro} onPress={() => setErro(null)} /> : null}
       </View>
 
-      <SelectField label="Cultura" icon={Sprout} value={cultura} options={opcoes(catalogo.produtos)} onChange={setCultura} emptyMessage="Catálogo de produtos ainda não carregado." />
+      <TextField label="Cultura" icon={Sprout} value={cultura} onChangeText={setCultura} editable={!salvando} />
       <TextField label="Variedade" placeholder="Ex.: Italiano" value={variedade} onChangeText={setVariedade} autoCapitalize="words" />
-      <TextField label="Área plantada" icon={Ruler} suffix="ha" keyboardType="numeric" value={area} onChangeText={setArea} />
+      <TextField label="Área plantada" icon={Ruler} suffix="ha" keyboardType="decimal-pad" value={area} onChangeText={setArea} editable={!salvando} />
+      {!!area.trim() && !areaValida(area) && <AppText variant="caption">Informe uma área maior que zero em hectares.</AppText>}
       <DateField label="Data do plantio" value={plantio} onChange={setPlantio} />
       <SelectField label="Etapa" value={etapa} options={opcoes(catalogo.etapas)} onChange={setEtapa} />
 

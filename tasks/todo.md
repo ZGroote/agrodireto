@@ -200,6 +200,8 @@ Etapa 0 iniciada em 10/11/2026. O estado de cada tarefa está na lista abaixo.
 
 - [ ] Concluída e verificada.
 
+**Progresso:** cadastro, listagem e edição de culturas locais com área em hectares. Catálogo do piloto, previsão real, mídia durável e sincronização seguem pendentes.
+
 **Responsável:** Agricultor + backend. **Dependências:** C01, C04.
 
 **Entrega e aceite:** Persistir cultura, unidade e previsão do catálogo do piloto; nenhuma faixa ±10% assumida sem validação.
@@ -211,6 +213,8 @@ Etapa 0 iniciada em 10/11/2026. O estado de cada tarefa está na lista abaixo.
 ### D02 — Persistir rascunho de lote
 
 - [ ] Concluída e verificada.
+
+**Progresso:** um rascunho por dispositivo com origem selecionada da propriedade local, gravação ao avançar, revisão dos campos salvos e retomada em Meus lotes. Publicação, vinculação remota e persistência das evidências seguem pendentes.
 
 **Responsável:** Agricultor + backend. **Dependências:** D01.
 
@@ -235,6 +239,8 @@ Etapa 0 iniciada em 10/11/2026. O estado de cada tarefa está na lista abaixo.
 ### D04 — Corrigir gravação do worker
 
 - [ ] Concluída e verificada.
+
+**Progresso:** adaptador assume o trabalho com atualização condicional e grava o resultado em um caminho exclusivo. Remoção é opcional e vem após a confirmação da referência. Testes HTTP locais cobrem reentrega, falha de gravação e falha de remoção. Falta homologar no Supabase.
 
 **Responsável:** Worker. **Dependências:** A04.
 

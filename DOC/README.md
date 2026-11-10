@@ -22,6 +22,7 @@ Um arquivo por passo, em ordem. Nome: `AAAA-MM-DD_NNN_titulo-curto.md`.
 | 003 | 2026-11-10 | [Rascunho local de propriedade](2026-11-10_003_rascunho-local-propriedade.md) |
 | 004 | 2026-11-10 | [Rascunho no fluxo de cadastro](2026-11-10_004_rascunho-no-cadastro.md) |
 | 005 | 2026-11-10 | [Estados locais do cadastro do Agricultor](2026-11-10_005_estados-locais-cadastro.md) |
+| 006 | 2026-11-10 | [Culturas, rascunho de lote e gravação de mídia](2026-11-10_006_producao-local-e-midia.md) |
 
 ## Documentos de referência
 
