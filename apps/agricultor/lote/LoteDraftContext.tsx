@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { ActivityIndicator } from 'react-native';
 import { AppText, Button, Screen, ScreenHeader } from '@agrodireto/ui';
-import { descartarRascunhoLote, lerRascunhosLote, loteVazio, salvarRascunhoLote, type EtapaLote, type LoteDraft, type Unidade } from './rascunhosLote';
+import { descartarRascunhoLote, idLoteValido, lerRascunhosLote, loteVazio, salvarRascunhoLote, type EtapaLote, type LoteDraft, type Unidade } from './rascunhosLote';
 
 export type { EvidenciaDraft, Unidade } from './rascunhosLote';
 
@@ -31,12 +31,13 @@ const LoteDraftContext = createContext<Ctx | null>(null);
 
 export function LoteDraftProvider({ id, children }: { id: string; children: ReactNode }) {
   const [draft, setDraft] = useState(loteVazio);
-  const [leitura, setLeitura] = useState<'carregando' | 'pronto' | 'erro'>('carregando');
+  const [leitura, setLeitura] = useState<'carregando' | 'pronto' | 'erro'>(idLoteValido(id) ? 'carregando' : 'erro');
   const [tentativa, setTentativa] = useState(0);
   const [operacao, setOperacao] = useState<Ctx['operacao']>('livre');
   const ocupado = useRef(false);
 
   useEffect(() => {
+    if (!idLoteValido(id)) return;
     let ativo = true;
     void lerRascunhosLote().then((registros) => {
       if (!ativo) return;
@@ -63,7 +64,7 @@ export function LoteDraftProvider({ id, children }: { id: string; children: Reac
         await descartarRascunhoLote(id);
         setDraft(loteVazio);
       } else {
-        await salvarRascunhoLote(id, etapa, draft);
+        setDraft(await salvarRascunhoLote(id, etapa, draft));
       }
       setOperacao(etapa === null ? 'livre' : 'salvo');
       return true;
@@ -81,10 +82,10 @@ export function LoteDraftProvider({ id, children }: { id: string; children: Reac
         {leitura === 'carregando' ? <ActivityIndicator /> : (
           <>
             <AppText>Não foi possível abrir o rascunho.</AppText>
-            <Button label="Tentar novamente" onPress={() => {
+            {idLoteValido(id) && <Button label="Tentar novamente" onPress={() => {
               setLeitura('carregando');
               setTentativa((anterior) => anterior + 1);
-            }} />
+            }} />}
           </>
         )}
       </Screen>

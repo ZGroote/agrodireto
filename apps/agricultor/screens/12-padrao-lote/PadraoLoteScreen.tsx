@@ -9,21 +9,18 @@ import {
   AddMediaButton,
   AlertBanner,
   AppText,
-  type FotoTipo,
   Screen,
   ScreenHeader,
   SelectField,
   spacing,
 } from '@agrodireto/ui';
-import { MiniaturaEvidencia } from '@/components/MiniaturaEvidencia';
+import { MiniaturaEvidenciaLote } from '@/lote/MiniaturaEvidenciaLote';
 import { useCatalogo } from '@/hooks/dados';
 import { opcoes } from '@/lib/opcoes';
 import { escolherDaGaleria, usarCamera, type ArquivoEscolhido } from '@/lib/selecionarMidia';
 import { useLoteDraft, type EvidenciaDraft } from '@/lote/LoteDraftContext';
 import { LoteDraftFooter } from '@/lote/LoteDraftFooter';
 import { rotasAgricultor } from '@/routes';
-
-const ILUSTRACOES: FotoTipo[] = ['tomate', 'caixas'];
 
 /** 12 · Padrão do lote (2/3) — padrão, calibre, embalagem e evidências (até 100 fotos e 100 vídeos). */
 export default function PadraoLoteScreen() {
@@ -83,19 +80,18 @@ export default function PadraoLoteScreen() {
           Fotos {usados.fotos}/{LIMITES_MIDIA.fotos} · Vídeos {usados.videos}/{LIMITES_MIDIA.videos}
         </AppText>
         <View style={styles.thumbs}>
-          {draft.evidencias.map((e, i) => (
-            <MiniaturaEvidencia
+          {draft.evidencias.map((e) => (
+            <MiniaturaEvidenciaLote
               key={e.id}
-              uri={e.uri}
-              tipo={e.tipo}
-              ilustracao={ILUSTRACOES[i % ILUSTRACOES.length]}
-              onRemove={() => update({ evidencias: draft.evidencias.filter((x) => x.id !== e.id) })}
+              loteId={id}
+              evidencia={e}
+              remover={() => update({ evidencias: draft.evidencias.filter((x) => x.id !== e.id) })}
             />
           ))}
           <AddMediaButton onPress={() => setAdicionar(true)} />
         </View>
         <AppText variant="caption" color="textSecondary">
-          As evidências ficam disponíveis nesta sessão. O rascunho salva os dados do lote.
+          Ao salvar ou continuar, os arquivos são guardados neste dispositivo.
         </AppText>
       </View>
 

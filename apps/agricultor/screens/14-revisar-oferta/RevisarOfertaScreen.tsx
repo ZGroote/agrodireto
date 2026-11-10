@@ -45,6 +45,7 @@ export default function RevisarOfertaScreen() {
         <KeyValueRow label="Padrão" value={draft.padrao || EMPTY} />
         <KeyValueRow label="Calibre" value={draft.calibre || EMPTY} />
         <KeyValueRow label="Embalagem" value={draft.embalagem || EMPTY} />
+        <KeyValueRow label="Evidências anexadas" value={String(draft.evidencias.length)} />
         <KeyValueRow label="Condições" value={draft.condicoes || EMPTY} />
       </View>
     </Screen>
