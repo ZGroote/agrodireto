@@ -200,7 +200,7 @@ Etapa 0 iniciada em 10/11/2026. O estado de cada tarefa está na lista abaixo.
 
 - [ ] Concluída e verificada.
 
-**Progresso:** cadastro, listagem e edição de culturas locais com área em hectares. Catálogo do piloto, previsão real, mídia durável e sincronização seguem pendentes.
+**Progresso:** culturas locais com previsão de colheita por cultura. Estimativa em quilos inteiros, limites opcionais declarados e data no calendário. Catálogo do piloto, histórico com autoria, mídia durável e sincronização seguem pendentes.
 
 **Responsável:** Agricultor + backend. **Dependências:** C01, C04.
 

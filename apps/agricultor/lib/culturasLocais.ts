@@ -10,13 +10,45 @@ export type DadosCultura = {
   etapa: string;
 };
 
-export type CulturaLocal = DadosCultura & { id: string };
+export type PrevisaoLocal = {
+  estimativaKg: number;
+  colheita: string;
+  minimoKg?: number;
+  maximoKg?: number;
+};
+
+export type CulturaLocal = DadosCultura & { id: string; previsao?: PrevisaoLocal };
 const campos = ['id', 'cultura', 'variedade', 'area', 'plantio', 'etapa'] as const;
 
+export function lerDataColheita(texto: string): Date | null {
+  const partes = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(texto);
+  if (!partes) return null;
+  const [, dia, mes, ano] = partes;
+  const data = new Date(Number(ano), Number(mes) - 1, Number(dia));
+  if (data.getFullYear() !== Number(ano) || data.getMonth() !== Number(mes) - 1 || data.getDate() !== Number(dia)) {
+    return null;
+  }
+  return data;
+}
+
+function kgPositivo(valor: unknown): valor is number {
+  return typeof valor === 'number' && Number.isSafeInteger(valor) && valor > 0;
+}
+
+export function previsaoValida(valor: unknown): valor is PrevisaoLocal {
+  if (!valor || typeof valor !== 'object') return false;
+  const { estimativaKg, colheita, minimoKg, maximoKg } = valor as Record<string, unknown>;
+  if (!kgPositivo(estimativaKg) || typeof colheita !== 'string' || !lerDataColheita(colheita)) return false;
+  if (minimoKg === undefined && maximoKg === undefined) return true;
+  return kgPositivo(minimoKg) && kgPositivo(maximoKg) && minimoKg <= estimativaKg && estimativaKg <= maximoKg;
+}
+
 function culturaValida(valor: unknown): valor is CulturaLocal {
-  return !!valor && typeof valor === 'object' && campos.every(
+  if (!valor || typeof valor !== 'object' || !campos.every(
     (campo) => typeof Reflect.get(valor, campo) === 'string',
-  );
+  )) return false;
+  const previsao: unknown = Reflect.get(valor, 'previsao');
+  return previsao === undefined || previsaoValida(previsao);
 }
 
 export async function lerCulturas(): Promise<CulturaLocal[]> {
@@ -38,10 +70,19 @@ export function areaValida(area: string) {
 
 let gravacao = Promise.resolve();
 
-export function salvarCultura(dados: DadosCultura, id?: string): Promise<void> {
+function atualizarCulturas(alterar: (culturas: CulturaLocal[]) => void): Promise<void> {
   const operacao = gravacao.then(async () => {
-    if (!dados.cultura.trim() || !areaValida(dados.area)) throw new Error('Cultura e área são obrigatórias');
     const culturas = await lerCulturas();
+    alterar(culturas);
+    await AsyncStorage.setItem(chave, JSON.stringify(culturas));
+  });
+  gravacao = operacao.catch(() => {});
+  return operacao;
+}
+
+export function salvarCultura(dados: DadosCultura, id?: string): Promise<void> {
+  return atualizarCulturas((culturas) => {
+    if (!dados.cultura.trim() || !areaValida(dados.area)) throw new Error('Cultura e área são obrigatórias');
     const registro = {
       cultura: dados.cultura.trim(), variedade: dados.variedade.trim(),
       area: dados.area.trim(), plantio: dados.plantio, etapa: dados.etapa,
@@ -49,7 +90,7 @@ export function salvarCultura(dados: DadosCultura, id?: string): Promise<void> {
     if (id) {
       const indice = culturas.findIndex((cultura) => cultura.id === id);
       if (indice === -1) throw new Error('Cultura não encontrada');
-      culturas[indice] = { ...registro, id };
+      culturas[indice] = { ...culturas[indice], ...registro };
     } else {
       const base = Date.now().toString(36);
       let novoId = base;
@@ -60,8 +101,14 @@ export function salvarCultura(dados: DadosCultura, id?: string): Promise<void> {
       }
       culturas.push({ ...registro, id: novoId });
     }
-    await AsyncStorage.setItem(chave, JSON.stringify(culturas));
   });
-  gravacao = operacao.catch(() => {});
-  return operacao;
+}
+
+export function salvarPrevisao(id: string, previsao: PrevisaoLocal): Promise<void> {
+  return atualizarCulturas((culturas) => {
+    if (!previsaoValida(previsao)) throw new Error('Previsão inválida');
+    const cultura = culturas.find((item) => item.id === id);
+    if (!cultura) throw new Error('Cultura não encontrada');
+    cultura.previsao = previsao;
+  });
 }
