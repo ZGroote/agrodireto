@@ -32,6 +32,8 @@ export const rotasLogistica = {
 
   // Dentro da tab Perfil (mantém a tab bar)
   privacidade: '/perfil/privacidade',
+  empresas: '/perfil/empresas',
+  equipe: '/perfil/equipe',
 
   // Carga e viagem (sem tab bar)
   carga: (params: { id?: string } = {}): Href => ({ pathname: '/carga', params }),
@@ -79,4 +81,6 @@ export const telasLogistica: { numero: string; nome: string; href: Href }[] = [
   { numero: '22', nome: 'Configurações', href: rotasLogistica.perfil },
   { numero: '23', nome: 'Privacidade', href: rotasLogistica.privacidade },
   { numero: '24', nome: 'Sem conexão', href: rotasLogistica.semConexao },
+  { numero: '25', nome: 'Trocar empresa', href: rotasLogistica.empresas },
+  { numero: '26', nome: 'Equipe e permissões', href: rotasLogistica.equipe },
 ];
