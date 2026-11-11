@@ -35,7 +35,7 @@ begin
   perform public.incluir_membro('eec4d7f1-bd11-41c1-9087-000000000511',null);
   perform public.incluir_membro('eec4d7f1-bd11-41c1-9087-000000000511','');
   perform public.incluir_membro('eec4d7f1-bd11-41c1-9087-000000000511','identidade-titular@example.invalid');
-  if not agrodireto_privado.e_titular('eec4d7f1-bd11-41c1-9087-000000000511') then raise exception 'Repetição alterou titular'; end if;
+  if (select papel from public.listar_meus_vinculos() where organizacao_id = 'eec4d7f1-bd11-41c1-9087-000000000511') is distinct from 'titular' then raise exception 'Repetição alterou titular'; end if;
   perform public.incluir_membro('eec4d7f1-bd11-41c1-9087-000000000512','identidade-membro@example.invalid');
   perform public.incluir_membro('eec4d7f1-bd11-41c1-9087-000000000513','identidade-membro@example.invalid');
   perform public.incluir_membro('eec4d7f1-bd11-41c1-9087-000000000514','identidade-membro@example.invalid');

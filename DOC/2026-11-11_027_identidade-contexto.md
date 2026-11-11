@@ -64,3 +64,18 @@ Entrega somente da etapa 1; **B01 não está concluída**. Ainda faltam UI de in
 Conforme DOC 015 e aprovação do Maestro, esta entrega não abre lotes/evidências de terceiros para membros. Esses fluxos ainda usam `produtor_id`; a frente Oferta deve coordenar a passagem para permissões organizacionais antes de liberar gestão coletiva. Acesso aos cadastros/propriedades já permitido pela RLS existente não foi ampliado nesta migration.
 
 Sem alteração de esquema de `organizacoes`, `membros_organizacao` ou `equipe_agrodireto`; inclusão em `membros_organizacao` só pela RPC aprovada. Sem novas bibliotecas, convites, remoção de membros, transferência de titularidade ou promoção administrativa. `tasks/todo.md`, `memoria.md` e `DOC/README.md` permanecem sob responsabilidade do Maestro.
+
+## Inclusão só por e-mail; convite fica para depois (decisão do usuário, 11/11)
+
+O usuário confirmou: por enquanto o titular inclui membros só pelo e-mail, sem convite. Caminho para um convite futuro, sem refazer nada:
+
+- criar `public.convites_organizacao` (organizacao_id, email normalizado, papel `membro`, criado_por, criado_em, expira_em, aceito_em);
+- em `incluir_membro`, quando a conta não existir, gravar o convite em vez de não fazer nada; a resposta continua a mesma, para não revelar e-mails;
+- um RPC `aceitar_convite` (ou um gatilho no cadastro) cria o vínculo quando a conta com aquele e-mail entrar;
+- a assinatura de `incluir_membro(uuid, text)` não muda, então as telas da etapa 2 não precisam mudar.
+
+## Aplicação no agro (Maestro, 11/11)
+
+Ensaio com tudo entre `begin` e `rollback`, depois aplicação de `20261111100000` a `20261111150000` e da carga do catálogo `20261111160000`. Passaram no `agro`: `culturas`, `veiculos_motoristas`, `rascunhos_lote`, `papel_transportadora`, `identidade_contexto`, `transportadoras`, `compradores`, `propriedades`, `inspecoes_lote` e `midias_fila`.
+
+Dois testes chamavam funções de `agrodireto_privado` direto no papel `authenticated`, que não tem acesso ao schema privado (de propósito). Ajuste: `papel_transportadora.sql` confere `e_titular`/`e_membro` fora do papel `authenticated`, com os mesmos claims; `identidade_contexto.sql` confere o titular por `listar_meus_vinculos()`. A troca concorrente em duas conexões separadas ainda não foi testada.

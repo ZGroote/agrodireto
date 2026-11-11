@@ -54,6 +54,7 @@ Um arquivo por passo, em ordem. Nome: `AAAA-MM-DD_NNN_titulo-curto.md`.
 | 025 | 2026-11-11 | [Recuperar acesso e papel do titular na Logística (B04)](2026-11-11_025_sessao-logistica-papel.md) |
 | 026 | 2026-11-11 | [Recuperar acesso no Agricultor e no Cliente (B02/B03)](2026-11-11_026_recuperar-acesso-agricultor-cliente.md) |
 | 027 | 2026-11-11 | [Membros por e-mail e troca de contexto auditada (B01, etapa 1)](2026-11-11_027_identidade-contexto.md) |
+| 028 | 2026-11-11 | [Aplicação no agro e catálogo de culturas](2026-11-11_028_aplicacao-agro-catalogo.md) |
 
 ## Documentos de referência
 

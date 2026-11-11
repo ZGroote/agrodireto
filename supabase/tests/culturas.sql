@@ -21,7 +21,7 @@ declare
   cult uuid := current_setting('teste.cultura')::uuid;
   r public.culturas;
 begin
-  if (select count(*) from public.catalogo_culturas) <> 3 then raise exception 'Produtor não lê o catálogo'; end if;
+  if (select count(*) from public.catalogo_culturas where id::text like 'd0100000-%') <> 3 then raise exception 'Produtor não lê o catálogo'; end if;
   select * into r from public.culturas where id = cult;
   if r.variedade <> 'Italiano' or r.area_ha <> 2.5 or r.plantio <> '2026-10-01' or r.etapa <> 'Plantio'
      or r.criado_por <> auth.uid() or r.unidade is not null then raise exception 'Cultura não reabriu como foi cadastrada'; end if;

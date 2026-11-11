@@ -28,8 +28,9 @@ select public.revisar_cadastro_transportadora(current_setting('teste.org')::uuid
   (select enviada_em from public.cadastros_transportadora where organizacao_id = current_setting('teste.org')::uuid), 'Confira o telefone');
 select set_config('teste.enviada', (select enviada_em::text from public.cadastros_transportadora where organizacao_id = current_setting('teste.org')::uuid), true);
 
--- Helper genérico.
+-- Helper genérico (schema privado: conferido fora do papel authenticated, com os mesmos claims).
 select set_config('request.jwt.claims','{"sub":"eec4d7f1-bd11-41c1-9087-000000000321","aal":"aal1"}',true);
+reset role;
 do $$
 begin
  if not agrodireto_privado.e_titular(current_setting('teste.org')::uuid) then raise exception 'Titular não reconhecido'; end if;
@@ -39,9 +40,13 @@ end $$;
 -- Membro: grava frota, mas não reenvia o cadastro.
 select set_config('request.jwt.claims','{"sub":"eec4d7f1-bd11-41c1-9087-000000000322","aal":"aal1"}',true);
 do $$
+begin
+ if agrodireto_privado.e_titular(current_setting('teste.org')::uuid) or not agrodireto_privado.e_membro(current_setting('teste.org')::uuid) then raise exception 'Papel do membro errado'; end if;
+end $$;
+set local role authenticated;
+do $$
 declare org uuid := current_setting('teste.org')::uuid;
 begin
- if agrodireto_privado.e_titular(org) or not agrodireto_privado.e_membro(org) then raise exception 'Papel do membro errado'; end if;
  perform public.salvar_veiculo(null, org, 'ABC1D23','12345678901','bau',1000, current_date + 30);
  perform public.salvar_motorista(null, org, 'Ana Souza','52998224725','12345678901','C', current_date + 30, null);
  begin perform public.reenviar_cadastro_transportadora(org, current_setting('teste.enviada')::timestamptz,
