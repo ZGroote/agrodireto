@@ -61,7 +61,9 @@ Um arquivo por passo, em ordem. Nome: `AAAA-MM-DD_NNN_titulo-curto.md`.
 | 032 | 2026-11-11 | [Empresa em uso e equipe no Cliente (B01, etapa 2)](2026-11-11_032_b01-empresa-comprador.md) |
 | 033 | 2026-11-11 | [Empresa em uso e equipe na Logística (B01, etapa 2)](2026-11-11_033_b01-empresa-transportadora.md) |
 | 034 | 2026-11-11 | [Papéis da equipe administrativa no servidor (B05, etapa 1)](2026-11-11_034_b05-papeis-equipe.md) |
+| 035 | 2026-11-11 | [Mídia autorizada no catálogo: foto e vídeo (D08)](2026-11-11_035_d08-midia-autorizada.md) |
 | 036 | 2026-11-11 | [Telas do Administrador por papel da equipe (B05, etapa 2)](2026-11-11_036_b05-app-administrador.md) |
+| 037 | 2026-11-11 | [Rascunho de propriedade só apagado após envio confirmado (C01)](2026-11-11_037_c01-rascunho-migra-uma-vez.md) |
 
 ## Documentos de referência
 
