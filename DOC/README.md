@@ -47,6 +47,7 @@ Um arquivo por passo, em ordem. Nome: `AAAA-MM-DD_NNN_titulo-curto.md`.
 | 018 | 2026-11-11 | [Worker de mídia: gravação segura, sanitização obrigatória e fila recuperável (D04–D06)](2026-11-11_018_worker-gravacao-sanitizacao-fila.md) |
 | 019 | 2026-11-11 | [Logística: sessão (B04) e cadastro da transportadora (C03)](2026-11-11_019_logistica-b04-c03.md) |
 | 020 | 2026-11-11 | [Frentes paralelas no Maestri](2026-11-11_020_frentes-paralelas.md) |
+| 021 | 2026-11-11 | [Cultura e previsão básica no Supabase (D01)](2026-11-11_021_d01-cultura-previsao.md) |
 
 ## Documentos de referência
 

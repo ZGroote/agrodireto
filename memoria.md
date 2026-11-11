@@ -1,7 +1,15 @@
 # Memória — última ação
 
-Em 11/11/2026, o ramo `logistica/b04-c03` (sessão e cadastro da transportadora) foi juntado ao `main`, e as migrações `20261111087000_transportadoras.sql` e `20261111090000_midias_fila.sql` foram aplicadas no Supabase `agro` depois de um ensaio desfeito. Os testes de banco de transportadoras, mídias, compradores, propriedades e inspeções passaram no banco real; typecheck, lint e testes do projeto (18 + 43) também.
+Em 11/11/2026, à tarde, o trabalho foi dividido em três frentes paralelas no Maestri (regras em `DOC/2026-11-11_020_frentes-paralelas.md`). Cada frente tem um andar (worktree) com ramo próprio, criado a partir do `main`:
 
-Arquivos: `DOC/2026-11-11_019_logistica-b04-c03.md` (renumerado, com a aplicação), `DOC/2026-11-11_018_worker-gravacao-sanitizacao-fila.md` (aplicação), `DOC/README.md`, `tasks/todo.md` (B04, C03, D06) e este arquivo.
+| Agente | Conta | Ramo | Primeira tarefa |
+|---|---|---|---|
+| Oferta (Claude Code, effort medium) | jaogroote | `frente/oferta-midia` | D01 |
+| Logistica (Claude Code, effort medium; a conta Codex "trabalho" estava com menos de 5% do limite semanal) | Padrão (Claude) | `frente/logistica` | G03 |
+| Identidade (Codex, reasoning medium) | Padrão | `frente/identidade` | C04 |
 
-Status: todas as migrações do repositório estão aplicadas no `agro`. Nada foi ensaiado pelas telas com contas reais. Próximo passo: tela de aprovação da transportadora no Administrador (C04) e um dia de ensaio do cadastro ao catálogo antes da etapa 3 (cotação e pedido). Relatório de progresso: https://claude.ai/artifact/LhGBzmHWDjgnNk2PLrkPZ2.
+Os andares ficam em `../.maestri/floors/`. O Maestri copiou o `node_modules` sem as pastas `dist` (que estão no `.gitignore`), por isso cada andar foi reinstalado com `npm ci`. Os testes do worker passaram em todos (43/43).
+
+Arquivos: `DOC/2026-11-11_020_frentes-paralelas.md`, `DOC/README.md` e este arquivo.
+
+Status: D01 (Oferta) juntada no `main` (typecheck, lint e testes 18 + 43 passando); a migration `20261111100000_culturas.sql` ainda NÃO foi aplicada no `agro` e `supabase/tests/culturas.sql` nunca rodou. O catálogo de culturas está vazio até o usuário escolher as culturas do piloto. G03 (Logística) e C04 (Identidade) em andamento. Próximo passo: aplicar a migration e rodar o teste quando o usuário fizer login no Supabase.
