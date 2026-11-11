@@ -56,6 +56,8 @@ Autorizações estão em `DOC/2026-11-05_010_quatro-apps-e-agricultor-completo.m
 
 ## 3. Escopo proposto para o piloto
 
+> **Ampliado em 11/11/2026.** O recorte abaixo foi substituído pela [seção 12](#12-ampliação-do-piloto-11112026): quatro segmentos e os módulos escolhidos do Documento Mestre. A jornada mínima continua sendo a espinha do piloto.
+
 Usar uma região e 2–4 culturas, com produtores, compradores e transportadores selecionados e operação assistida. É a direção do PRD; região, culturas, participantes e volumes ainda precisam ser escolhidos.
 
 Jornada mínima:
@@ -182,4 +184,54 @@ Limites: não foram feitos build nativo, teste em aparelho, inspeção visual no
 Planejar por marcos e capacidade da equipe. Os prazos do PRD são estimativas originais, não uma estimativa validada a partir desta auditoria. O calendário depende de equipe, acesso ao Supabase, PSP, regras do piloto e homologação em aparelhos.
 
 Próxima fase recomendada: executar a Etapa 0 e preparar a primeira fatia de cadastro real. A aprovação do plano e das dependências dessa fase deve preceder a implementação, conforme o fluxo do projeto. O pedido atual de análise e planejamento está atendido.
+
+## 12. Ampliação do piloto (11/11/2026)
+
+**Status: proposta aguardando aprovação.** O usuário decidiu ampliar o piloto a partir do *Documento Mestre de Evolução e Expansão* (v1.1, 10/11/2026, feito no ChatGPT e ainda fora do repositório). O documento complementa o PRD sem substituí-lo, e as regras de preservação continuam valendo.
+
+### 12.1 Escopo escolhido
+
+| Item | Entra no piloto |
+|---|---|
+| Segmentos | Hortifrúti, grãos e commodities, pecuária e origem animal, agroindústria |
+| Comercial | Demandas do comprador com matching explicável, AgroDireto Pay com split, compras recorrentes |
+| Rastreabilidade e inteligência | QR de rastreabilidade, inteligência de mercado, indicadores de ODS, compras institucionais (PAA/PNAE e instituições) |
+| Base de dados | Organizações com membros e papéis; várias propriedades por organização; usuário em mais de uma organização |
+| **Fica fora** | Lotes coletivos (consolidação de vários produtores), logística colaborativa, roteirização sofisticada, IA de classificação, crédito e seguros |
+
+### 12.2 O que muda na base já construída
+
+- `propriedades` usa `usuario_id` como chave primária, o que limita a uma propriedade por usuário e não tem organização. Corrigir com **migration nova** (o projeto hospedado de integração já pode ter as anteriores aplicadas; não editar migrations antigas). A propriedade passa a ter id próprio e pertencer a uma organização. Isso precede tudo o que depende de comprador-empresa, papéis e demandas.
+- O cadastro de culturas e lotes foi feito para hortifrúti. Os segmentos entram por **configuração** (categorias, atributos, unidades, regras de qualidade, documentos e requisitos logísticos), sem formulário universal e sem um app por segmento.
+- A previsão de safra existente vira o estado **estimado** da disponibilidade. Previsão nunca conta como estoque.
+- O paywall/RevenueCat continua separado do pagamento do pedido. O AgroDireto Pay usa um PSP com split e não custodia valores.
+
+### 12.3 Ordem sugerida dentro do piloto
+
+As etapas 0–6 continuam. As tarefas novas entram nelas (ver [todo.md](todo.md)), e uma etapa nova, **5A — Inteligência e institucional**, vem antes da homologação.
+
+1. **Base multissetorial (etapas 1–2):** organizações e papéis, catálogo por segmento, documentos obrigatórios, estados de disponibilidade.
+2. **Transação (etapas 2–5):** demandas e matching, negociação e pedido, AgroDireto Pay, logística por segmento, QR.
+3. **Inteligência (etapa 5A):** recorrência, mercado, ODS e institucional, alimentados pelos eventos reais das etapas anteriores.
+
+Recomendação a confirmar com a operação: abrir o piloto em ondas, primeiro hortifrúti e grãos, depois pecuária/origem animal e agroindústria, que dependem de documentação sanitária e de inspeção ainda não definidas. A plataforma suporta os quatro desde o início; o que se escalona é a liberação a usuários reais.
+
+### 12.4 Decisões novas (somam-se à seção 4)
+
+| Decisão | Por que destrava trabalho | Momento |
+|---|---|---|
+| Atributos, unidades, padrões de qualidade e documentos obrigatórios de cada segmento | Sem isso o catálogo por segmento seria inventado | Antes de D09/D10 |
+| Documentação sanitária e transporte de animais e produtos de origem animal | Regras legais; não podem sair do código | Antes de liberar o segmento |
+| PSP com split para marketplace; comissão por segmento; quem paga tarifas | Define AgroDireto Pay e repasse | Antes de G01 |
+| Fontes de preço de referência e metodologia | Mercado só mostra dado com fonte, data e método | Antes de J01 |
+| Fórmula, fonte e período de cada indicador ODS; critério de pequeno produtor | Evita indicador sem base | Antes de J02 |
+| Quais programas e instituições entram (PAA, PNAE, outros) e quem valida a habilitação | O sistema organiza, não declara elegibilidade | Antes de J03 |
+| Política de dados públicos do QR | Nada pessoal ou comercial restrito vai a público | Antes de H05 |
+
+### 12.5 Riscos da ampliação
+
+- **Prazo:** o escopo passa de uma jornada para quatro segmentos e sete módulos. Os critérios da seção 10 continuam valendo para cada segmento liberado.
+- **Regulatório:** pecuária, origem animal, agroindústria, split e compras públicas dependem de regras externas. Validar com profissionais antes da operação; não presumir no código.
+- **Modelo de dados:** organização e segmento mexem em tabelas já criadas. Fazer antes de existir dado real.
+- **Dados de inteligência:** mercado e ODS só fazem sentido com volume real de operações. Antes disso, mostrar estado vazio, nunca estimativa apresentada como fato.
 
