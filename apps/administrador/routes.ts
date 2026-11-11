@@ -32,7 +32,7 @@ export const rotasAdministrador = {
   auditoria: '/perfil/auditoria',
 
   // Fluxos em tela cheia (sem tab bar)
-  analisarCadastro: (params: Id & { tipo?: 'comprador' } = {}): Href => ({ pathname: '/cadastro', params }),
+  analisarCadastro: (params: Id & { tipo?: 'comprador' | 'transportadora' } = {}): Href => ({ pathname: '/cadastro', params }),
   documentosMidias: (params: Id = {}): Href => ({ pathname: '/documentos', params }),
   revisaoLote: (params: Id = {}): Href => ({ pathname: '/lote', params }),
   rastreabilidade: (params: Id = {}): Href => ({ pathname: '/rastreabilidade', params }),
