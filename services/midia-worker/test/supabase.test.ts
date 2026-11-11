@@ -14,15 +14,21 @@ const trabalho = {
   nomeOriginal: 'foto.png',
 };
 
-async function comStorage(opcoes: { falharUpdate?: boolean; falharRemove?: boolean; perderReferencia?: boolean }, verificar: (
+type Opcoes = {
+  falharUpdate?: boolean; falharRemove?: boolean; perderReferencia?: boolean;
+  falharUpload?: boolean; falharDownload?: boolean; caminho?: string;
+};
+
+async function comStorage(opcoes: Opcoes, verificar: (
   eventos: string[], executar: () => ReturnType<typeof processarMidiaDoStorage>,
 ) => Promise<void>) {
+  const job = { ...trabalho, caminho: opcoes.caminho ?? trabalho.caminho };
   const imagem = await sharp({
     create: { width: 256, height: 256, channels: 3, background: '#56a52a' },
   }).png({ compressionLevel: 0 }).toBuffer();
   const eventos: string[] = [];
   let processamento = 'aguardando';
-  let arquivo = trabalho.caminho;
+  let arquivo = job.caminho;
 
   const servidor = createServer(async (req, res) => {
     const url = new URL(req.url ?? '/', 'http://localhost');
@@ -51,6 +57,7 @@ async function comStorage(opcoes: { falharUpdate?: boolean; falharRemove?: boole
 
     if (req.method === 'GET' && url.pathname.startsWith('/storage/v1/object/')) {
       eventos.push('download');
+      if (opcoes.falharDownload) return json(404, { message: 'objeto ausente' });
       res.writeHead(200, { 'content-type': 'image/png' });
       return res.end(imagem);
     }
@@ -58,11 +65,15 @@ async function comStorage(opcoes: { falharUpdate?: boolean; falharRemove?: boole
     if (req.method === 'POST' && url.pathname.startsWith('/storage/v1/object/')) {
       eventos.push(`upload:${req.headers['x-upsert']}:${url.pathname}`);
       for await (const parte of req) { void parte; }
+      if (opcoes.falharUpload) return json(500, { message: 'falha no envio' });
       return json(200, { Key: url.pathname });
     }
 
     if (req.method === 'DELETE' && url.pathname === '/storage/v1/object/midias') {
-      eventos.push('remove');
+      const partes: Uint8Array[] = [];
+      for await (const parte of req) partes.push(parte);
+      const { prefixes } = JSON.parse(Buffer.concat(partes).toString('utf8')) as { prefixes: string[] };
+      eventos.push(`remove:${prefixes.join(',')}`);
       if (opcoes.falharRemove) return json(500, { message: 'falha ao remover' });
       return json(200, [{ name: trabalho.caminho }]);
     }
@@ -77,7 +88,7 @@ async function comStorage(opcoes: { falharUpdate?: boolean; falharRemove?: boole
   process.env.SUPABASE_SERVICE_ROLE_KEY = 'chave-de-teste';
 
   try {
-    await verificar(eventos, () => processarMidiaDoStorage(trabalho));
+    await verificar(eventos, () => processarMidiaDoStorage(job));
   } finally {
     await new Promise<void>((resolve, reject) => {
       servidor.close((erro) => erro ? reject(erro) : resolve());
@@ -100,14 +111,42 @@ test('preserva o original se a atualização falhar ou se nenhuma linha for conf
     await comStorage(opcoes, async (eventos, executar) => {
       assert.equal((await executar()).status, 'falhou');
       assert.ok(eventos.includes('falhou'));
-      assert.ok(!eventos.includes('remove'));
+      // O original nunca é removido; o otimizado só sai quando nenhuma linha foi confirmada (sem ambiguidade).
+      assert.ok(!eventos.includes(`remove:${trabalho.caminho}`));
+      const otimizado = eventos.find((e) => e.startsWith('upload:'))?.split('/midias/')[1];
+      assert.equal(eventos.includes(`remove:${otimizado}`), !!opcoes.perderReferencia);
     });
   }
+});
+
+test('falha no download ou no envio registra a falha sem tocar no original', async () => {
+  for (const opcoes of [{ falharDownload: true }, { falharUpload: true }]) {
+    await comStorage(opcoes, async (eventos, executar) => {
+      const r = await executar();
+      assert.equal(r.status, 'falhou');
+      assert.ok(r.motivo);
+      assert.equal(eventos.at(-1), 'falhou');
+      assert.ok(!eventos.some((e) => e.startsWith('remove') || e === 'pronta'));
+    });
+  }
+});
+
+test('arquivos com o mesmo nome e extensões diferentes não colidem', async () => {
+  const destinos: string[] = [];
+  for (const caminho of ['propriedade/lote/foto.png', 'propriedade/lote/foto.jpg']) {
+    await comStorage({ caminho }, async (eventos, executar) => {
+      assert.equal((await executar()).status, 'pronta');
+      destinos.push(eventos.find((e) => e.startsWith('upload:')) ?? '');
+      assert.ok(eventos.includes(`remove:${caminho}`));
+    });
+  }
+  assert.equal(new Set(destinos).size, 2);
+  for (const destino of destinos) assert.doesNotMatch(destino, /\/foto\.(png|jpg|webp)$/);
 });
 
 test('falha na limpeza não desfaz o resultado gravado', async () => {
   await comStorage({ falharRemove: true }, async (eventos, executar) => {
     assert.equal((await executar()).status, 'pronta');
-    assert.deepEqual(eventos.slice(-2), ['pronta', 'remove']);
+    assert.deepEqual(eventos.slice(-2), ['pronta', `remove:${trabalho.caminho}`]);
   });
 });

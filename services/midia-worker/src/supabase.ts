@@ -35,6 +35,16 @@ function exigir(nome: string): string {
 /** Evita que um nome com "../" escape da pasta temporária. */
 const nomeSeguro = (nome: string) => basename(nome).replace(/[^\w.\-]+/g, '_') || 'arquivo';
 
+/** Limpeza opcional: uma falha aqui não desfaz o que já foi confirmado no banco. */
+async function removerSemFalhar(storage: { remove(caminhos: string[]): Promise<{ error: { message: string } | null }> }, caminho: string, midiaId: string) {
+  try {
+    const removido = await storage.remove([caminho]);
+    if (removido.error) throw new Error(removido.error.message);
+  } catch (erro) {
+    console.warn('Falha ao remover arquivo do Storage:', midiaId, caminho, erro);
+  }
+}
+
 /**
  * Baixa o original do Storage, otimiza, sobe o resultado e atualiza a linha em `midias`.
  * Com `apagarOriginalAposOtimizar`, o original é removido depois do sucesso, para não acumular volume.
@@ -94,15 +104,14 @@ export async function processarMidiaDoStorage(trabalho: TrabalhoMidia): Promise<
       .select('id')
       .maybeSingle();
     if (atualizado.error) throw new Error(atualizado.error.message);
-    if (!atualizado.data) throw new Error('A mídia mudou durante a otimização.');
+    if (!atualizado.data) {
+      // Resposta sem ambiguidade: nenhuma linha aponta para o arquivo novo, então ele é removido.
+      if (caminhoFinal !== trabalho.caminho) await removerSemFalhar(storage, caminhoFinal, trabalho.midiaId);
+      throw new Error('A mídia mudou durante a otimização.');
+    }
 
     if (config.apagarOriginalAposOtimizar && caminhoFinal !== trabalho.caminho) {
-      try {
-        const removido = await storage.remove([trabalho.caminho]);
-        if (removido.error) throw new Error(removido.error.message);
-      } catch (erro) {
-        console.warn('Otimização gravada. Falha ao remover original:', trabalho.midiaId, erro);
-      }
+      await removerSemFalhar(storage, trabalho.caminho, trabalho.midiaId);
     }
     return resultado;
   } catch (e) {
