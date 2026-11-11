@@ -9,7 +9,7 @@ create table public.rascunhos_lote (
   etapa text not null check (etapa in ('novo', 'padrao', 'preco', 'revisar')),
   quantidade numeric check (quantidade > 0 and quantidade <= 1000000000),
   unidade text not null check (unidade in ('kg', 'cx', 't')),
-  preco_centavos bigint check (preco_centavos between 1 and 100000000000),
+  preco_centavos bigint check (preco_centavos between 1 and 1000000000),
   padrao text not null default '' check (char_length(padrao) <= 120),
   calibre text not null default '' check (char_length(calibre) <= 120),
   embalagem text not null default '' check (char_length(embalagem) <= 120),
