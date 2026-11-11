@@ -37,6 +37,11 @@ export async function lerRascunhoPropriedade(): Promise<RascunhoPropriedade | nu
   return dados as RascunhoPropriedade;
 }
 
+/** Só depois de o servidor confirmar o envio (C01): o rascunho local não some antes disso. */
+export async function removerRascunhoPropriedade() {
+  return AsyncStorage.removeItem(await chaveDaConta());
+}
+
 export async function salvarRascunhoPropriedade(campos: RascunhoPropriedade) {
   return AsyncStorage.setItem(await chaveDaConta(), JSON.stringify(campos));
 }

@@ -4,8 +4,8 @@ import { Home, MapPin, Ruler, Sprout } from 'lucide-react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { AddMediaButton, AppText, Button, Foto, Screen, ScreenHeader, spacing, TextField } from '@agrodireto/ui';
 
-import { camposPropriedadeVazios, lerRascunhoPropriedade, salvarRascunhoPropriedade, type RascunhoPropriedade } from '@/lib/rascunhoPropriedade';
-import { enviarPropriedade, lerPropriedadeEnviada } from '@/lib/propriedadeRemota';
+import { camposPropriedadeVazios, salvarRascunhoPropriedade, type RascunhoPropriedade } from '@/lib/rascunhoPropriedade';
+import { enviarPropriedade, lerFormularioPropriedade } from '@/lib/propriedadeRemota';
 import { rotasAgricultor } from '@/routes';
 
 type Campo = keyof RascunhoPropriedade;
@@ -25,21 +25,14 @@ export default function EditarPropriedadeScreen() {
     let ativo = true;
     async function carregar() {
       try {
-        if (corrigir === '1') {
-          const enviada = await lerPropriedadeEnviada();
-          if (!ativo) return;
-          if (enviada?.status !== 'ajustes_solicitados') {
-            router.dismissTo(rotasAgricultor.propriedade);
-            return;
-          }
-          const { nome, cidade, uf, area, culturas, enviada_em } = enviada;
-          setCampos({ nome, cidade, uf, area: String(area), culturas });
-          setRevisao(enviada_em);
-        } else {
-          const rascunho = await lerRascunhoPropriedade();
-          if (!ativo) return;
-          if (rascunho) setCampos(rascunho);
+        const formulario = await lerFormularioPropriedade(corrigir === '1');
+        if (!ativo) return;
+        if (!formulario) {
+          router.dismissTo(rotasAgricultor.propriedade);
+          return;
         }
+        setCampos(formulario.campos);
+        setRevisao(formulario.revisao);
         setEstado('pronto');
       } catch {
         if (ativo) setEstado('erroLeitura');

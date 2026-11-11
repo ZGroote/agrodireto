@@ -43,6 +43,7 @@ function falso({ contexto = null, vinculos = [], propriedade = null, criada = 'o
   const organizacoes = carregar('../lib/organizacoes.ts', { './supabase': { supabase } });
   const remota = carregar('../lib/propriedadeRemota.ts', {
     '@agrodireto/dominio': { camposPropriedadeEnviada: 'id' }, './organizacoes': organizacoes, './supabase': { supabase },
+    './rascunhoPropriedade': { camposPropriedadeVazios: {}, lerRascunhoPropriedade: async () => null, removerRascunhoPropriedade: async () => undefined },
   });
   return { chamadas, organizacoes, remota };
 }

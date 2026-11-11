@@ -5,7 +5,7 @@ import { Camera, CircleCheck, ExternalLink, MapPin, Pencil, Ruler, Sprout } from
 import { AppText, Button, colors, Divider, Foto, ListRow, Screen, ScreenHeader, sizes, spacing } from '@agrodireto/ui';
 import type { PropriedadeEnviada } from '@agrodireto/dominio';
 import { mensagemEscolherOrganizacao } from '@/lib/organizacoes';
-import { enviarPropriedade, lerPropriedadeEnviada } from '@/lib/propriedadeRemota';
+import { enviarRascunhoPropriedade, lerPropriedadeEnviada } from '@/lib/propriedadeRemota';
 import { useRascunhoPropriedade } from '@/hooks/useRascunhoPropriedade';
 import { rotasAgricultor } from '@/routes';
 
@@ -38,7 +38,7 @@ export default function MinhaPropriedadeScreen() {
     setEnviando(true);
     setMensagem('');
     try {
-      await enviarPropriedade(leitura.rascunho);
+      await enviarRascunhoPropriedade(leitura.rascunho);
       const dados = await lerPropriedadeEnviada();
       if (!dados) throw new Error('Não foi possível confirmar o envio. Tente novamente.');
       setEnviada(dados);
