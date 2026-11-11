@@ -123,6 +123,8 @@ Etapa 0 iniciada em 10/11/2026. O estado de cada tarefa está na lista abaixo.
 
 - [ ] Concluída e verificada.
 
+**Progresso:** desde 11/11, criar conta, login e rotas protegidas no app Logística (DOC 019). Falta recuperar acesso, ensaio em aparelho e proteger ações por papel.
+
 **Responsável:** App Logística. **Dependências:** B01, B02.
 
 **Entrega e aceite:** Autenticar usuários operacionais e identificar transportadora/vínculo; proteger ações por papel.
@@ -176,6 +178,8 @@ Etapa 0 iniciada em 10/11/2026. O estado de cada tarefa está na lista abaixo.
 ### C03 — Persistir cadastro da transportadora
 
 - [ ] Concluída e verificada.
+
+**Progresso:** desde 11/11, cadastro da transportadora (CNPJ, regiões atendidas, tipos de carga) com envio, ajustes e revisão; migração aplicada e testada no Supabase `agro` (DOC 019). Falta a tela de aprovação no Administrador e o ensaio pelas telas.
 
 **Responsável:** Logística + backend. **Dependências:** B04.
 
@@ -279,6 +283,8 @@ Etapa 0 iniciada em 10/11/2026. O estado de cada tarefa está na lista abaixo.
 ### D06 — Tornar os jobs recuperáveis
 
 - [ ] Concluída e verificada.
+
+**Progresso:** desde 11/11, fila de mídias no banco com retomada, cerca de tentativa e limite de 3 tentativas; worker com 43 testes e migração aplicada e testada no Supabase `agro` (DOC 018). Falta o worker rodar contra o hospedado e o reprocessamento pela equipe.
 
 **Responsável:** Worker + backend. **Dependências:** D03, D04.
 

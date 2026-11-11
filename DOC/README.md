@@ -45,6 +45,7 @@ Um arquivo por passo, em ordem. Nome: `AAAA-MM-DD_NNN_titulo-curto.md`.
 | 016 | 2026-11-11 | [Pesquisa das decisões do piloto ampliado](2026-11-11_016_pesquisa-decisoes-piloto-ampliado.md) |
 | 017 | 2026-11-11 | [Empresa compradora](2026-11-11_017_empresa-compradora.md) |
 | 018 | 2026-11-11 | [Worker de mídia: gravação segura, sanitização obrigatória e fila recuperável (D04–D06)](2026-11-11_018_worker-gravacao-sanitizacao-fila.md) |
+| 019 | 2026-11-11 | [Logística: sessão (B04) e cadastro da transportadora (C03)](2026-11-11_019_logistica-b04-c03.md) |
 
 ## Documentos de referência
 

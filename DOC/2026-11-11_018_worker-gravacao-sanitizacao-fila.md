@@ -68,3 +68,7 @@ Ramo `worker/d04-d06-recuperavel`, em worktree próprio, sem push.
 - D08: leitura do comprador só de `processamento = 'pronta'`, usando `arquivo_publicado`.
 - Reprocessar pela equipe: voltar a linha para `aguardando` e zerar as tentativas.
 - Homologar no Supabase hospedado.
+
+## Aplicação no banco
+
+Em 11/11, `20261111090000_midias_fila.sql` foi aplicada no Supabase `agro` pelo SQL Editor, depois de um ensaio desfeito. `supabase/tests/midias_fila.sql` passou no banco real. O worker ainda não roda contra o hospedado.
