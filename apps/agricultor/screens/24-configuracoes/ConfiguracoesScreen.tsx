@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'expo-router';
-import { Bell, Camera, CircleHelp, Cloud, FileText, Landmark, LogOut, RefreshCw, ShieldAlert, ShieldCheck, User } from 'lucide-react-native';
+import { Bell, Building2, Camera, CircleHelp, Cloud, FileText, Landmark, LogOut, RefreshCw, ShieldAlert, ShieldCheck, User } from 'lucide-react-native';
 import { AppText, Button, Card, colors, Divider, ListRow, Screen, ScreenHeader, sizes, spacing } from '@agrodireto/ui';
 import { useAgricultor, useSincronizacao } from '@/hooks/dados';
 import { rotasAgricultor } from '@/routes';
@@ -35,6 +35,11 @@ export default function ConfiguracoesScreen() {
           }
           onPress={() => router.push(rotasAgricultor.propriedade)}
         />
+      </Card>
+
+      {/* Não está no mockup: escolha da organização e membros (B01). */}
+      <Card>
+        <ListRow icon={Building2} title="Organização" onPress={() => router.push(rotasAgricultor.organizacao)} />
       </Card>
 
       <View>

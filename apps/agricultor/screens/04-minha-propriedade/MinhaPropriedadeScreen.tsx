@@ -4,6 +4,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { Camera, CircleCheck, ExternalLink, MapPin, Pencil, Ruler, Sprout } from 'lucide-react-native';
 import { AppText, Button, colors, Divider, Foto, ListRow, Screen, ScreenHeader, sizes, spacing } from '@agrodireto/ui';
 import type { PropriedadeEnviada } from '@agrodireto/dominio';
+import { mensagemEscolherOrganizacao } from '@/lib/organizacoes';
 import { enviarPropriedade, lerPropriedadeEnviada } from '@/lib/propriedadeRemota';
 import { useRascunhoPropriedade } from '@/hooks/useRascunhoPropriedade';
 import { rotasAgricultor } from '@/routes';
@@ -24,7 +25,10 @@ export default function MinhaPropriedadeScreen() {
     setMensagem('');
     void lerPropriedadeEnviada().then(
       (dados) => { if (ativo) { setEnviada(dados); setConsultando(false); } },
-      () => { if (ativo) setMensagem('Não foi possível consultar a propriedade. Abra a tela novamente para tentar.'); },
+      (erro) => {
+        if (ativo) setMensagem(erro instanceof Error && erro.message === mensagemEscolherOrganizacao
+          ? erro.message : 'Não foi possível consultar a propriedade. Abra a tela novamente para tentar.');
+      },
     );
     return () => { ativo = false; };
   }, []));

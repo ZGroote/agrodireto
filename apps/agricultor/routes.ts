@@ -34,6 +34,7 @@ export const rotasAgricultor = {
   privacidade: '/perfil/privacidade',
   seguranca: '/perfil/seguranca',
   ajuda: '/perfil/ajuda',
+  organizacao: '/perfil/organizacao',
 
   // Cadastro e propriedade (tela cheia)
   cadastro: '/cadastro',
@@ -72,7 +73,7 @@ export const rotasAgricultor = {
   ocorrencia: (params: { pedido?: string } = {}): Href => ({ pathname: '/transporte/ocorrencia', params }),
 } as const;
 
-/** Catálogo das telas — mockup 1-agricultor.jpeg (01–24) e telas criadas além do mockup (25–45). */
+/** Catálogo das telas — mockup 1-agricultor.jpeg (01–24) e telas criadas além do mockup (25–46). */
 export const telasAgricultor: { numero: string; nome: string; href: Href }[] = [
   { numero: '00a', nome: 'Onboarding', href: rotasAgricultor.onboarding },
   { numero: '00b', nome: 'Paywall', href: rotasAgricultor.paywall },
@@ -119,4 +120,5 @@ export const telasAgricultor: { numero: string; nome: string; href: Href }[] = [
   { numero: '43', nome: 'Termos de Uso', href: rotasAgricultor.termos },
   { numero: '44', nome: 'Política de Privacidade', href: rotasAgricultor.politica },
   { numero: '45', nome: 'Perfil público', href: rotasAgricultor.perfilPublico },
+  { numero: '46', nome: 'Organização', href: rotasAgricultor.organizacao },
 ];

@@ -3,7 +3,8 @@ update agrodireto_privado.seguranca_equipe set exige_mfa = true where unica;
 insert into auth.users (id, aud, role, email) values
 ('eec4d7f1-bd11-41c1-9087-000000000001','authenticated','authenticated','agrodireto-rls-a@example.invalid'),
 ('eec4d7f1-bd11-41c1-9087-000000000002','authenticated','authenticated','agrodireto-rls-b@example.invalid'),
-('eec4d7f1-bd11-41c1-9087-000000000003','authenticated','authenticated','agrodireto-rls-admin@example.invalid');
+('eec4d7f1-bd11-41c1-9087-000000000003','authenticated','authenticated','agrodireto-rls-admin@example.invalid'),
+('eec4d7f1-bd11-41c1-9087-000000000004','authenticated','authenticated','agrodireto-rls-c@example.invalid');
 insert into public.equipe_agrodireto values ('eec4d7f1-bd11-41c1-9087-000000000003');
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"eec4d7f1-bd11-41c1-9087-000000000001","aal":"aal1"}',true);
@@ -21,6 +22,29 @@ begin
  begin insert into public.equipe_agrodireto values (auth.uid()); raise exception 'Autopromoção permitida'; exception when insufficient_privilege then null; end;
  begin insert into public.membros_organizacao (organizacao_id, usuario_id) select organizacao_id, 'eec4d7f1-bd11-41c1-9087-000000000002' from public.propriedades limit 1; raise exception 'Membro incluído pelo app'; exception when insufficient_privilege then null; end;
 end $$;
+-- Envio na organização escolhida (p_organizacao).
+select set_config('teste.org', (select organizacao_id::text from public.propriedades where id = current_setting('teste.prop')::uuid), true);
+select public.incluir_membro(current_setting('teste.org')::uuid, ' AGRODIRETO-RLS-C@example.invalid ');
+do $$
+declare org uuid := current_setting('teste.org')::uuid;
+begin
+ if (select organizacao_id from public.propriedades where id = public.enviar_propriedade('Terceira área','Cidade teste','SP',1,'Milho', org)) <> org then raise exception 'Titular não gravou na organização escolhida'; end if;
+ begin perform public.enviar_propriedade('Inexistente','Cidade','SP',1,'Milho', gen_random_uuid()); raise exception 'Gravou em organização inexistente'; exception when insufficient_privilege then null; end;
+end $$;
+select set_config('request.jwt.claims','{"sub":"eec4d7f1-bd11-41c1-9087-000000000004","aal":"aal1"}',true);
+do $$
+declare org uuid := current_setting('teste.org')::uuid; propria uuid;
+begin
+ if (select organizacao_id from public.propriedades where id = public.enviar_propriedade('Área do membro','Cidade teste','SP',1,'Milho', org)) <> org then raise exception 'Membro não gravou na organização escolhida'; end if;
+ if (select count(*) from public.listar_meus_vinculos()) <> 1 then raise exception 'Envio com organização criou outra organização'; end if;
+ select organizacao_id into propria from public.propriedades where id = public.enviar_propriedade('Sítio próprio','Cidade teste','SP',1,'Milho');
+ if propria = org or (select papel from public.listar_meus_vinculos() where organizacao_id = propria) <> 'titular' then raise exception 'Envio sem organização mudou de comportamento'; end if;
+end $$;
+select set_config('request.jwt.claims','{"sub":"eec4d7f1-bd11-41c1-9087-000000000001","aal":"aal1"}',true);
+do $$
+begin
+ if (select count(*) from public.propriedades) <> 4 then raise exception 'Propriedades da organização fora do esperado'; end if;
+end $$;
 select set_config('request.jwt.claims','{"sub":"eec4d7f1-bd11-41c1-9087-000000000002","aal":"aal2"}',true);
 do $$
 declare prop uuid := current_setting('teste.prop')::uuid;
@@ -28,6 +52,7 @@ begin
  if (select count(*) from public.propriedades) <> 0 or (select count(*) from public.organizacoes) <> 0 or (select count(*) from public.membros_organizacao) <> 0 then raise exception 'Acesso cruzado permitido'; end if;
  begin perform public.aprovar_propriedade(prop); raise exception 'Usuário comum aprovou'; exception when insufficient_privilege then null; end;
  begin perform public.reenviar_propriedade(prop, now(), 'Invasão','Cidade','SP',1,'Milho'); raise exception 'Outra organização reenviou'; exception when sqlstate 'PT409' then null; end;
+ begin perform public.enviar_propriedade('Invasão','Cidade','SP',1,'Milho', current_setting('teste.org')::uuid); raise exception 'Terceiro gravou em organização alheia'; exception when insufficient_privilege then null; end;
  begin perform public.enviar_propriedade('Teste','Cidade','XX',-1,'Tomate'); raise exception 'Dados inválidos aceitos'; exception when check_violation then null; end;
 end $$;
 select set_config('request.jwt.claims','{"sub":"eec4d7f1-bd11-41c1-9087-000000000003","aal":"aal1"}',true);
@@ -73,7 +98,7 @@ do $$
 begin
  if has_table_privilege('anon','public.propriedades','select') or has_table_privilege('anon','public.organizacoes','select')
     or has_table_privilege('anon','public.membros_organizacao','select')
-    or has_function_privilege('anon','public.enviar_propriedade(text,text,text,numeric,text)','execute') then raise exception 'Acesso anônimo permitido'; end if;
+    or has_function_privilege('anon','public.enviar_propriedade(text,text,text,numeric,text,uuid)','execute') then raise exception 'Acesso anônimo permitido'; end if;
 end $$;
 rollback;
 select 'Organizações, várias propriedades, RLS, MFA, idempotência, auditoria e validação OK; dados de teste revertidos' as resultado;
