@@ -38,10 +38,18 @@ function dataISO(data: Date) {
   return [data.getFullYear(), String(data.getMonth() + 1).padStart(2, '0'), String(data.getDate()).padStart(2, '0')].join('-');
 }
 
+/** E00 (DOC 042): 'inspecao_obrigatoria' só aparece no catálogo após inspeção aprovada. */
+export type VerificacaoLote = 'declarado' | 'inspecao_obrigatoria';
+export const avisoVerificacao: Record<VerificacaoLote, string> = {
+  inspecao_obrigatoria: 'Este lote precisa de inspeção da equipe AgroDireto antes de aparecer no catálogo (1º lote, valor acima de R$ 20.000 ou pecuária).',
+  declarado: 'Publicado como "Declarado pelo produtor": o checklist do lote é o que você informou.',
+};
+
 export async function lerPublicacao(rascunho: string) {
   if (!supabase) throw new Error();
   const { data, error } = await supabase.from('ofertas_lote')
-    .select('id,retirada_em').eq('rascunho_id', rascunho).maybeSingle<{ id: string; retirada_em: string | null }>();
+    .select('id,retirada_em,verificacao').eq('rascunho_id', rascunho)
+    .maybeSingle<{ id: string; retirada_em: string | null; verificacao: VerificacaoLote }>();
   if (error) throw error;
   return data;
 }
