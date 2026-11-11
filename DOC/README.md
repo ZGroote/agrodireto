@@ -57,8 +57,10 @@ Um arquivo por passo, em ordem. Nome: `AAAA-MM-DD_NNN_titulo-curto.md`.
 | 028 | 2026-11-11 | [Aplicação no agro e catálogo de culturas](2026-11-11_028_aplicacao-agro-catalogo.md) |
 | 029 | 2026-11-11 | [Armazenamento privado de mídia (D03)](2026-11-11_029_d03-midia-privada.md) |
 | 030 | 2026-11-11 | [Organização escolhida no Agricultor (B01, etapa 2)](2026-11-11_030_b01-organizacao-produtor.md) |
+| 031 | 2026-11-11 | [Envio persistente de mídia da propriedade (D07)](2026-11-11_031_d07-upload-persistente.md) |
 | 032 | 2026-11-11 | [Empresa em uso e equipe no Cliente (B01, etapa 2)](2026-11-11_032_b01-empresa-comprador.md) |
 | 033 | 2026-11-11 | [Empresa em uso e equipe na Logística (B01, etapa 2)](2026-11-11_033_b01-empresa-transportadora.md) |
+| 034 | 2026-11-11 | [Papéis da equipe administrativa no servidor (B05, etapa 1)](2026-11-11_034_b05-papeis-equipe.md) |
 
 ## Documentos de referência
 
