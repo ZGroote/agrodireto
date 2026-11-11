@@ -1,5 +1,6 @@
 import { StyleSheet, View } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useCallback, useState } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import {
   ArrowLeftRight,
@@ -14,11 +15,23 @@ import {
   Users,
 } from 'lucide-react-native';
 import { AppText, Card, colors, Divider, EMPTY, ListRow, Screen, ScreenHeader, sizes, spacing } from '@agrodireto/ui';
+import { contextoAtual, listarVinculos, type Vinculo } from '@/lib/organizacoes';
 import { rotasCliente } from '../../routes';
 
 /** 24 · Configurações (tab Perfil) — empresa, equipe e preferências. */
 export default function ConfiguracoesScreen() {
   const router = useRouter();
+  const [empresa, setEmpresa] = useState<Vinculo | null>(null);
+
+  // Cabeçalho mostra a empresa em uso (B01); sem escolha ou com falha, fica vazio.
+  useFocusEffect(useCallback(() => {
+    let ativo = true;
+    void Promise.all([listarVinculos(), contextoAtual()]).then(
+      ([lista, contexto]) => { if (ativo) setEmpresa(lista.find((v) => v.organizacao_id === contexto) ?? null); },
+      () => { if (ativo) setEmpresa(null); },
+    );
+    return () => { ativo = false; };
+  }, []));
 
   return (
     <Screen withTabBar header={<ScreenHeader title="Configurações" />}>
@@ -27,18 +40,18 @@ export default function ConfiguracoesScreen() {
           <Building2 size={sizes.iconMd} color={colors.primary} />
         </View>
         <View>
-          <AppText variant="heading">{EMPTY}</AppText>
+          <AppText variant="heading">{empresa?.nome ?? EMPTY}</AppText>
           <AppText variant="caption" color="textSecondary">
-            {EMPTY}
+            {empresa ? (empresa.papel === 'titular' ? 'Titular' : 'Membro') : EMPTY}
           </AppText>
         </View>
       </View>
 
-      {/* Sub-telas sem mockup (Equipe, Trocar empresa, Notificações, Privacidade, Segurança, Região, Ajuda) — fases seguintes. */}
+      {/* Sub-telas sem mockup (Notificações, Privacidade, Segurança, Região, Ajuda) — fases seguintes. Equipe e Trocar empresa: 29 e 28. */}
       <Card>
-        <ListRow icon={Users} title="Equipe e permissões" chevron />
+        <ListRow icon={Users} title="Equipe e permissões" onPress={() => router.push(rotasCliente.equipe)} />
         <Divider />
-        <ListRow icon={ArrowLeftRight} title="Trocar empresa" chevron />
+        <ListRow icon={ArrowLeftRight} title="Trocar empresa" onPress={() => router.push(rotasCliente.empresas)} />
         <Divider />
         <ListRow icon={Bell} title="Notificações" chevron />
         <Divider />
