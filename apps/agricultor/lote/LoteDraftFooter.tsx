@@ -11,7 +11,7 @@ export function LoteDraftFooter({ etapa, proxima, label = 'Continuar', disabled 
   disabled?: boolean;
 }) {
   const router = useRouter();
-  const { id, salvar, operacao } = useLoteDraft();
+  const { id, salvar, tentarEnviar, operacao, mensagem } = useLoteDraft();
   const gravando = operacao === 'gravando';
 
   async function salvarEAvancar() {
@@ -20,8 +20,12 @@ export function LoteDraftFooter({ etapa, proxima, label = 'Continuar', disabled 
 
   return (
     <>
-      {operacao === 'salvo' && <AppText variant="caption" accessibilityLiveRegion="polite">Rascunho salvo no dispositivo.</AppText>}
-      {operacao === 'erro' && <AppText variant="caption" accessibilityLiveRegion="polite">Não foi possível gravar a alteração. Tente novamente.</AppText>}
+      {operacao === 'salvo' && <AppText variant="caption" accessibilityLiveRegion="polite">Rascunho salvo no servidor. Salvar não publica o lote.</AppText>}
+      {operacao === 'pendente' && <>
+        <AppText variant="caption" accessibilityLiveRegion="polite">Rascunho salvo no dispositivo · envio pendente. {mensagem}</AppText>
+        <Button label="Tentar enviar novamente" variant="secondary" onPress={() => void tentarEnviar()} />
+      </>}
+      {operacao === 'erro' && <AppText variant="caption" accessibilityLiveRegion="polite">{mensagem} Tente novamente.</AppText>}
       {proxima && <Button label={label} disabled={disabled || gravando} onPress={() => void salvarEAvancar()} />}
       <Button
         label="Salvar rascunho"
