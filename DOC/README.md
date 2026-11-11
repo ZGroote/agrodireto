@@ -67,6 +67,9 @@ Um arquivo por passo, em ordem. Nome: `AAAA-MM-DD_NNN_titulo-curto.md`.
 | 038 | 2026-11-11 | [Proposta: campos e documentos por segmento (D09/D10)](2026-11-11_038_proposta-d09-campos-por-segmento.md) |
 | 039 | 2026-11-11 | [Proposta: recorte do piloto (A01)](2026-11-11_039_proposta-a01-recorte-piloto.md) |
 | 040 | 2026-11-11 | [Decisões do piloto aprovadas (A01, D09, D10)](2026-11-11_040_decisoes-piloto-aprovadas.md) |
+| 041 | 2026-11-11 | [Atributos por segmento e saca de 60 kg (D09, onda 1)](2026-11-11_041_d09-atributos-segmento.md) |
+| 042 | 2026-11-11 | [Inspeção obrigatória antes do catálogo (E00)](2026-11-11_042_e00-inspecao-obrigatoria.md) |
+| 044 | 2026-11-11 | [Solicitar cotação (F01)](2026-11-11_044_f01-cotacao-real.md) |
 
 ## Documentos de referência
 
