@@ -2,7 +2,7 @@ import { StyleSheet, View } from 'react-native';
 import { useCallback, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { AppText, Button, Card, EMPTY, KeyValueRow, Screen, ScreenHeader, spacing } from '@agrodireto/ui';
-import { lerPublicacao, publicarOferta, retirarOferta } from '@/lib/ofertas';
+import { avisoVerificacao, lerPublicacao, publicarOferta, retirarOferta } from '@/lib/ofertas';
 import { useLoteDraft } from '@/lote/LoteDraftContext';
 import { LoteDraftFooter } from '@/lote/LoteDraftFooter';
 import { rotasAgricultor } from '@/routes';
@@ -82,6 +82,7 @@ export default function RevisarOfertaScreen() {
       {publicacao && (
         <>
           <AppText>{publicacao.retirada_em ? 'Oferta retirada' : 'Lote publicado em homologação'}</AppText>
+          {!publicacao.retirada_em && <AppText variant="caption" color="textSecondary">{avisoVerificacao[publicacao.verificacao]}</AppText>}
           <Button label="Abrir evidências do lote" variant="secondary" disabled={ocupado}
             onPress={() => router.push(rotasAgricultor.detalheLote({ id: publicacao.id }))} />
         </>
