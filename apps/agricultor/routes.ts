@@ -12,7 +12,6 @@ export const rotasAgricultor = {
   entrar: '/entrar',
   criarConta: '/criar-conta',
   recuperarAcesso: '/recuperar-acesso',
-  verificarCodigo: '/verificar-codigo',
   termos: '/termos-de-uso',
   politica: '/politica-de-privacidade',
 
@@ -120,5 +119,4 @@ export const telasAgricultor: { numero: string; nome: string; href: Href }[] = [
   { numero: '43', nome: 'Termos de Uso', href: rotasAgricultor.termos },
   { numero: '44', nome: 'Política de Privacidade', href: rotasAgricultor.politica },
   { numero: '45', nome: 'Perfil público', href: rotasAgricultor.perfilPublico },
-  { numero: '46', nome: 'Verificar código', href: rotasAgricultor.verificarCodigo },
 ];

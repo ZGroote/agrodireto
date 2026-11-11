@@ -8,7 +8,7 @@ Login por código no telefone.
 
 ## Conexões
 - **Chega de:** 00b Paywall
-- **Vai para:** 46 Verificar código · 02 Criar conta · 42 Recuperar acesso
+- **Vai para:** 02 Criar conta · 42 Recuperar acesso (Esqueci minha senha)
 
 ## Dados
 Lidos por `hooks/dados.ts` (useAgricultor (telefone)). Hoje vêm de dados-demo (fictício).
