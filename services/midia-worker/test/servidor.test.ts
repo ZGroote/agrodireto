@@ -45,13 +45,12 @@ describe('servidor do worker', () => {
     assert.equal((await post(corpo, 'errado')).status, 401);
   });
 
-  it('o webhook recusa corpo inválido (400)', async () => {
-    assert.equal((await post({ midiaId: 'x' }, 'segredo-de-teste')).status, 400);
+  it('o webhook recusa corpo que não é objeto JSON (400)', async () => {
     assert.equal((await post('texto', 'segredo-de-teste')).status, 400);
   });
 
-  it('o webhook aceita um pedido válido e responde 202 sem esperar o processamento', async () => {
-    const r = await post({ midiaId: 'x', bucket: 'midias', caminho: 'a/b.jpg', nomeOriginal: 'b.jpg' }, 'segredo-de-teste');
+  it('o webhook só acorda a fila do banco e responde 202 sem esperar o processamento', async () => {
+    const r = await post({ type: 'INSERT', table: 'midias' }, 'segredo-de-teste');
     assert.equal(r.status, 202);
   });
 

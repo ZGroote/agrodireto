@@ -1,131 +1,66 @@
 import assert from 'node:assert/strict';
-import { createServer } from 'node:http';
-import { once } from 'node:events';
 import { test } from 'node:test';
-import sharp from 'sharp';
+import type { Executor } from '../src/video.ts';
+import { iniciarSupabaseSimulado, type Falhas } from './supabaseSimulado.ts';
 
 process.env.APAGAR_ORIGINAL_APOS_OTIMIZAR = 'true';
-const { processarMidiaDoStorage } = await import('../src/supabase.ts');
+// Prazo curto (3 s) para o teste de trabalho travado.
+process.env.PRAZO_TRABALHO_MIN = '0.05';
+const { assumirProximaMidia, processarMidiaDoStorage } = await import('../src/supabase.ts');
 
-const trabalho = {
-  midiaId: 'midia-teste',
-  bucket: 'midias',
-  caminho: 'propriedade/lote/foto.png',
-  nomeOriginal: 'foto.png',
-};
+const ORIGINAL = 'propriedade/lote/foto.png';
 
-type Opcoes = {
-  falharUpdate?: boolean; falharRemove?: boolean; perderReferencia?: boolean;
-  falharUpload?: boolean; falharDownload?: boolean; caminho?: string;
-};
-
-async function comStorage(opcoes: Opcoes, verificar: (
-  eventos: string[], executar: () => ReturnType<typeof processarMidiaDoStorage>,
-) => Promise<void>) {
-  const job = { ...trabalho, caminho: opcoes.caminho ?? trabalho.caminho };
-  const imagem = await sharp({
-    create: { width: 256, height: 256, channels: 3, background: '#56a52a' },
-  }).png({ compressionLevel: 0 }).toBuffer();
-  const eventos: string[] = [];
-  let processamento = 'aguardando';
-  let arquivo = job.caminho;
-
-  const servidor = createServer(async (req, res) => {
-    const url = new URL(req.url ?? '/', 'http://localhost');
-    function json(status: number, dados: unknown) {
-      res.writeHead(status, { 'content-type': 'application/json' });
-      res.end(JSON.stringify(dados));
-    }
-
-    if (req.method === 'PATCH' && url.pathname === '/rest/v1/midias') {
-      const partes: Uint8Array[] = [];
-      for await (const parte of req) partes.push(parte);
-      const dados = JSON.parse(Buffer.concat(partes).toString('utf8')) as { processamento: string; arquivo?: string };
-      const esperado = url.searchParams.get('processamento');
-      const corresponde = url.searchParams.get('id') === 'eq.midia-teste'
-        && url.searchParams.get('arquivo') === `eq.${arquivo}`
-        && (esperado === `eq.${processamento}`
-          || (esperado === 'in.(aguardando,falhou)' && ['aguardando', 'falhou'].includes(processamento)));
-      if (!corresponde) return json(200, []);
-      eventos.push(dados.processamento);
-      if (dados.processamento === 'pronta' && opcoes.falharUpdate) return json(500, { message: 'falha na gravação' });
-      if (dados.processamento === 'pronta' && opcoes.perderReferencia) return json(200, []);
-      processamento = dados.processamento;
-      arquivo = dados.arquivo ?? arquivo;
-      return json(200, [{ id: trabalho.midiaId }]);
-    }
-
-    if (req.method === 'GET' && url.pathname.startsWith('/storage/v1/object/')) {
-      eventos.push('download');
-      if (opcoes.falharDownload) return json(404, { message: 'objeto ausente' });
-      res.writeHead(200, { 'content-type': 'image/png' });
-      return res.end(imagem);
-    }
-
-    if (req.method === 'POST' && url.pathname.startsWith('/storage/v1/object/')) {
-      eventos.push(`upload:${req.headers['x-upsert']}:${url.pathname}`);
-      for await (const parte of req) { void parte; }
-      if (opcoes.falharUpload) return json(500, { message: 'falha no envio' });
-      return json(200, { Key: url.pathname });
-    }
-
-    if (req.method === 'DELETE' && url.pathname === '/storage/v1/object/midias') {
-      const partes: Uint8Array[] = [];
-      for await (const parte of req) partes.push(parte);
-      const { prefixes } = JSON.parse(Buffer.concat(partes).toString('utf8')) as { prefixes: string[] };
-      eventos.push(`remove:${prefixes.join(',')}`);
-      if (opcoes.falharRemove) return json(500, { message: 'falha ao remover' });
-      return json(200, [{ name: trabalho.caminho }]);
-    }
-
-    json(404, { message: 'rota inesperada' });
-  });
-  servidor.listen(0, '127.0.0.1');
-  await once(servidor, 'listening');
-  const endereco = servidor.address();
-  assert.ok(endereco && typeof endereco !== 'string');
-  process.env.SUPABASE_URL = `http://127.0.0.1:${endereco.port}`;
+async function comSupabase(falhas: Falhas, verificar: (simulado: Awaited<ReturnType<typeof iniciarSupabaseSimulado>>) => Promise<void>, caminho = ORIGINAL) {
+  const simulado = await iniciarSupabaseSimulado(caminho, falhas);
+  process.env.SUPABASE_URL = simulado.url;
   process.env.SUPABASE_SERVICE_ROLE_KEY = 'chave-de-teste';
-
   try {
-    await verificar(eventos, () => processarMidiaDoStorage(job));
+    await verificar(simulado);
   } finally {
-    await new Promise<void>((resolve, reject) => {
-      servidor.close((erro) => erro ? reject(erro) : resolve());
-    });
+    await simulado.fechar();
   }
 }
 
-test('confirma a referência antes da remoção e ignora reentrega do mesmo trabalho', async () => {
-  await comStorage({}, async (eventos, executar) => {
-    assert.equal((await executar()).status, 'pronta');
-    assert.deepEqual(eventos.map((evento) => evento.split(':')[0]), ['otimizando', 'download', 'upload', 'pronta', 'remove']);
-    assert.match(eventos[2], /^upload:false:\/storage\/v1\/object\/midias\/propriedade\/lote\/otimizado-[\da-f-]+\.webp$/);
-    assert.equal((await executar()).status, 'mantida');
-    assert.equal(eventos.length, 5);
+async function assumir() {
+  const trabalho = await assumirProximaMidia();
+  assert.ok(trabalho, 'a fila devia entregar a mídia');
+  return trabalho;
+}
+
+const enviados = (eventos: string[]) => eventos.filter((e) => e.startsWith('upload:')).map((e) => e.split('/midias/')[1]);
+
+test('confirma a referência antes da remoção e a fila não entrega a mesma mídia de novo', async () => {
+  await comSupabase({}, async ({ eventos, linha }) => {
+    const trabalho = await assumir();
+    assert.deepEqual(trabalho, { midiaId: 'midia-teste', caminho: ORIGINAL, tentativa: 1 });
+    assert.equal((await processarMidiaDoStorage(trabalho)).status, 'pronta');
+    assert.deepEqual(eventos.map((evento) => evento.split(':')[0]), ['assumida', 'download', 'upload', 'pronta', 'remove']);
+    assert.match(eventos[2] ?? '', /^upload:false:\/storage\/v1\/object\/midias\/propriedade\/lote\/otimizado-[\da-f-]+\.webp$/);
+    assert.equal(linha.publicado, enviados(eventos)[0]);
+    assert.equal(await assumirProximaMidia(), null);
   });
 });
 
 test('preserva o original se a atualização falhar ou se nenhuma linha for confirmada', async () => {
-  for (const opcoes of [{ falharUpdate: true }, { perderReferencia: true }]) {
-    await comStorage(opcoes, async (eventos, executar) => {
-      assert.equal((await executar()).status, 'falhou');
+  for (const falhas of [{ falharUpdate: true }, { perderReferencia: true }]) {
+    await comSupabase(falhas, async ({ eventos }) => {
+      assert.equal((await processarMidiaDoStorage(await assumir())).status, 'falhou');
       assert.ok(eventos.includes('falhou'));
       // O original nunca é removido; o otimizado só sai quando nenhuma linha foi confirmada (sem ambiguidade).
-      assert.ok(!eventos.includes(`remove:${trabalho.caminho}`));
-      const otimizado = eventos.find((e) => e.startsWith('upload:'))?.split('/midias/')[1];
-      assert.equal(eventos.includes(`remove:${otimizado}`), !!opcoes.perderReferencia);
+      assert.ok(!eventos.includes(`remove:${ORIGINAL}`));
+      assert.equal(eventos.includes(`remove:${enviados(eventos)[0]}`), !!falhas.perderReferencia);
     });
   }
 });
 
 test('falha no download ou no envio registra a falha sem tocar no original', async () => {
-  for (const opcoes of [{ falharDownload: true }, { falharUpload: true }]) {
-    await comStorage(opcoes, async (eventos, executar) => {
-      const r = await executar();
+  for (const falhas of [{ falharDownload: true }, { falharUpload: true }]) {
+    await comSupabase(falhas, async ({ eventos, linha }) => {
+      const r = await processarMidiaDoStorage(await assumir());
       assert.equal(r.status, 'falhou');
       assert.ok(r.motivo);
       assert.equal(eventos.at(-1), 'falhou');
+      assert.equal(linha.processamento, 'falhou');
       assert.ok(!eventos.some((e) => e.startsWith('remove') || e === 'pronta'));
     });
   }
@@ -134,19 +69,60 @@ test('falha no download ou no envio registra a falha sem tocar no original', asy
 test('arquivos com o mesmo nome e extensões diferentes não colidem', async () => {
   const destinos: string[] = [];
   for (const caminho of ['propriedade/lote/foto.png', 'propriedade/lote/foto.jpg']) {
-    await comStorage({ caminho }, async (eventos, executar) => {
-      assert.equal((await executar()).status, 'pronta');
-      destinos.push(eventos.find((e) => e.startsWith('upload:')) ?? '');
+    await comSupabase({}, async ({ eventos }) => {
+      assert.equal((await processarMidiaDoStorage(await assumir())).status, 'pronta');
+      destinos.push(...enviados(eventos));
       assert.ok(eventos.includes(`remove:${caminho}`));
-    });
+    }, caminho);
   }
   assert.equal(new Set(destinos).size, 2);
   for (const destino of destinos) assert.doesNotMatch(destino, /\/foto\.(png|jpg|webp)$/);
 });
 
 test('falha na limpeza não desfaz o resultado gravado', async () => {
-  await comStorage({ falharRemove: true }, async (eventos, executar) => {
-    assert.equal((await executar()).status, 'pronta');
-    assert.deepEqual(eventos.slice(-2), ['pronta', `remove:${trabalho.caminho}`]);
+  await comSupabase({ falharRemove: true }, async ({ eventos, linha }) => {
+    assert.equal((await processarMidiaDoStorage(await assumir())).status, 'pronta');
+    assert.deepEqual(eventos.slice(-2), ['pronta', `remove:${ORIGINAL}`]);
+    assert.equal(linha.processamento, 'pronta');
   });
+});
+
+test('job repetido: a execução antiga não grava por cima da nova e não deixa arquivo', async () => {
+  await comSupabase({}, async ({ eventos, linha }) => {
+    const antiga = await assumir();
+    linha.prazoVencido = true; // o worker antigo parou de responder e o prazo venceu
+    const nova = await assumir();
+    assert.equal(nova.tentativa, 2);
+
+    const rAntiga = await processarMidiaDoStorage(antiga);
+    assert.equal(rAntiga.status, 'falhou');
+    assert.equal(linha.processamento, 'otimizando');
+    assert.equal((await processarMidiaDoStorage(nova)).status, 'pronta');
+
+    const [daAntiga, daNova] = enviados(eventos);
+    assert.ok(eventos.includes(`remove:${daAntiga}`), 'o envio da execução antiga é removido');
+    assert.equal(linha.publicado, daNova);
+    assert.equal(eventos.filter((e) => e === 'pronta').length, 1);
+  });
+});
+
+test('trabalho travado: o prazo encerra o processo e registra a falha', async () => {
+  await comSupabase({}, async ({ eventos, linha }) => {
+    let encerrado = false;
+    // FFmpeg que nunca termina: só para quando o sinal do prazo chega.
+    const travado: Executor = (_programa, _argumentos, sinal) => new Promise((_resolve, reject) => {
+      sinal?.addEventListener('abort', () => {
+        encerrado = true;
+        reject(new Error('encerrado'));
+      });
+    });
+    const inicio = Date.now();
+    const r = await processarMidiaDoStorage(await assumir(), travado);
+    assert.ok(encerrado);
+    assert.ok(Date.now() - inicio < 10_000);
+    assert.equal(r.status, 'falhou');
+    assert.match(r.motivo ?? '', /Tempo limite/);
+    assert.equal(linha.processamento, 'falhou');
+    assert.ok(!eventos.some((e) => e.startsWith('upload')));
+  }, 'propriedade/lote/drone.mp4');
 });

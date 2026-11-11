@@ -146,6 +146,14 @@ describe('otimização de vídeo (lógica, com FFmpeg simulado)', () => {
   });
 });
 
+describe('prazo do processo', () => {
+  it('o sinal do prazo encerra um programa travado', async () => {
+    const inicio = Date.now();
+    await assert.rejects(executarReal(process.execPath, ['-e', 'setTimeout(() => {}, 60000)'], AbortSignal.timeout(300)));
+    assert.ok(Date.now() - inicio < 10_000);
+  });
+});
+
 describe('argumentos do FFmpeg', () => {
   it('H.265: libx265, tag hvc1, sem alterar resolução nem taxa de quadros, sem metadados', () => {
     const a = argsCodificacao('in.mov', 'out.mp4', SONDA, 24, 'hevc');

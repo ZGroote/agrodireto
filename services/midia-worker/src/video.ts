@@ -7,10 +7,11 @@ import type { Resultado } from './tipos.ts';
 const execFileAsync = promisify(execFile);
 
 /** Roda um programa e devolve a saída. Injetável para testar a lógica sem o FFmpeg instalado. */
-export type Executor = (programa: string, argumentos: string[]) => Promise<{ stdout: string; stderr: string }>;
+export type Executor = (programa: string, argumentos: string[], sinal?: AbortSignal) => Promise<{ stdout: string; stderr: string }>;
 
-export const executarReal: Executor = async (programa, argumentos) => {
-  const { stdout, stderr } = await execFileAsync(programa, argumentos, { maxBuffer: 64 * 1024 * 1024 });
+/** Com `sinal`, o processo é encerrado (SIGKILL) quando o prazo do trabalho acaba. */
+export const executarReal: Executor = async (programa, argumentos, sinal) => {
+  const { stdout, stderr } = await execFileAsync(programa, argumentos, { maxBuffer: 64 * 1024 * 1024, signal: sinal, killSignal: 'SIGKILL' });
   return { stdout, stderr };
 };
 

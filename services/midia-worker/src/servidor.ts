@@ -2,10 +2,13 @@ import { timingSafeEqual } from 'node:crypto';
 import { createServer, type IncomingMessage } from 'node:http';
 import { config } from './config.ts';
 import { criarFila } from './fila.ts';
-import { processarMidiaDoStorage, type TrabalhoMidia } from './supabase.ts';
+import { assumirProximaMidia, processarMidiaDoStorage } from './supabase.ts';
 
 const porta = Number(process.env.PORT ?? 8080);
-const fila = criarFila(config.concorrencia);
+const acordar = criarFila(config.concorrencia, assumirProximaMidia, async (trabalho) => {
+  const r = await processarMidiaDoStorage(trabalho);
+  console.log(JSON.stringify({ midiaId: trabalho.midiaId, tentativa: trabalho.tentativa, status: r.status, motivo: r.motivo }));
+});
 
 function tokenValido(recebido: string | undefined): boolean {
   const esperado = process.env.WORKER_TOKEN;
@@ -26,21 +29,12 @@ async function lerJson(req: IncomingMessage, limiteBytes = 10_000): Promise<unkn
   return JSON.parse(Buffer.concat(partes).toString('utf8'));
 }
 
-function comoTrabalho(corpo: unknown): TrabalhoMidia | null {
-  if (typeof corpo !== 'object' || corpo === null) return null;
-  const c = corpo as Record<string, unknown>;
-  const { midiaId, bucket, caminho, nomeOriginal } = c;
-  if (typeof midiaId === 'string' && typeof bucket === 'string' && typeof caminho === 'string' && typeof nomeOriginal === 'string') {
-    return { midiaId, bucket, caminho, nomeOriginal };
-  }
-  return null;
-}
-
 /**
  * Servidor do worker.
  *  GET  /saude    — verificação de saúde
- *  POST /webhook  — aviso de que há mídia nova no Storage: { midiaId, bucket, caminho, nomeOriginal }
- *                   (Authorization: Bearer WORKER_TOKEN). Responde 202 e processa em segundo plano.
+ *  POST /webhook  — aviso de que há mídia nova (Authorization: Bearer WORKER_TOKEN), corpo JSON qualquer.
+ *                   O trabalho já está registrado na tabela `midias`; o aviso só faz o worker conferir a fila agora.
+ *                   Responde 202 e processa em segundo plano.
  */
 const servidor = createServer(async (req, res) => {
   const responder = (status: number, corpo: unknown) => {
@@ -55,13 +49,9 @@ const servidor = createServer(async (req, res) => {
 
     if (req.method === 'POST' && req.url === '/webhook') {
       if (!tokenValido(req.headers.authorization)) return responder(401, { erro: 'Não autorizado.' });
-      const trabalho = comoTrabalho(await lerJson(req));
-      if (!trabalho) return responder(400, { erro: 'Corpo inválido: esperado midiaId, bucket, caminho e nomeOriginal.' });
-
-      void fila(() => processarMidiaDoStorage(trabalho)).then(
-        (r) => console.log(JSON.stringify({ midiaId: trabalho.midiaId, status: r.status, motivo: r.motivo })),
-        (e: unknown) => console.error('Falha ao processar', trabalho.midiaId, e),
-      );
+      const corpo = await lerJson(req);
+      if (typeof corpo !== 'object' || corpo === null) return responder(400, { erro: 'Corpo inválido: esperado um objeto JSON.' });
+      void acordar();
       return responder(202, { aceito: true });
     }
 
@@ -71,4 +61,9 @@ const servidor = createServer(async (req, res) => {
   }
 });
 
-servidor.listen(porta, () => console.log(`midia-worker ouvindo na porta ${porta} (codec de vídeo: ${config.codecVideo})`));
+servidor.listen(porta, () => {
+  console.log(`midia-worker ouvindo na porta ${porta} (codec de vídeo: ${config.codecVideo})`);
+  // Retoma o que ficou na fila (inclusive de antes de um reinício) e confere de tempos em tempos.
+  void acordar();
+  setInterval(() => void acordar(), config.intervaloFilaSeg * 1000).unref();
+});

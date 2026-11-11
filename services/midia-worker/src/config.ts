@@ -30,6 +30,10 @@ export const config = {
   pastaTemporaria: process.env.PASTA_TEMPORARIA ?? tmpdir(),
   /** Quantos arquivos processar ao mesmo tempo (vídeo é pesado: 1 por padrão) */
   concorrencia: numero(process.env.CONCORRENCIA, 1),
+  /** Prazo de cada trabalho, em minutos: ao fim, o FFmpeg é encerrado e a mídia fica "falhou" para nova tentativa */
+  prazoTrabalhoMin: numero(process.env.PRAZO_TRABALHO_MIN, 45),
+  /** A cada quantos segundos o worker confere a fila no banco (além do aviso do webhook) */
+  intervaloFilaSeg: numero(process.env.INTERVALO_FILA_SEG, 30),
   /** Depois de otimizar com sucesso, apagar o original do Storage para não acumular volume */
   apagarOriginalAposOtimizar: process.env.APAGAR_ORIGINAL_APOS_OTIMIZAR === 'true',
 } as const;
