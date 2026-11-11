@@ -4,17 +4,17 @@
 **Referência visual:** `mockups/4-administrador.jpeg` (tela 18)
 
 ## Objetivo
-Permissões por função.
+Mostrar o que cada papel da equipe pode (só leitura) e gerir a equipe (B05, DOC 034 e 036).
 
 ## Elementos
-Voltar, Função, Permissões (Lotes, Inspeções, Financeiro), Salvar permissões. Tab bar.
+Voltar, Função (os 7 papéis), Permissões (Pode / Não pode por ação). Fora do mockup: Equipe (lista; o geral concede, troca e revoga por e-mail). Tab bar.
 
 ## Conexões
 - **Chega de:** 24 Configurações
 - **Vai para:** volta (Salvar)
 
-## Dados (fase de integração)
-Papéis + RLS no Supabase.
+## Dados
+`lib/equipe.ts`: `listar_equipe`, `conceder_acesso_equipe`, `revogar_acesso_equipe`; matriz copiada de `equipe_pode` (teste de paridade).
 
 ## Pendências e observações
-Toggles começam desligados. Funções são catálogo — revisar.
+Desvio do mockup aprovado: sem toggles e sem "Salvar permissões", porque a matriz é fixa no servidor. Acesso: geral e auditor (ler_equipe); só o geral altera.

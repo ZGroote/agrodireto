@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Redirect, Stack } from 'expo-router';
-import { consultarAcessoEquipe, supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
+import { papelEquipe, type Papel } from '@/lib/equipe';
+import { PapelEquipeContext } from '@/components/PapelEquipe';
 import { rotasAdministrador } from '@/routes';
 
 export default function Layout() {
-  const [acesso, setAcesso] = useState<boolean | null>(supabase ? null : false);
+  // undefined: carregando; null: sem acesso autorizado (papel_equipe nulo).
+  const [papel, setPapel] = useState<Papel | null | undefined>(supabase ? undefined : null);
 
   useEffect(() => {
     if (!supabase) return;
@@ -12,20 +15,20 @@ export default function Layout() {
     let tokenAtual: string | undefined;
     let timer: ReturnType<typeof setTimeout> | undefined;
     async function validar(token: string) {
-      const autorizado = await consultarAcessoEquipe() === 'autorizado';
-      if (ativo && token === tokenAtual) setAcesso(autorizado);
+      const atual = await papelEquipe();
+      if (ativo && token === tokenAtual) setPapel(atual);
     }
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_evento, sessao) => {
       const token = sessao?.access_token;
       if (timer) clearTimeout(timer);
       tokenAtual = token;
       if (!token) {
-        setAcesso(false);
+        setPapel(null);
         return;
       }
       timer = setTimeout(() => {
         void validar(token).catch(() => {
-          if (ativo && token === tokenAtual) setAcesso(false);
+          if (ativo && token === tokenAtual) setPapel(null);
         });
       }, 0);
     });
@@ -36,7 +39,11 @@ export default function Layout() {
     };
   }, []);
 
-  if (acesso === null) return null;
-  if (!acesso) return <Redirect href={rotasAdministrador.entrar} />;
-  return <Stack screenOptions={{ headerShown: false }} />;
+  if (papel === undefined) return null;
+  if (!papel) return <Redirect href={rotasAdministrador.entrar} />;
+  return (
+    <PapelEquipeContext.Provider value={papel}>
+      <Stack screenOptions={{ headerShown: false }} />
+    </PapelEquipeContext.Provider>
+  );
 }

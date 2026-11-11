@@ -1,1 +1,6 @@
-export { default } from '@/screens/11-torre-logistica/TorreLogisticaScreen';
+import Tela from '@/screens/11-torre-logistica/TorreLogisticaScreen';
+import { Permitido } from '@/components/PapelEquipe';
+
+export default function Rota() {
+  return <Permitido acao="sem_acao_no_servidor"><Tela /></Permitido>;
+}
