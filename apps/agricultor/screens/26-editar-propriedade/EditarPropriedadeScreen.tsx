@@ -1,14 +1,20 @@
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Home, MapPin, Ruler, Sprout } from 'lucide-react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { AddMediaButton, AppText, Button, Foto, Screen, ScreenHeader, spacing, TextField } from '@agrodireto/ui';
 
 import { camposPropriedadeVazios, lerRascunhoPropriedade, salvarRascunhoPropriedade, type RascunhoPropriedade } from '@/lib/rascunhoPropriedade';
+import { enviarPropriedade, lerPropriedadeEnviada } from '@/lib/propriedadeRemota';
+import { rotasAgricultor } from '@/routes';
 
 type Campo = keyof RascunhoPropriedade;
 
 /** 26 · Editar propriedade — nome, local, área, culturas e foto de capa. */
 export default function EditarPropriedadeScreen() {
+  const router = useRouter();
+  const { corrigir } = useLocalSearchParams<{ corrigir?: string }>();
+  const [revisao, setRevisao] = useState<string>();
   const [campos, setCampos] = useState(camposPropriedadeVazios);
   const [estado, setEstado] = useState<'carregando' | 'pronto' | 'erroLeitura'>('carregando');
   const [salvando, setSalvando] = useState(false);
@@ -19,9 +25,21 @@ export default function EditarPropriedadeScreen() {
     let ativo = true;
     async function carregar() {
       try {
-        const rascunho = await lerRascunhoPropriedade();
-        if (!ativo) return;
-        if (rascunho) setCampos(rascunho);
+        if (corrigir === '1') {
+          const enviada = await lerPropriedadeEnviada();
+          if (!ativo) return;
+          if (enviada?.status !== 'ajustes_solicitados') {
+            router.dismissTo(rotasAgricultor.propriedade);
+            return;
+          }
+          const { nome, cidade, uf, area, culturas, enviada_em } = enviada;
+          setCampos({ nome, cidade, uf, area: String(area), culturas });
+          setRevisao(enviada_em);
+        } else {
+          const rascunho = await lerRascunhoPropriedade();
+          if (!ativo) return;
+          if (rascunho) setCampos(rascunho);
+        }
         setEstado('pronto');
       } catch {
         if (ativo) setEstado('erroLeitura');
@@ -29,7 +47,7 @@ export default function EditarPropriedadeScreen() {
     }
     void carregar();
     return () => { ativo = false; };
-  }, []);
+  }, [corrigir, router]);
 
   function editar(campo: Campo, valor: string) {
     setCampos((anteriores) => ({ ...anteriores, [campo]: valor }));
@@ -41,12 +59,17 @@ export default function EditarPropriedadeScreen() {
     setSalvando(true);
     setMensagem('');
     try {
+      if (revisao) {
+        await enviarPropriedade(campos, revisao);
+        router.dismissTo(rotasAgricultor.propriedade);
+        return;
+      }
       await salvarRascunhoPropriedade(campos);
       setErro(false);
       setMensagem('Rascunho salvo neste dispositivo.');
-    } catch {
+    } catch (falha) {
       setErro(true);
-      setMensagem('Não foi possível salvar. Tente novamente.');
+      setMensagem(revisao && falha instanceof Error ? falha.message : 'Não foi possível salvar. Tente novamente.');
     } finally {
       setSalvando(false);
     }
@@ -56,8 +79,8 @@ export default function EditarPropriedadeScreen() {
 
   return (
     <Screen
-      header={<ScreenHeader title="Editar propriedade" subtitle="O rascunho fica apenas neste dispositivo." />}
-      footer={<Button label="Salvar rascunho" disabled={!editavel || !campos.nome.trim()} loading={salvando} onPress={() => void salvar()} />}
+      header={<ScreenHeader title="Editar propriedade" subtitle={revisao ? undefined : 'O rascunho fica neste dispositivo.'} />}
+      footer={<Button label={revisao ? 'Reenviar para análise' : 'Salvar rascunho'} disabled={!editavel || !campos.nome.trim()} loading={salvando} onPress={() => void salvar()} />}
     >
       {estado === 'carregando' && <AppText>Carregando rascunho…</AppText>}
       {estado === 'erroLeitura' && <AppText>Não foi possível abrir o rascunho. Saia desta tela e tente novamente.</AppText>}

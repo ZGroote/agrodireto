@@ -1,38 +1,36 @@
-import { useState } from 'react';
-import { useRouter } from 'expo-router';
+import { useCallback, useState } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { Building2 } from 'lucide-react-native';
-import { Button, EmptyState, Screen, ScreenHeader, SegmentedControl } from '@agrodireto/ui';
-import { rotasAdministrador } from '../../routes';
+import { AppText, Card, EmptyState, ListRow, Screen, ScreenHeader } from '@agrodireto/ui';
+import type { PropriedadeEnviada } from '@agrodireto/dominio';
+import { listarPendencias } from '@/lib/propriedades';
+import { rotasAdministrador } from '@/routes';
 
-type Aba = 'agricultores' | 'compradores';
-
-/**
- * 04 · Cadastros (tab) — agricultores e compradores por status.
- * Item: Card + ListRow com ícone, nome, cidade · UF e StatusPill (Em análise = warning, Ativo = success).
- */
 export default function CadastrosScreen() {
   const router = useRouter();
-  const [aba, setAba] = useState<Aba>('agricultores');
-  // Lista virá do Supabase.
-  const cadastros: never[] = [];
+  const [cadastros, setCadastros] = useState<PropriedadeEnviada[]>([]);
+  const [estado, setEstado] = useState<'carregando' | 'pronto' | 'erro'>('carregando');
+
+  useFocusEffect(useCallback(() => {
+    let ativo = true;
+    setEstado('carregando');
+    void listarPendencias().then(
+      (dados) => { if (ativo) { setCadastros(dados); setEstado('pronto'); } },
+      () => { if (ativo) setEstado('erro'); },
+    );
+    return () => { ativo = false; };
+  }, []));
 
   return (
-    <Screen
-      withTabBar
-      header={<ScreenHeader title="Cadastros" />}
-      footer={<Button label="Analisar cadastro" onPress={() => router.push(rotasAdministrador.analisarCadastro())} />}
-    >
-      <SegmentedControl
-        value={aba}
-        onChange={setAba}
-        segments={[
-          { key: 'agricultores', label: 'Agricultores' },
-          { key: 'compradores', label: 'Compradores' },
-        ]}
-      />
-      {cadastros.length === 0 ? (
-        <EmptyState icon={Building2} title={aba === 'agricultores' ? 'Nenhum agricultor cadastrado' : 'Nenhum comprador cadastrado'} />
-      ) : null}
+    <Screen withTabBar header={<ScreenHeader title="Propriedades em análise" />}>
+      {estado === 'carregando' && <AppText>Carregando…</AppText>}
+      {estado === 'erro' && <AppText>Não foi possível consultar os cadastros. Confira sua conexão e entre novamente.</AppText>}
+      {estado === 'pronto' && cadastros.length === 0 && <EmptyState icon={Building2} title="Nenhuma propriedade aguardando análise" />}
+      {estado === 'pronto' && cadastros.map((cadastro) => (
+        <Card key={cadastro.usuario_id}>
+          <ListRow title={cadastro.nome} subtitle={`${cadastro.cidade} · ${cadastro.uf}`} onPress={() => router.push(rotasAdministrador.analisarCadastro({ id: cadastro.usuario_id }))} />
+        </Card>
+      ))}
     </Screen>
   );
 }

@@ -1,57 +1,44 @@
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Phone, ShieldCheck, User } from 'lucide-react-native';
-import { AppText, Button, Checkbox, Screen, ScreenHeader, spacing, TextField } from '@agrodireto/ui';
-import { useAgricultor, useCodigoValidacao } from '@/hooks/dados';
+import { AppText, Button, Checkbox, Screen, ScreenHeader, TextField, TextLink } from '@agrodireto/ui';
+import { supabase } from '@/lib/supabase';
 import { rotasAgricultor } from '@/routes';
 
-/** 02 · Criar conta — nome, telefone, código de validação e aceite dos termos. */
 export default function CriarContaScreen() {
   const router = useRouter();
-  const agricultor = useAgricultor();
-  const [nome, setNome] = useState(agricultor.nome);
-  const [telefone, setTelefone] = useState(agricultor.telefone);
-  const [codigo, setCodigo] = useState(useCodigoValidacao());
-  const [aceite, setAceite] = useState(true);
+  const [email, setEmail] = useState('');
+  const [senha, setSenha] = useState('');
+  const [aceite, setAceite] = useState(false);
+  const [ocupado, setOcupado] = useState(false);
+  const [mensagem, setMensagem] = useState('');
 
-  const valido = nome.trim().length > 1 && telefone.trim().length >= 10 && codigo.length === 6 && aceite;
+  async function criar() {
+    if (!supabase || ocupado || !aceite) return;
+    setOcupado(true);
+    setMensagem('');
+    try {
+      const { data, error } = await supabase.auth.signUp({ email: email.trim(), password: senha });
+      if (error) throw error;
+      if (data.session) router.replace(rotasAgricultor.cadastro);
+      else setMensagem('Confira o e-mail de confirmação e depois entre com sua senha.');
+    } catch {
+      setMensagem('Não foi possível criar a conta. Confira os dados e tente novamente.');
+    } finally {
+      setOcupado(false);
+    }
+  }
 
   return (
-    <Screen
-      header={<ScreenHeader title="Criar conta" subtitle="Informe seu cadastro para criar sua conta de agricultor." />}
-      footer={<Button label="Continuar" disabled={!valido} onPress={() => router.replace(rotasAgricultor.cadastro)} />}
-    >
-      <TextField label="Nome" icon={User} placeholder="Seu nome completo" value={nome} onChangeText={setNome} autoCapitalize="words" />
-      <TextField label="Telefone" icon={Phone} placeholder="(00) 00000-0000" keyboardType="phone-pad" value={telefone} onChangeText={setTelefone} />
-      <TextField
-        label="Código de validação (6 dígitos)"
-        icon={ShieldCheck}
-        placeholder="000000"
-        keyboardType="number-pad"
-        maxLength={6}
-        value={codigo}
-        onChangeText={(t) => setCodigo(t.replace(/\D/g, ''))}
-      />
-      <View style={styles.aceite}>
-        <Checkbox checked={aceite} onChange={setAceite} />
-        <AppText variant="caption" color="textSecondary" style={styles.flex}>
-          Li e concordo com os{' '}
-          <AppText variant="caption" color="primary" onPress={() => router.push(rotasAgricultor.termos)}>
-            Termos de Uso
-          </AppText>{' '}
-          e a{' '}
-          <AppText variant="caption" color="primary" onPress={() => router.push(rotasAgricultor.politica)}>
-            Política de Privacidade
-          </AppText>
-          .
-        </AppText>
-      </View>
+    <Screen header={<ScreenHeader title="Criar conta" />}>
+      <TextField label="E-mail" keyboardType="email-address" autoCapitalize="none" value={email} onChangeText={setEmail} />
+      <TextField label="Senha (mínimo de 8 caracteres)" secure value={senha} onChangeText={setSenha} />
+      <Checkbox checked={aceite} onChange={setAceite} label="Li e concordo com os termos e a política de privacidade" />
+      <TextLink label="Termos de Uso" onPress={() => router.push(rotasAgricultor.termos)} />
+      <TextLink label="Política de Privacidade" onPress={() => router.push(rotasAgricultor.politica)} />
+      {!!mensagem && <AppText accessibilityLiveRegion="polite">{mensagem}</AppText>}
+      {!supabase && <AppText>Ambiente de integração indisponível.</AppText>}
+      <Button label="Criar conta" loading={ocupado} disabled={!supabase || ocupado || !aceite || !email.includes('@') || senha.length < 8} onPress={() => void criar()} />
+      <TextLink label="Já tenho conta" onPress={() => router.replace(rotasAgricultor.entrar)} />
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  aceite: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  flex: { flex: 1 },
-});

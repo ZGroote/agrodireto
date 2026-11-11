@@ -43,3 +43,10 @@ export async function abrirEvidencia(chave: string) {
 export async function apagarEvidencia(chave: string) {
   await executar('readwrite', (store) => store.delete(chave));
 }
+
+export async function lerBytesEvidencia(chave: string, limite: number) {
+  const arquivo: unknown = await executar('readonly', (store) => store.get(chave));
+  if (!(arquivo instanceof Blob) || !arquivo.size) throw new Error('Arquivo indisponível neste dispositivo.');
+  if (arquivo.size > limite) throw new Error('O arquivo ultrapassa 6 MiB.');
+  return arquivo.arrayBuffer();
+}

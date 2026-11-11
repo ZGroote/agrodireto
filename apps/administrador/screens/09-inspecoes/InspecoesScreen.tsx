@@ -1,65 +1,44 @@
-import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
-import { useRouter } from 'expo-router';
-import { CalendarDays, CalendarX, ChevronLeft, ChevronRight, Clock, User } from 'lucide-react-native';
-import { AppText, Button, Card, colors, Divider, EMPTY, EmptyState, ListRow, Screen, ScreenHeader, sizes, spacing } from '@agrodireto/ui';
+import { useCallback, useState } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { ClipboardList } from 'lucide-react-native';
+import { rotulosInspecao } from '@agrodireto/dominio';
+import { AppText, Button, Card, EmptyState, ListRow, Screen, ScreenHeader, VStack } from '@agrodireto/ui';
+import { listarLotesInspecao, type LoteInspecao } from '@/lib/inspecoes';
 import { rotasAdministrador } from '../../routes';
 
-const DIAS = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
-
-const formatar = (d: Date) =>
-  `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()} (${DIAS[d.getDay()]})`;
-
-/**
- * 09 · Inspeções — próxima inspeção e agenda do dia.
- * Item da agenda: ListRow com status (check = concluída), "07h · local" e chevron → inspecionar({ id }).
- */
 export default function InspecoesScreen() {
   const router = useRouter();
-  const [dia, setDia] = useState(() => new Date());
-  // Inspeções virão do Supabase (agenda do dia selecionado).
-  const agenda: never[] = [];
+  const [pagina, setPagina] = useState(0);
+  const [lotes, setLotes] = useState<LoteInspecao[]>([]);
+  const [mensagem, setMensagem] = useState('Carregando lotes…');
 
-  const mover = (delta: number) => setDia((d) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + delta));
+  useFocusEffect(useCallback(() => {
+    let ativo = true;
+    setMensagem('Carregando lotes…');
+    void listarLotesInspecao(pagina).then(
+      (dados) => { if (ativo) { setLotes(dados); setMensagem(''); } },
+      () => { if (ativo) { setLotes([]); setMensagem('Não foi possível carregar os lotes. Reabra a tela para tentar novamente.'); } },
+    );
+    return () => { ativo = false; };
+  }, [pagina]));
 
   return (
-    <Screen
-      header={<ScreenHeader title="Inspeções" />}
-      // Agendamento: sem mockup — fase de dados.
-      footer={<Button label="Agendar inspeção" />}
-    >
-      <Card padded={false}>
-        <View style={styles.stepper}>
-          <Pressable onPress={() => mover(-1)} hitSlop={8} accessibilityLabel="Dia anterior" style={styles.arrow}>
-            <ChevronLeft size={sizes.iconMd} color={colors.textPrimary} />
-          </Pressable>
-          <View style={styles.day}>
-            <CalendarDays size={sizes.iconMd} color={colors.primary} />
-            <AppText variant="heading">{formatar(dia)}</AppText>
-          </View>
-          <Pressable onPress={() => mover(1)} hitSlop={8} accessibilityLabel="Próximo dia" style={styles.arrow}>
-            <ChevronRight size={sizes.iconMd} color={colors.textPrimary} />
-          </Pressable>
-        </View>
-      </Card>
-
-      <Card onPress={() => router.push(rotasAdministrador.inspecionar())}>
-        <ListRow icon={Clock} title={`Próxima inspeção · ${EMPTY}`} />
-        <Divider />
-        <ListRow icon={User} title={`Inspetor(a): ${EMPTY}`} />
-      </Card>
-
-      <View style={styles.section}>
-        <AppText variant="heading">Agenda do dia</AppText>
-        {agenda.length === 0 ? <EmptyState icon={CalendarX} title="Nenhuma inspeção neste dia" /> : null}
-      </View>
+    <Screen header={<ScreenHeader title="Inspeções" />}>
+      {!!mensagem && <AppText accessibilityLiveRegion="polite">{mensagem}</AppText>}
+      {!mensagem && lotes.length === 0 && <EmptyState icon={ClipboardList} title="Nenhum lote nesta página" />}
+      {!mensagem && lotes.map((lote) => (
+        <Card key={lote.lote_id}>
+          <ListRow icon={ClipboardList} title={lote.produto}
+            subtitle={`${lote.quantidade} ${lote.unidade} · ${lote.resultado ? rotulosInspecao[lote.resultado] : 'Sem inspeção'}`}
+            onPress={() => router.push(rotasAdministrador.inspecionar({ id: lote.lote_id }))} />
+        </Card>
+      ))}
+      {!mensagem && (
+        <VStack gap="sm">
+          {pagina > 0 && <Button label="Página anterior" variant="secondary" onPress={() => setPagina(pagina - 1)} />}
+          {lotes.length === 20 && pagina < 1000 && <Button label="Próxima página" variant="secondary" onPress={() => setPagina(pagina + 1)} />}
+        </VStack>
+      )}
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  stepper: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: spacing.sm },
-  arrow: { padding: spacing.sm },
-  day: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  section: { gap: spacing.sm },
-});

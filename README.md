@@ -13,6 +13,8 @@ npm run verify
 
 Para rodar a interface do Agricultor: `npm run web -w @agrodireto/agricultor`. Substitua o nome do workspace para abrir outro perfil.
 
+Para abrir os quatro perfis pelo hub, rode `npm run hub` na raiz e acesse [AgroDireto](http://localhost:8082). O hub local oferece atalhos para os apps e para seus mapas de telas. As operações protegidas usam a sessão de cada app.
+
 - [Ambientes e configuração](DOC/ambientes.md)
 - [Recorte do piloto](DOC/piloto.md)
 - [Plano e backlog](tasks/plan.md)

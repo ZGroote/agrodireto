@@ -1,4 +1,5 @@
 import { StyleSheet, View } from 'react-native';
+import { supabase } from '@/lib/supabase';
 import { useRouter, type Href } from 'expo-router';
 import {
   Bell,
@@ -6,7 +7,6 @@ import {
   CircleHelp,
   FolderTree,
   History,
-  KeyRound,
   Lock,
   LogOut,
   Megaphone,
@@ -55,7 +55,6 @@ export default function ConfiguracoesScreen() {
         <Divider />
         <ListRow icon={Lock} title="Segurança e sessões" chevron />
         <Divider />
-        <ListRow icon={KeyRound} title="MFA" subtitle={EMPTY} chevron />
         <Divider />
         <ListRow icon={CircleHelp} title="Ajuda e suporte" chevron />
       </Card>
@@ -81,7 +80,11 @@ export default function ConfiguracoesScreen() {
       </View>
 
       <Card>
-        <ListRow icon={LogOut} title="Sair" tone="danger" chevron={false} onPress={() => router.dismissTo('/')} />
+        <ListRow icon={LogOut} title="Sair" tone="danger" chevron={false} onPress={() => {
+          void supabase?.auth.signOut({ scope: 'local' }).then(({ error }) => {
+            if (!error) router.dismissTo('/entrar');
+          });
+        }} />
       </Card>
     </Screen>
   );

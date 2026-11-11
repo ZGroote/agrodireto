@@ -48,7 +48,7 @@ Etapa 0 iniciada em 10/11/2026. O estado de cada tarefa está na lista abaixo.
 
 - [ ] Concluída e verificada.
 
-**Estado:** [ambientes e setup](../DOC/ambientes.md) preparados. Não há projeto Supabase de desenvolvimento/homologação e o host não tem a CLI nem o runtime de contêiner disponíveis. Falta iniciar ou provisionar um ambiente e testar a conexão.
+**Estado:** [projeto hospedado de integração](../DOC/ambientes.md) ativo, com resposta HTTP 200 da API de Auth usando a chave pública. URL e chave pública configuradas localmente nos quatro apps. O ambiente local com Supabase CLI e o projeto separado do piloto seguem pendentes.
 
 **Responsável:** Backend. **Dependências:** A01, A02.
 
@@ -83,6 +83,8 @@ Etapa 0 iniciada em 10/11/2026. O estado de cada tarefa está na lista abaixo.
 
 - [ ] Concluída e verificada.
 
+**Progresso:** identidade via Auth e vínculo privado de equipe para o fluxo de propriedade. Isolamento e bloqueio de promoção verificados no banco. Empresas e vínculos dos demais perfis seguem pendentes.
+
 **Responsável:** Backend. **Dependências:** A01, A03.
 
 **Entrega e aceite:** Representar usuário, empresa/membro, papel e aprovação; acesso administrativo não pode ser autoatribuído; RLS nega acesso cruzado por padrão.
@@ -94,6 +96,8 @@ Etapa 0 iniciada em 10/11/2026. O estado de cada tarefa está na lista abaixo.
 ### B02 — Integrar sessão do Agricultor
 
 - [ ] Concluída e verificada.
+
+**Progresso:** criação de conta e login por e-mail e senha, rotas protegidas, logout e SecureStore no app nativo. Pendentes recuperação de acesso e restauração de sessão em aparelho.
 
 **Responsável:** App Agricultor. **Dependências:** B01.
 
@@ -131,6 +135,8 @@ Etapa 0 iniciada em 10/11/2026. O estado de cada tarefa está na lista abaixo.
 
 - [ ] Concluída e verificada.
 
+**Progresso:** login e vínculo de equipe reais. O banco exige MFA por padrão. O segundo fator está desligado em homologação até chegar o primeiro cliente.
+
 **Responsável:** App Administrador. **Dependências:** B01, B02.
 
 **Entrega e aceite:** Acesso por concessão autorizada; verificação real de segundo fator conforme regra; seis dígitos arbitrários não liberam acesso.
@@ -143,7 +149,7 @@ Etapa 0 iniciada em 10/11/2026. O estado de cada tarefa está na lista abaixo.
 
 - [ ] Concluída e verificada.
 
-**Progresso:** edição, resumo e checklist do cadastro leem o mesmo rascunho local. No navegador, o resumo atualizou ao voltar da edição e o checklist mostrou o rascunho após recarregar. Cadastro vinculado ao usuário, migração do rascunho e gravação remota continuam pendentes.
+**Progresso:** o rascunho é separado por conta e pode ser enviado ao Supabase. O resumo e o checklist mostram a situação remota. Após pedido de ajustes, o produtor pode corrigir e reenviar. Falta ensaio completo pela interface.
 
 **Responsável:** Agricultor + backend. **Dependências:** B02.
 
@@ -181,6 +187,8 @@ Etapa 0 iniciada em 10/11/2026. O estado de cada tarefa está na lista abaixo.
 
 - [ ] Concluída e verificada.
 
+**Progresso:** Administrador lista propriedades pendentes, aprova ou pede ajustes com motivo. O Agricultor consulta o status, corrige e reenvia. Pendentes demais cadastros e regras de publicação e compra.
+
 **Responsável:** Administrador + backend. **Dependências:** B05, C01, C02, C03.
 
 **Entrega e aceite:** Listar pendências reais; aprovar/rejeitar com motivo, autor e data; regras de publicação/compra consultam aprovação.
@@ -214,7 +222,7 @@ Etapa 0 iniciada em 10/11/2026. O estado de cada tarefa está na lista abaixo.
 
 - [ ] Concluída e verificada.
 
-**Progresso:** vários rascunhos por dispositivo, com retomada na etapa salva em Meus lotes e compatibilidade com o rascunho anterior. Cada lote pode usar a propriedade, uma cultura cadastrada e a data de sua previsão. Fotos e vídeos são recuperados no dispositivo. Publicação e vinculação remota seguem pendentes.
+**Progresso:** rascunhos separados por conta no dispositivo, com retomada na etapa salva. O rascunho anterior é associado à primeira conta que o abre. Publicação de homologação vinculada à propriedade aprovada. Fotos e vídeos são recuperados no dispositivo.
 
 **Responsável:** Agricultor + backend. **Dependências:** D01.
 
@@ -228,7 +236,7 @@ Etapa 0 iniciada em 10/11/2026. O estado de cada tarefa está na lista abaixo.
 
 - [ ] Concluída e verificada.
 
-**Progresso:** comando do worker para criar ou verificar o bucket privado `midias`, exercitado com um servidor HTTP de teste. Provisionamento no Supabase, políticas por usuário e cotas seguem pendentes.
+**Progresso:** bucket privado `midias` preparado para o worker. O bucket `evidencias-lote` da homologação vincula originais ao produtor e ao lote, com cotas de reserva. O teste no Supabase confirmou isolamento e limite por lote. Falta integrar o worker e finalizar a política de retenção.
 
 **Responsável:** Backend. **Dependências:** B01, D02.
 
@@ -256,6 +264,8 @@ Etapa 0 iniciada em 10/11/2026. O estado de cada tarefa está na lista abaixo.
 
 - [ ] Concluída e verificada.
 
+**Progresso:** o worker atualizado gera uma cópia sem metadados de fotos estáticas e envia ao bucket privado do catálogo. O teste do worker cobre EXIF, preservação dos pixels e falha no upload. Falta o fluxo de vídeos.
+
 **Responsável:** Worker. **Dependências:** D03.
 
 **Entrega e aceite:** Não publicar original com metadados sensíveis no fallback mantida; formatos sem sanitização segura ficam privados com motivo.
@@ -280,7 +290,7 @@ Etapa 0 iniciada em 10/11/2026. O estado de cada tarefa está na lista abaixo.
 
 - [ ] Concluída e verificada.
 
-**Progresso:** anexos copiados ao salvar o rascunho. Foto e vídeo recuperados após recarregar na web. Pacotes do Agricultor exportados para Android e iOS. Faltam teste em aparelho e upload integrado.
+**Progresso:** anexos copiados ao salvar o rascunho e enviados pelo detalhe do lote publicado. O produtor pode recuperar os arquivos confirmados por link temporário. Falta testar a transferência real pelo app e tratar vídeos acima de 6 MiB.
 
 **Responsável:** Agricultor. **Dependências:** D03, D04, D05, D06.
 
@@ -294,6 +304,8 @@ Etapa 0 iniciada em 10/11/2026. O estado de cada tarefa está na lista abaixo.
 
 - [ ] Concluída e verificada.
 
+**Progresso:** produtor autoriza a foto aprovada, operação prepara a cópia e Cliente exibe a galeria. Permissões, consentimento e revogação foram verificados no Supabase de homologação. Falta validar a jornada com sessões reais pelas telas e completar o fluxo de vídeos.
+
 **Responsável:** Admin + Cliente, entregas separadas. **Dependências:** D07, B03, B05.
 
 **Entrega e aceite:** Administrador valida/rejeita; comprador vê mídia permitida com status correto e reprodução compatível com dispositivos do piloto.
@@ -305,6 +317,8 @@ Etapa 0 iniciada em 10/11/2026. O estado de cada tarefa está na lista abaixo.
 ### E00 — Registrar checklist de qualidade do lote
 
 - [ ] Concluída e verificada.
+
+**Progresso:** checklist e resultado persistidos com autor, data e referências das evidências aprovadas. O Administrador pode concluir a inspeção, e Agricultor e Cliente consultam o resumo. Regras de acesso verificadas em homologação. Faltam a verificação com sessões pelas telas e a definição dos casos de inspeção obrigatória no piloto.
 
 **Responsável:** Operação + backend. **Dependências:** A01, D02, D08.
 
@@ -318,6 +332,8 @@ Etapa 0 iniciada em 10/11/2026. O estado de cada tarefa está na lista abaixo.
 
 - [ ] Concluída e verificada.
 
+**Progresso:** publicação de homologação exige propriedade aprovada, valida os dados comerciais e é idempotente por rascunho e produtor. O produtor pode consultar e retirar a oferta. Falta integrar evidências e inspeção para o piloto.
+
 **Responsável:** Agricultor + backend. **Dependências:** C04, D02, D07, D08, E00.
 
 **Entrega e aceite:** Publicação valida aprovação, campos e evidências requeridas; retorna ID real e estado correto; erro não apaga rascunho.
@@ -329,6 +345,8 @@ Etapa 0 iniciada em 10/11/2026. O estado de cada tarefa está na lista abaixo.
 ### E02 — Mostrar ofertas reais ao comprador
 
 - [ ] Concluída e verificada.
+
+**Progresso:** catálogo de homologação com busca por produto, paginação e detalhe. Somente compradores autorizados consultam ofertas vigentes. Falta aprovar compradores pelo fluxo empresarial e validar as telas com contas de teste.
 
 **Responsável:** Cliente. **Dependências:** E01, C02.
 

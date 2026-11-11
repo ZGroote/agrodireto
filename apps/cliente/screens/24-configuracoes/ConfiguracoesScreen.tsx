@@ -1,5 +1,6 @@
 import { StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
+import { supabase } from '@/lib/supabase';
 import {
   ArrowLeftRight,
   Bell,
@@ -52,7 +53,9 @@ export default function ConfiguracoesScreen() {
         {/* Não está no mockup: único acesso à 22 · Faturas e financeiro. */}
         <ListRow icon={Receipt} title="Faturas e financeiro" onPress={() => router.push(rotasCliente.faturas)} />
         <Divider />
-        <ListRow icon={LogOut} title="Sair" tone="danger" chevron={false} onPress={() => router.dismissTo('/')} />
+        <ListRow icon={LogOut} title="Sair" tone="danger" chevron={false} onPress={() => {
+          void supabase?.auth.signOut({ scope: 'local' });
+        }} />
       </Card>
     </Screen>
   );

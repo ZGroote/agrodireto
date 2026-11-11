@@ -32,10 +32,26 @@ Cada arquivo termina em `pronta`, `mantida` ou `falhou`, com os tamanhos antes e
 npm install                      # na raiz do repositório
 npm test -w @agrodireto/midia-worker
 npm run otimizar -w @agrodireto/midia-worker -- caminho/foto.heic ./saida
+npm run otimizar -w @agrodireto/midia-worker -- --copia-foto caminho/foto.jpg ./saida
 npm start -w @agrodireto/midia-worker           # servidor (precisa das variáveis do .env.example)
 ```
 
 Vídeo precisa do `ffmpeg` e do `ffprobe` no PATH, com libx265 e libvmaf (a imagem Docker já traz). Sem eles, os testes de vídeo com FFmpeg real são pulados.
+
+`--copia-foto` prepara um WebP sem perda e sem EXIF, XMP ou IPTC a partir de JPEG, PNG ou WebP estático, até 6 MiB e 16 megapixels. A cópia pode ficar maior. O comando preserva o original e recusa sobrescrever uma cópia existente. Ele roda localmente, sem publicar no catálogo.
+
+## Preparar foto para o catálogo
+
+No detalhe do lote, o produtor compartilha a foto depois da aprovação da equipe. Configure `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY` no ambiente privado do worker e execute na raiz.
+
+```sh
+npm run preparar-foto-catalogo -w @agrodireto/midia-worker -- --pendentes
+npm run preparar-foto-catalogo -w @agrodireto/midia-worker -- <uuid-do-lote> <chave-da-foto>
+```
+
+O modo `--pendentes` percorre as fotos aprovadas e autorizadas que ainda precisam de cópia. Uma falha é informada com a chave da foto, e as seguintes são processadas. O comando sai com código 1 se houver alguma falha. Na próxima execução, as cópias registradas são ignoradas e as fotos ainda pendentes podem ser tentadas novamente.
+
+O modo individual retorna o caminho no bucket privado `fotos-catalogo`, inclusive quando a cópia já está registrada.
 
 ## Servidor
 

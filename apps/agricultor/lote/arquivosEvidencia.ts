@@ -22,3 +22,10 @@ export async function apagarEvidencia(chave: string) {
   const arquivo = new File(diretorio(), chave);
   if (arquivo.exists) arquivo.delete();
 }
+
+export async function lerBytesEvidencia(chave: string, limite: number) {
+  const arquivo = new File(diretorio(), chave);
+  if (!arquivo.exists || arquivo.size <= 0) throw new Error('Arquivo indisponível neste dispositivo.');
+  if (arquivo.size > limite) throw new Error('O arquivo ultrapassa 6 MiB.');
+  return arquivo.arrayBuffer();
+}

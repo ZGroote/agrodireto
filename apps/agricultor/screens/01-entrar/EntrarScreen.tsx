@@ -1,49 +1,41 @@
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Phone } from 'lucide-react-native';
-import { AppText, Button, Logo, Screen, ScreenHeader, spacing, TextField, TextLink } from '@agrodireto/ui';
-import { useAgricultor } from '@/hooks/dados';
+import { AppText, Button, Logo, Screen, ScreenHeader, TextField, TextLink } from '@agrodireto/ui';
+import { supabase } from '@/lib/supabase';
 import { rotasAgricultor } from '@/routes';
 
-/** 01 · Entrar — login por código no telefone. Auth real entra na fase de autenticação. */
 export default function EntrarScreen() {
   const router = useRouter();
-  const [telefone, setTelefone] = useState(useAgricultor().telefone);
+  const [email, setEmail] = useState('');
+  const [senha, setSenha] = useState('');
+  const [ocupado, setOcupado] = useState(false);
+  const [mensagem, setMensagem] = useState('');
+
+  async function entrar() {
+    if (!supabase || ocupado) return;
+    setOcupado(true);
+    setMensagem('');
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password: senha });
+      if (error) throw error;
+      router.replace(rotasAgricultor.cadastro);
+    } catch {
+      setMensagem('Não foi possível entrar. Confira o e-mail, a senha e a conexão.');
+    } finally {
+      setOcupado(false);
+    }
+  }
 
   return (
     <Screen header={<ScreenHeader />}>
-      <View style={styles.logo}>
-        <Logo subtitle="Agricultor" />
-      </View>
-
-      <View style={styles.head}>
-        <AppText variant="title">Entrar</AppText>
-        <AppText variant="body" color="textSecondary">
-          Receba um código no seu telefone para acessar sua conta.
-        </AppText>
-      </View>
-
-      <TextField
-        label="Telefone"
-        icon={Phone}
-        placeholder="(00) 00000-0000"
-        keyboardType="phone-pad"
-        value={telefone}
-        onChangeText={setTelefone}
-      />
-
-      <View style={styles.actions}>
-        <Button label="Receber código" disabled={telefone.trim().length < 10} onPress={() => router.push(rotasAgricultor.verificarCodigo)} />
-        <TextLink label="Criar conta" onPress={() => router.push(rotasAgricultor.criarConta)} />
-        <TextLink label="Recuperar acesso" onPress={() => router.push(rotasAgricultor.recuperarAcesso)} />
-      </View>
+      <Logo subtitle="Agricultor" />
+      <AppText variant="title">Entrar</AppText>
+      <TextField label="E-mail" keyboardType="email-address" autoCapitalize="none" value={email} onChangeText={setEmail} />
+      <TextField label="Senha" secure value={senha} onChangeText={setSenha} />
+      {!supabase && <AppText>Ambiente de integração indisponível.</AppText>}
+      {!!mensagem && <AppText accessibilityLiveRegion="polite">{mensagem}</AppText>}
+      <Button label="Entrar" loading={ocupado} disabled={!supabase || ocupado || !email.includes('@') || !senha} onPress={() => void entrar()} />
+      <TextLink label="Criar conta" onPress={() => router.push(rotasAgricultor.criarConta)} />
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  logo: { paddingBottom: spacing.sm },
-  head: { gap: spacing.xs },
-  actions: { gap: spacing.xs, paddingTop: spacing.sm },
-});

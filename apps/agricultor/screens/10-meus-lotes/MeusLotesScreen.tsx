@@ -1,80 +1,63 @@
 import { useCallback, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Package, Plus } from 'lucide-react-native';
-import { AppText, Card, EmptyState, ListRow, Screen, ScreenHeader, SegmentedControl, VStack } from '@agrodireto/ui';
-import { LoteItem } from '@/components/LoteItem';
-import { useLotes } from '@/hooks/dados';
+import { AppText, Card, EmptyState, ListRow, Screen, ScreenHeader, SegmentedControl } from '@agrodireto/ui';
 import { lerRascunhosLote, nomesEtapas, type RascunhoSalvo } from '@/lote/rascunhosLote';
+import { listarOfertasProprias } from '@/lib/ofertas';
 import { rotasAgricultor } from '@/routes';
 
-type Aba = 'disponiveis' | 'historico';
+type Aba = 'publicados' | 'retirados';
 
-/** 10 · Meus lotes (Produção) — disponíveis x histórico. Cada item abre 15 · Detalhe do lote. */
 export default function MeusLotesScreen() {
   const router = useRouter();
-  const [aba, setAba] = useState<Aba>('disponiveis');
+  const [aba, setAba] = useState<Aba>('publicados');
   const [rascunhos, setRascunhos] = useState<RascunhoSalvo[]>([]);
+  const [ofertas, setOfertas] = useState<Awaited<ReturnType<typeof listarOfertasProprias>>>([]);
   const [erroRascunhos, setErroRascunhos] = useState(false);
+  const [estado, setEstado] = useState<'carregando' | 'pronto' | 'erro'>('carregando');
+
   useFocusEffect(useCallback(() => {
     let ativo = true;
+    setEstado('carregando');
     void lerRascunhosLote().then(
-      (registros) => {
-        if (!ativo) return;
-        setRascunhos(registros);
-        setErroRascunhos(false);
-      },
+      (registros) => { if (ativo) { setRascunhos(registros); setErroRascunhos(false); } },
       () => { if (ativo) setErroRascunhos(true); },
+    );
+    void listarOfertasProprias().then(
+      (dados) => { if (ativo) { setOfertas(dados); setEstado('pronto'); } },
+      () => { if (ativo) setEstado('erro'); },
     );
     return () => { ativo = false; };
   }, []));
-  const lotes = useLotes();
-  const disponiveis = lotes.filter((l) => l.status !== 'encerrado');
-  const historico = lotes.filter((l) => l.status === 'encerrado');
-  // Como no mockup: a primeira aba lista todos os lotes (com o status de cada um); Histórico lista só os encerrados.
-  const lista = aba === 'disponiveis' ? lotes : historico;
+
+  const publicados = ofertas.filter((item) => item.retirada_em === null);
+  const retirados = ofertas.filter((item) => item.retirada_em !== null);
+  const lista = aba === 'publicados' ? publicados : retirados;
+  const locais = rascunhos.filter((rascunho) => !ofertas.some((oferta) => oferta.rascunho_id === rascunho.id));
 
   return (
-    <Screen
-      withTabBar
-      header={
-        <ScreenHeader
-          title="Meus lotes"
-          action={{ icon: Plus, label: 'Novo lote', onPress: () => router.push(rotasAgricultor.novoLote) }}
-        />
-      }
-    >
+    <Screen withTabBar header={<ScreenHeader title="Meus lotes" action={{ icon: Plus, label: 'Novo lote', onPress: () => router.push(rotasAgricultor.novoLote) }} />}>
       {erroRascunhos && <AppText>Não foi possível abrir os rascunhos deste dispositivo.</AppText>}
-      {!erroRascunhos && rascunhos.length > 0 && (
+      {!erroRascunhos && locais.length > 0 && (
         <Card>
           <AppText variant="heading">Rascunhos neste dispositivo</AppText>
-          {rascunhos.map(({ id, etapa, campos }) => (
-            <ListRow
-              key={id}
-              title={campos.produto?.trim() || 'Lote em preparação'}
-              subtitle={nomesEtapas[etapa]}
-              onPress={() => router.push(rotasAgricultor.rascunhoLote(id, etapa))}
-            />
+          {locais.map(({ id, etapa, campos }) => (
+            <ListRow key={id} title={campos.produto?.trim() || 'Lote em preparação'} subtitle={nomesEtapas[etapa]} onPress={() => router.push(rotasAgricultor.rascunhoLote(id, etapa))} />
           ))}
         </Card>
       )}
-      <SegmentedControl
-        value={aba}
-        onChange={setAba}
-        segments={[
-          { key: 'disponiveis', label: 'Disponíveis', count: disponiveis.length },
-          { key: 'historico', label: 'Histórico', count: historico.length },
-        ]}
-      />
-      {lista.length === 0 ? (
-        <EmptyState icon={Package} title={aba === 'disponiveis' ? 'Nenhum lote disponível' : 'Nenhum lote no histórico'} />
-      ) : (
-        <VStack gap="md">
-          <AppText variant="caption" color="textSecondary">Lotes de demonstração</AppText>
-          {lista.map((l) => (
-            <LoteItem key={l.id} lote={l} onPress={() => router.push(rotasAgricultor.detalheLote({ id: l.id }))} />
-          ))}
-        </VStack>
-      )}
+      <SegmentedControl value={aba} onChange={setAba} segments={[
+        { key: 'publicados', label: 'Publicados', count: publicados.length },
+        { key: 'retirados', label: 'Retirados', count: retirados.length },
+      ]} />
+      {estado === 'carregando' && <AppText>Carregando lotes…</AppText>}
+      {estado === 'erro' && <AppText>Não foi possível consultar as ofertas. Abra esta tela novamente para tentar.</AppText>}
+      {estado === 'pronto' && lista.length === 0 && <EmptyState icon={Package} title={aba === 'publicados' ? 'Nenhum lote publicado' : 'Nenhum lote retirado'} />}
+      {estado === 'pronto' && lista.map((lote) => (
+        <Card key={lote.id}>
+          <ListRow title={lote.produto} subtitle={`${lote.quantidade} ${lote.unidade}`} onPress={() => router.push(rotasAgricultor.detalheLote({ id: lote.id }))} />
+        </Card>
+      ))}
     </Screen>
   );
 }

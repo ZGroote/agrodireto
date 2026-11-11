@@ -2,16 +2,34 @@ import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Lock, Mail } from 'lucide-react-native';
-import { AppText, Button, Logo, Screen, spacing, TextField, TextLink } from '@agrodireto/ui';
+import { AppText, Button, Logo, Screen, spacing, TextField } from '@agrodireto/ui';
+import { supabase } from '@/lib/supabase';
 import { rotasCliente } from '../../routes';
 
-/** 01 · Entrar — login por e-mail e senha (empresa compradora). Auth real entra na fase de autenticação. */
+/** Acesso do comprador por e-mail e senha. */
 export default function EntrarScreen() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
+  const [entrando, setEntrando] = useState(false);
+  const [mensagem, setMensagem] = useState('');
 
   const valido = email.includes('@') && senha.length >= 6;
+
+  async function entrar() {
+    if (!supabase || entrando) return;
+    setEntrando(true);
+    setMensagem('');
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password: senha });
+      if (error) throw error;
+      router.replace(rotasCliente.ofertas);
+    } catch {
+      setMensagem('Não foi possível entrar. Confira o e-mail e a senha.');
+    } finally {
+      setEntrando(false);
+    }
+  }
 
   return (
     <Screen>
@@ -38,10 +56,9 @@ export default function EntrarScreen() {
       <TextField label="Senha" icon={Lock} placeholder="Sua senha" secure value={senha} onChangeText={setSenha} />
 
       <View style={styles.actions}>
-        <Button label="Entrar" disabled={!valido} onPress={() => router.replace(rotasCliente.inicio)} />
-        {/* Criar conta e Recuperar acesso: sem mockup do Cliente — entram na fase de autenticação. */}
-        <TextLink label="Criar conta" />
-        <TextLink label="Recuperar acesso" />
+        {!supabase && <AppText>Ambiente de integração indisponível.</AppText>}
+        {!!mensagem && <AppText accessibilityLiveRegion="polite">{mensagem}</AppText>}
+        <Button label="Entrar" disabled={!valido || !supabase || entrando} loading={entrando} onPress={() => void entrar()} />
       </View>
     </Screen>
   );

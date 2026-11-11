@@ -1,5 +1,5 @@
 import { stat, writeFile } from 'node:fs/promises';
-import sharp from 'sharp';
+import sharp, { type Metadata, type Sharp } from 'sharp';
 import { config } from './config.ts';
 import type { Resultado } from './tipos.ts';
 
@@ -24,7 +24,7 @@ export function psnr(a: Buffer, b: Buffer): number {
  * Pixels para comparar. A transparência é composta sobre fundo branco nos dois lados: as cores que ficam
  * escondidas debaixo de pixels transparentes não aparecem e o WebP as descarta de propósito.
  */
-const pixels = (img: sharp.Sharp) => img.toColourspace('srgb').flatten({ background: '#ffffff' }).raw().toBuffer({ resolveWithObject: true });
+const pixels = (img: Sharp) => img.toColourspace('srgb').flatten({ background: '#ffffff' }).raw().toBuffer({ resolveWithObject: true });
 
 type Candidato = { buffer: Buffer; psnrDb?: number; rotulo: string };
 
@@ -38,7 +38,7 @@ export async function otimizarImagem(entrada: string, saida: string): Promise<Re
   const bytesEntrada = (await stat(entrada)).size;
   const mantida = (motivo: string): Resultado => ({ status: 'mantida', tipo: 'foto', bytesEntrada, motivo });
 
-  let meta: sharp.Metadata;
+  let meta: Metadata;
   try {
     meta = await sharp(entrada, { animated: true, failOn: 'none' }).metadata();
   } catch (e) {

@@ -1,75 +1,57 @@
-import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
-import { useRouter } from 'expo-router';
-import { ChevronDown, Heart, Leaf, MapPin, Weight, type LucideIcon } from 'lucide-react-native';
-import { AppText, colors, EmptyState, radius, Screen, ScreenHeader, SearchField, sizes, spacing, TextLink } from '@agrodireto/ui';
-import { rotasCliente } from '../../routes';
+import { useCallback, useState } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { Leaf } from 'lucide-react-native';
+import type { OfertaCatalogo } from '@agrodireto/dominio';
+import { AppText, Button, Card, EmptyState, ListRow, Screen, ScreenHeader, SearchField } from '@agrodireto/ui';
+import { consultarCatalogo } from '@/lib/ofertas';
+import { rotasCliente } from '@/routes';
 
-/**
- * 03 · Ofertas (tab) — busca e lista de ofertas.
- * Item: Card com MediaThumb, código, produto, fornecedor · cidade, disponível, preço/kg
- * e chevron → rotasCliente.oferta({ id }).
- */
 export default function OfertasScreen() {
   const router = useRouter();
   const [busca, setBusca] = useState('');
-  // Lista virá do Supabase (ofertas publicadas, filtradas por busca e filtros).
-  const ofertas: never[] = [];
+  const [ofertas, setOfertas] = useState<OfertaCatalogo[]>([]);
+  const [pagina, setPagina] = useState(0);
+  const [temMais, setTemMais] = useState(false);
+  const [carregando, setCarregando] = useState(true);
+  const [mensagem, setMensagem] = useState('');
+  const [tentativa, setTentativa] = useState(0);
+
+  useFocusEffect(useCallback(() => {
+    let ativo = true;
+    setCarregando(true);
+    setMensagem('');
+    const timer = setTimeout(() => {
+      void consultarCatalogo(busca, pagina).then(
+        (dados) => {
+          if (!ativo) return;
+          setOfertas(dados);
+          setTemMais(dados.length === 20);
+        },
+        (erro: unknown) => {
+          if (ativo) setMensagem(erro instanceof Error ? erro.message : 'Não foi possível consultar o catálogo.');
+        },
+      ).finally(() => { if (ativo) setCarregando(false); });
+    }, pagina === 0 && tentativa === 0 ? 250 : 0);
+    return () => { ativo = false; clearTimeout(timer); };
+  }, [busca, pagina, tentativa]));
 
   return (
-    <Screen
-      withTabBar
-      header={
-        <ScreenHeader
-          title="Ofertas"
-          // Não está no mockup: único acesso à 11 · Favoritos.
-          action={{ icon: Heart, label: 'Favoritos', onPress: () => router.push(rotasCliente.favoritos) }}
-        />
-      }
-    >
-      <SearchField value={busca} onChangeText={setBusca} placeholder="Buscar produtos" />
-
-      <View style={styles.chips}>
-        <FilterChip icon={MapPin} label="Região" onPress={() => router.push(rotasCliente.filtros)} />
-        <FilterChip icon={Weight} label="Quantidade" onPress={() => router.push(rotasCliente.filtros)} />
-      </View>
-      {/* Não está no mockup: único acesso à 07 · Comparar ofertas. */}
-      <TextLink label="Comparar ofertas" align="right" onPress={() => router.push(rotasCliente.comparar)} />
-
-      {ofertas.length === 0 ? (
-        <EmptyState icon={Leaf} title="Nenhuma oferta encontrada" description="As ofertas publicadas pelos produtores aparecem aqui." />
-      ) : null}
+    <Screen withTabBar header={<ScreenHeader title="Ofertas" />}>
+      <SearchField value={busca} onChangeText={(valor) => { setBusca(valor); setPagina(0); setTentativa(0); setOfertas([]); }} placeholder="Buscar produtos" />
+      {!carregando && !mensagem && ofertas.map((oferta) => (
+        <Card key={oferta.id}>
+          <ListRow
+            title={oferta.produto}
+            subtitle={`${oferta.fornecedor} · ${oferta.cidade}/${oferta.uf}\n${oferta.quantidade} ${oferta.unidade} · R$ ${(oferta.preco_centavos / 100).toFixed(2).replace('.', ',')}/${oferta.unidade}`}
+            onPress={() => router.push(rotasCliente.oferta({ id: oferta.id }))}
+          />
+        </Card>
+      ))}
+      {carregando && <AppText>Carregando ofertas…</AppText>}
+      {!!mensagem && <><AppText accessibilityLiveRegion="polite">{mensagem}</AppText><Button label="Tentar novamente" onPress={() => setTentativa((n) => n + 1)} /></>}
+      {!carregando && !mensagem && ofertas.length === 0 && <EmptyState icon={Leaf} title="Nenhuma oferta encontrada" />}
+      {!carregando && !mensagem && pagina > 0 && <Button label="Página anterior" onPress={() => setPagina((n) => n - 1)} />}
+      {!carregando && !mensagem && temMais && <Button label="Próxima página" onPress={() => setPagina((n) => n + 1)} />}
     </Screen>
   );
 }
-
-/** Atalho de filtro ("Ibiúna ▾", "500 kg ▾") — abre 04 · Mapa e filtros. */
-function FilterChip({ icon: Icon, label, onPress }: { icon: LucideIcon; label: string; onPress: () => void }) {
-  return (
-    <Pressable onPress={onPress} accessibilityRole="button" style={({ pressed }) => [styles.chip, pressed && styles.pressed]}>
-      <Icon size={sizes.iconSm} color={colors.textPrimary} />
-      <AppText variant="label" style={styles.flex}>
-        {label}
-      </AppText>
-      <ChevronDown size={sizes.iconSm} color={colors.textPrimary} />
-    </Pressable>
-  );
-}
-
-const styles = StyleSheet.create({
-  chips: { flexDirection: 'row', gap: spacing.sm, marginBottom: -spacing.md },
-  chip: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    height: sizes.inputHeight - spacing.sm,
-    paddingHorizontal: spacing.md,
-    borderRadius: radius.input,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-  },
-  flex: { flex: 1 },
-  pressed: { opacity: 0.7 },
-});

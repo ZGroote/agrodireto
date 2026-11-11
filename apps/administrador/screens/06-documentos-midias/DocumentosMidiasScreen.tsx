@@ -1,62 +1,69 @@
-import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { useRouter } from 'expo-router';
-import { CalendarDays, FileText, MapPin, User, Video, type LucideIcon } from 'lucide-react-native';
-import { AppText, Button, colors, EMPTY, EmptyState, ImagePlaceholder, Screen, ScreenHeader, SegmentedControl, sizes, spacing } from '@agrodireto/ui';
+import { useCallback, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
+import { AppText, Button, Card, ListRow, Screen, ScreenHeader, TextArea } from '@agrodireto/ui';
+import { baixarOriginal, listarPendentes, revisarEvidencia, type EvidenciaPendente } from '@/lib/evidencias';
 
-type Aba = 'documentos' | 'midias';
-
-/**
- * 06 · Documentos e mídias — validação dos arquivos enviados pelo cadastro. Param: ?id=
- * Com dados: StatusPill de verificação (ex.: "Não verificado", warning).
- */
 export default function DocumentosMidiasScreen() {
-  const router = useRouter();
-  const [aba, setAba] = useState<Aba>('midias');
+  const [pendentes, setPendentes] = useState<EvidenciaPendente[]>([]);
+  const [selecionada, setSelecionada] = useState<EvidenciaPendente | null>(null);
+  const [motivo, setMotivo] = useState('');
+  const [mensagem, setMensagem] = useState('');
+  const [carregou, setCarregou] = useState(false);
+  const [ocupado, setOcupado] = useState(false);
+  const [atualizacao, setAtualizacao] = useState(0);
+
+  useFocusEffect(useCallback(() => {
+    let ativo = true;
+    setCarregou(false);
+    setSelecionada(null);
+    const carregar = atualizacao > 0 ? 'Não foi possível atualizar a fila.' : 'Não foi possível consultar a fila.';
+    void listarPendentes().then(
+      (dados) => { if (ativo) { setPendentes(dados); setMensagem(''); setCarregou(true); } },
+      () => { if (ativo) setMensagem(carregar); },
+    );
+    return () => { ativo = false; };
+  }, [atualizacao]));
+
+  async function decidir(aprovada: boolean) {
+    if (!selecionada || ocupado || (!aprovada && !motivo.trim())) return;
+    setOcupado(true);
+    setMensagem('');
+    try {
+      await revisarEvidencia(selecionada, aprovada, motivo);
+      setAtualizacao((n) => n + 1);
+    } catch (erro) {
+      setMensagem(erro instanceof Error ? erro.message : 'Não foi possível registrar a revisão.');
+    } finally {
+      setOcupado(false);
+    }
+  }
 
   return (
-    <Screen
-      header={<ScreenHeader title="Documentos e mídias" />}
-      // Validação real: Edge Function marca o arquivo como verificado e grava a auditoria.
-      footer={<Button label={aba === 'midias' ? 'Validar mídia' : 'Validar documento'} onPress={() => router.back()} />}
-    >
-      <SegmentedControl
-        value={aba}
-        onChange={setAba}
-        segments={[
-          { key: 'documentos', label: 'Documentos' },
-          { key: 'midias', label: 'Mídias' },
-        ]}
-      />
-
-      {aba === 'midias' ? (
-        <>
-          {/* Mídia virá do Storage do Supabase. */}
-          <ImagePlaceholder height={160} video label="Nenhuma mídia enviada" />
-          <View style={styles.meta}>
-            <Line icon={Video} text={`Origem: ${EMPTY}`} />
-            <Line icon={CalendarDays} text={EMPTY} />
-            <Line icon={User} text={EMPTY} />
-            <Line icon={MapPin} text={EMPTY} />
-          </View>
-        </>
-      ) : (
-        <EmptyState icon={FileText} title="Nenhum documento enviado" />
+    <Screen header={<ScreenHeader title="Revisar evidências" />}>
+      {!!mensagem && <AppText accessibilityLiveRegion="polite">{mensagem}</AppText>}
+      {!carregou && !mensagem && <AppText>Carregando evidências…</AppText>}
+      {carregou && !selecionada && pendentes.length === 0 && <AppText>Nenhuma evidência aguardando revisão.</AppText>}
+      {carregou && !selecionada && pendentes.map((item) => (
+        <Card key={`${item.lote_id}/${item.chave}`}>
+          <ListRow title={item.produto} subtitle={item.tipo === 'foto' ? 'Foto' : 'Vídeo'} onPress={() => {
+            setSelecionada(item);
+            setMotivo('');
+            setMensagem('');
+          }} />
+        </Card>
+      ))}
+      {selecionada && (
+        <Card>
+          <AppText variant="heading">{selecionada.produto}</AppText>
+          <Button label="Baixar para revisão" variant="secondary" disabled={ocupado} onPress={() => {
+            void baixarOriginal(selecionada.arquivo).catch(() => setMensagem('Não foi possível baixar o arquivo.'));
+          }} />
+          <Button label="Aprovar evidência" disabled={ocupado} onPress={() => void decidir(true)} />
+          <TextArea label="Motivo da rejeição" value={motivo} onChangeText={setMotivo} maxLength={500} />
+          <Button label="Rejeitar evidência" variant="secondary" disabled={ocupado || !motivo.trim()} onPress={() => void decidir(false)} />
+        </Card>
       )}
+      <Button label="Atualizar fila" variant="secondary" disabled={ocupado} onPress={() => setAtualizacao((n) => n + 1)} />
     </Screen>
   );
 }
-
-function Line({ icon: Icon, text }: { icon: LucideIcon; text: string }) {
-  return (
-    <View style={styles.line}>
-      <Icon size={sizes.iconMd} color={colors.textSecondary} />
-      <AppText variant="body">{text}</AppText>
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  meta: { gap: spacing.sm },
-  line: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-});

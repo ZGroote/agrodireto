@@ -36,7 +36,8 @@
           "cameraPermission": "O AgroDireto precisa da câmera para registrar fotos e vídeos da sua produção.",
           "microphonePermission": "O AgroDireto precisa do microfone para gravar o áudio dos vídeos."
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true

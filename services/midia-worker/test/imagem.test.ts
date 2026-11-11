@@ -1,10 +1,11 @@
 import assert from 'node:assert/strict';
-import { mkdtemp, rm, stat, writeFile } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { after, before, describe, it } from 'node:test';
 import sharp from 'sharp';
 import { config } from '../src/config.ts';
+import { prepararCopiaFoto } from '../src/copiaFoto.ts';
 import { otimizarImagem, psnr } from '../src/imagem.ts';
 import { processarArquivo } from '../src/processar.ts';
 
@@ -145,6 +146,38 @@ describe('otimização de imagem', () => {
     assert.equal(r.tipo, 'foto');
     assert.equal(r.status, 'pronta', r.motivo ?? 'sem motivo');
     assert.ok((await stat(join(pasta, 'FOTO-GRANDE.webp'))).size > 0);
+  });
+});
+
+describe('cópia de foto sem metadados', () => {
+  it('gera uma cópia mesmo quando ela fica maior e preserva a orientação', async () => {
+    const entrada = join(pasta, 'privada.jpg');
+    const saida = join(pasta, 'privada.sanitizada.webp');
+    await sharp(pixelsDeFoto(800, 600), { raw: { width: 800, height: 600, channels: 3 } })
+      .jpeg({ quality: 20 }).withMetadata({ orientation: 6 })
+      .toFile(entrada);
+    const original = await readFile(entrada);
+    const metadadosOriginais = await sharp(original).metadata();
+    assert.ok(metadadosOriginais.exif);
+    assert.equal(metadadosOriginais.orientation, 6);
+
+    const resultado = await prepararCopiaFoto(entrada, saida);
+    assert.equal(resultado.status, 'pronta', resultado.motivo ?? 'sem motivo');
+    assert.ok((resultado.bytesSaida ?? 0) > resultado.bytesEntrada);
+    const meta = await sharp(saida).metadata();
+    assert.deepEqual([meta.width, meta.height], [600, 800]);
+    assert.equal(meta.exif, undefined);
+    assert.equal(meta.xmp, undefined);
+    assert.equal(meta.iptc, undefined);
+    assert.deepEqual(await readFile(entrada), original);
+  });
+
+  it('recusa SVG renomeado e não deixa uma cópia', async () => {
+    const entrada = join(pasta, 'vetor.png');
+    const saida = join(pasta, 'vetor.sanitizada.webp');
+    await writeFile(entrada, '<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"/>');
+    assert.equal((await prepararCopiaFoto(entrada, saida)).status, 'falhou');
+    await assert.rejects(stat(saida), { code: 'ENOENT' });
   });
 });
 

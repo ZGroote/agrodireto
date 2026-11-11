@@ -26,6 +26,7 @@ export default function InicioScreen() {
       {/* Não estão no mockup: únicos acessos às telas 07, 09, 15 e 16. */}
       <Card>
         <ListRow icon={Package} title="Revisão de lotes" onPress={() => router.push(rotasAdministrador.revisaoLote())} />
+        <ListRow icon={ClipboardCheck} title="Revisar evidências" onPress={() => router.push(rotasAdministrador.documentosMidias())} />
         <Divider />
         <ListRow icon={ClipboardCheck} title="Inspeções" onPress={() => router.push(rotasAdministrador.inspecoes)} />
         <Divider />

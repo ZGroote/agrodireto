@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { apagarEvidencia, armazenarEvidencia } from './arquivosEvidencia';
+import { supabase } from '@/lib/supabase';
 
 export type Unidade = 'kg' | 'cx' | 't';
 export type EtapaLote = 'novo' | 'padrao' | 'preco' | 'revisar';
@@ -93,27 +94,50 @@ function lerRegistro(valor: unknown): RascunhoSalvo {
   return { id, etapa, campos: lerCampos(campos) };
 }
 
-async function lerArmazenamento(): Promise<RascunhoSalvo[]> {
-  const json = await AsyncStorage.getItem(chave);
+async function chaveDaConta() {
+  const resposta = await supabase?.auth.getSession();
+  const id = resposta?.data.session?.user.id;
+  if (!id) throw new Error('Sessão indisponível');
+  return `${chave}/${id}`;
+}
+
+function lerLista(json: string): RascunhoSalvo[] {
+  const registros: unknown = JSON.parse(json);
+  if (!Array.isArray(registros)) throw new Error('Lista de rascunhos inválida');
+  return registros.map(lerRegistro);
+}
+
+async function lerArmazenamento(chaveConta: string): Promise<RascunhoSalvo[]> {
+  const json = await AsyncStorage.getItem(chaveConta);
   if (json !== null) {
-    const registros: unknown = JSON.parse(json);
-    if (!Array.isArray(registros)) throw new Error('Lista de rascunhos inválida');
-    return registros.map(lerRegistro);
+    return lerLista(json);
   }
+  const chaveDono = `${chave}/dono-legado`;
+  const dono = await AsyncStorage.getItem(chaveDono);
+  if (dono && dono !== chaveConta) return [];
+  const legado = await AsyncStorage.getItem(chave);
   const antigo = await AsyncStorage.getItem(chaveAnterior);
-  return antigo === null ? [] : [{ id: 'anterior', etapa: 'novo', campos: lerCampos(JSON.parse(antigo)) }];
+  if (legado === null && antigo === null) return [];
+  const registros: RascunhoSalvo[] = legado !== null ? lerLista(legado) : [
+    { id: 'anterior', etapa: 'novo', campos: lerCampos(JSON.parse(antigo ?? 'null')) },
+  ];
+  await AsyncStorage.setItem(chaveDono, chaveConta);
+  await AsyncStorage.setItem(chaveConta, JSON.stringify(registros));
+  return registros;
 }
 
 let gravacao = Promise.resolve();
 
-export async function lerRascunhosLote() {
-  await gravacao;
-  return lerArmazenamento();
+export function lerRascunhosLote() {
+  const operacao = gravacao.then(async () => lerArmazenamento(await chaveDaConta()));
+  gravacao = operacao.then(() => {}, () => {});
+  return operacao;
 }
 
 function alterarRascunhos(id: string, etapa: EtapaLote | null, campos: LoteDraft) {
   const operacao = gravacao.then(async () => {
-    const registros = await lerArmazenamento();
+    const chaveConta = await chaveDaConta();
+    const registros = await lerArmazenamento(chaveConta);
     const anterior = registros.find((item) => item.id === id);
     const outros = registros.filter((item) => item.id !== id);
     const evidencias: EvidenciaDraft[] = [];
@@ -137,7 +161,7 @@ function alterarRascunhos(id: string, etapa: EtapaLote | null, campos: LoteDraft
 
     const salvo = { ...campos, evidencias };
     const atualizados = etapa === null ? outros : [{ id, etapa, campos: salvo }, ...outros];
-    await AsyncStorage.setItem(chave, JSON.stringify(atualizados));
+    await AsyncStorage.setItem(chaveConta, JSON.stringify(atualizados));
     const mantidas = new Set(evidencias.map((item) => chaveEvidencia(id, item)));
     for (const chaveArquivo of anteriores) {
       if (mantidas.has(chaveArquivo)) continue;

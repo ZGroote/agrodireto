@@ -26,6 +26,20 @@ Um arquivo por passo, em ordem. Nome: `AAAA-MM-DD_NNN_titulo-curto.md`.
 | 007 | 2026-11-10 | [Previsão de safra por cultura](2026-11-10_007_previsao-safra-local.md) |
 | 008 | 2026-11-10 | [Vários rascunhos de lote e previsão da cultura](2026-11-10_008_rascunhos-e-previsao.md) |
 | 009 | 2026-11-10 | [Evidências persistentes e preparação do Storage](2026-11-10_009_evidencias-e-storage.md) |
+| 010 | 2026-11-10 | [Ambiente Supabase de integração e bucket privado](2026-11-10_010_supabase-integracao.md) |
+| 001 | 2026-11-11 | [Autenticação e cadastro de propriedade em homologação](2026-11-11_001_identidade-e-propriedades.md) |
+| 002 | 2026-11-11 | [Ajustes no cadastro e acesso em homologação](2026-11-11_002_ajustes-no-cadastro.md) |
+| 003 | 2026-11-11 | [Publicação de lotes e catálogo em homologação](2026-11-11_003_catalogo-homologacao.md) |
+| 004 | 2026-11-11 | [Evidências privadas de lote em homologação](2026-11-11_004_evidencias-privadas.md) |
+| 005 | 2026-11-11 | [Revisão de evidências em homologação](2026-11-11_005_revisao-de-evidencias.md) |
+| 006 | 2026-11-11 | [Teste com imagem real](2026-11-11_006_teste-foto-real.md) |
+| 007 | 2026-11-11 | [Otimização da imagem de teste](2026-11-11_007_otimizacao-foto.md) |
+| 008 | 2026-11-11 | [Hub de homologação](2026-11-11_008_hub-homologacao.md) |
+| 009 | 2026-11-11 | [Teste com a imagem otimizada](2026-11-11_009_teste-webp.md) |
+| 010 | 2026-11-11 | [Cópia de foto sem metadados](2026-11-11_010_copia-foto-sem-metadados.md) |
+| 011 | 2026-11-11 | [Fotos autorizadas no catálogo](2026-11-11_011_fotos-no-catalogo.md) |
+| 012 | 2026-11-11 | [Preparo em lote das fotos do catálogo](2026-11-11_012_preparo-em-lote-das-fotos.md) |
+| 013 | 2026-11-11 | [Inspeção de qualidade dos lotes](2026-11-11_013_inspecao-dos-lotes.md) |
 
 ## Documentos de referência
 

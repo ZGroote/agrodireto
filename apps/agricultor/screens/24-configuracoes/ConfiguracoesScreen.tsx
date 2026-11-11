@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
+import { supabase } from '@/lib/supabase';
 import { useRouter } from 'expo-router';
 import { Bell, Camera, CircleHelp, Cloud, FileText, Landmark, LogOut, RefreshCw, ShieldAlert, ShieldCheck, User } from 'lucide-react-native';
 import { AppText, Button, Card, colors, Divider, ListRow, Screen, ScreenHeader, sizes, spacing } from '@agrodireto/ui';
@@ -72,7 +73,11 @@ export default function ConfiguracoesScreen() {
 
       {/* Sair não está no mockup: é a saída do app (volta ao Onboarding). */}
       <Card>
-        <ListRow icon={LogOut} title="Sair" tone="danger" chevron={false} onPress={() => router.dismissTo('/')} />
+        <ListRow icon={LogOut} title="Sair" tone="danger" chevron={false} onPress={() => {
+          void supabase?.auth.signOut({ scope: 'local' }).then(({ error }) => {
+            if (!error) router.dismissTo('/entrar');
+          });
+        }} />
       </Card>
     </Screen>
   );
