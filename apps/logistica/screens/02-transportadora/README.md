@@ -13,8 +13,11 @@ Voltar, título, subtítulo, Razão social, CNPJ, Contato, Salvar cadastro.
 - **Chega de:** 01 Entrar (Criar conta) · 22 Configurações (Conta)
 - **Vai para:** 03 Veículos
 
-## Dados (fase de integração)
-Tabela de transportadoras (PRD: cadastro logístico). Migrar rascunho do AsyncStorage após signup.
+## Dados
+`cadastros_transportadora` (migration `20261111087000_transportadoras.sql`) por `lib/transportadora.ts`.
+Primeiro envio cria a organização do tipo transportadora com a conta como titular; segue para 03 Veículos.
+Com ajustes pedidos pela operação, mostra o motivo e permite reenviar. Em análise ou aprovado, só consulta.
 
 ## Pendências e observações
-Validação local: razão social preenchida, CNPJ com 14 dígitos, telefone com 10+ dígitos. Sem máscara de CNPJ/telefone.
+Campos além do mockup (pedido do C03): nome do contato, cidade/UF, estados atendidos e tipos de carga.
+Validação local só de formato; dígitos do CNPJ (inclusive alfanumérico) e listas são conferidos no banco. Sem máscara de CNPJ/telefone.

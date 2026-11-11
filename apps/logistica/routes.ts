@@ -14,6 +14,7 @@ export const rotasLogistica = {
   onboarding: '/onboarding',
   paywall: '/paywall',
   entrar: '/entrar',
+  criarConta: '/criar-conta',
 
   // Cadastro da transportadora (sem tab bar)
   transportadora: '/cadastro',
