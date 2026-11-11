@@ -9,6 +9,7 @@ export type EvidenciaDraft = { id: string; tipo: 'foto' | 'video'; uri?: string;
 export type LoteDraft = {
   produto?: string;
   culturaId?: string;
+  propriedadeId?: string;
   origem?: string;
   quantidade: string;
   unidade: Unidade;
@@ -37,7 +38,7 @@ export const nomesEtapas: Record<EtapaLote, string> = {
 const chave = '@agrodireto/agricultor/lotes-rascunhos/v2';
 const chaveAnterior = '@agrodireto/agricultor/lote-rascunho/v1';
 const camposObrigatorios = ['quantidade', 'precoUnitario', 'dataColheita', 'retirada', 'condicoes', 'validade'] as const;
-const camposOpcionais = ['produto', 'culturaId', 'origem', 'padrao', 'calibre', 'embalagem'] as const;
+const camposOpcionais = ['produto', 'culturaId', 'propriedadeId', 'origem', 'padrao', 'calibre', 'embalagem'] as const;
 
 export function criarIdLote() {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
