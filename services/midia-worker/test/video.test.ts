@@ -1,12 +1,12 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { access, mkdtemp, readdir, rm, stat, writeFile } from 'node:fs/promises';
+import { access, mkdtemp, readdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { after, before, describe, it } from 'node:test';
 import { config } from '../src/config.ts';
 import { processarArquivo } from '../src/processar.ts';
-import { argsCodificacao, argsCopiaSemMetadados, executarReal, lerVmaf, otimizarVideo, type Executor, type Sonda } from '../src/video.ts';
+import { argsCodificacao, argsCopiaSemMetadados, executarReal, lerVmaf, otimizarVideo, prepararCopiaVideo, type Executor, type Sonda } from '../src/video.ts';
 
 let pasta = '';
 before(async () => {
@@ -240,5 +240,37 @@ describe('cópia de vídeo sem metadados (FFmpeg de verdade)', { skip: ffmpegCom
     assert.doesNotMatch(JSON.stringify(info), /23\.5505|"location|ISO6709/i);
     assert.deepEqual(info.streams.map((s) => s.codec_type), ['video']);
     assert.equal(info.streams[0]?.width, 320);
+  });
+});
+
+describe('cópia de vídeo do catálogo (D08)', () => {
+  it('acima de 60 s ou sem faixa de vídeo falha sem gerar cópia', async () => {
+    const longo = ffmpegSimulado({ notas: [], duracao: '75' });
+    const r = await prepararCopiaVideo(await criarOriginal('cat-longo.mp4'), join(pasta, 'cat-longo.out.mp4'), longo.executar);
+    assert.equal(r.status, 'falhou');
+    assert.deepEqual(longo.chamadas.map((c) => c.tipo), ['sonda']);
+    const semVideo = ffmpegSimulado({ notas: [], semVideo: true });
+    assert.equal((await prepararCopiaVideo(await criarOriginal('cat-audio.mp4'), join(pasta, 'cat-audio.out.mp4'), semVideo.executar)).status, 'falhou');
+  });
+
+  it('com FFmpeg real: H.264 8 bits, AAC, sem localização nem legenda, índice no começo', { skip: ffmpegCompleto() ? false : 'ffmpeg não encontrado' }, async () => {
+    const entrada = join(pasta, 'cat-gps.mov');
+    const legenda = join(pasta, 'cat-gps.srt');
+    await writeFile(legenda, '1\n00:00:00,000 --> 00:00:01,000\nGPS(-23.5505,-46.6333)\n');
+    execFileSync(config.ffmpeg, ['-y', '-loglevel', 'error', '-f', 'lavfi', '-i', 'testsrc2=size=320x240:rate=10:duration=1',
+      '-f', 'lavfi', '-i', 'sine=duration=1', '-i', legenda, '-map', '0', '-map', '1', '-map', '2', '-c:v', 'libx265', '-c:a', 'aac',
+      '-c:s', 'mov_text', '-metadata', 'location=-23.5505-046.6333/', '-pix_fmt', 'yuv420p10le', '-tag:v', 'hvc1', entrada]);
+    const saida = join(pasta, 'cat-gps.out.mp4');
+    const r = await prepararCopiaVideo(entrada, saida);
+    assert.equal(r.status, 'pronta', r.motivo ?? 'sem motivo');
+    const info = execFileSync(config.ffprobe, ['-v', 'error', '-print_format', 'json', '-show_streams', '-show_format', saida], { encoding: 'utf8' });
+    assert.doesNotMatch(info, /-23\.5505/);
+    const dados = JSON.parse(info) as { streams: { codec_type: string; codec_name: string; pix_fmt?: string }[] };
+    assert.deepEqual(dados.streams.map((s) => s.codec_type).sort(), ['audio', 'video']);
+    const video = dados.streams.find((s) => s.codec_type === 'video');
+    assert.equal(video?.codec_name, 'h264');
+    assert.equal(video?.pix_fmt, 'yuv420p');
+    const bytes = await readFile(saida);
+    assert.ok(bytes.indexOf('moov') < bytes.indexOf('mdat'), 'índice (moov) antes dos dados');
   });
 });

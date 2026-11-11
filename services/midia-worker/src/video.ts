@@ -91,6 +91,40 @@ export function argsCopiaSemMetadados(entrada: string, saida: string): string[] 
     '-map_metadata', '-1', '-map_chapters', '-1', '-c', 'copy', '-movflags', '+faststart', saida];
 }
 
+/**
+ * Cópia para o catálogo (D08): H.264 8 bits + AAC, o par que toca em qualquer celular e navegador, sem metadados,
+ * sem faixas de dados/legenda (GPS do drone) e com o índice no começo para tocar antes de baixar inteiro.
+ */
+export function argsCopiaCatalogo(entrada: string, saida: string): string[] {
+  return ['-y', '-hide_banner', '-loglevel', 'error', '-i', entrada, '-map', '0:v:0', '-map', '0:a:0?',
+    '-map_metadata', '-1', '-map_chapters', '-1', '-c:v', 'libx264', '-crf', '23', '-preset', 'medium',
+    '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '128k', '-movflags', '+faststart', saida];
+}
+
+/** Gera a cópia de vídeo do catálogo. Sem faixa de vídeo, acima do limite de duração ou sem decodificador: falha com motivo. */
+export async function prepararCopiaVideo(entrada: string, saida: string, executar: Executor = executarReal): Promise<Resultado> {
+  const bytesEntrada = (await stat(entrada)).size;
+  const falha = (motivo: string): Resultado => ({ status: 'falhou', tipo: 'video', bytesEntrada, motivo });
+  let sonda: Sonda;
+  try {
+    sonda = await sondar(entrada, executar);
+  } catch {
+    return falha('Formato de vídeo sem decodificador no worker.');
+  }
+  if (!sonda.temVideo) return falha('O arquivo não tem faixa de vídeo.');
+  if (sonda.duracaoSeg > config.duracaoMaxVideoSeg) {
+    return falha(`Vídeo com ${Math.ceil(sonda.duracaoSeg)} s passa do limite de ${config.duracaoMaxVideoSeg} s.`);
+  }
+  try {
+    await executar(config.ffmpeg, argsCopiaCatalogo(entrada, saida));
+  } catch (e) {
+    await apagar(saida);
+    return falha(e instanceof Error ? e.message : 'Não foi possível gerar a cópia do vídeo.');
+  }
+  return { status: 'pronta', tipo: 'video', arquivoSaida: saida, formatoSaida: 'mp4', bytesEntrada,
+    bytesSaida: (await stat(saida)).size, largura: sonda.largura, altura: sonda.altura, qualidade: { codec: 'h264' } };
+}
+
 /** Extrai a nota do texto que o libvmaf imprime: "VMAF score: 96.21" */
 export function lerVmaf(texto: string): number | undefined {
   const m = texto.match(/VMAF score:\s*([0-9]+(?:\.[0-9]+)?)/i);

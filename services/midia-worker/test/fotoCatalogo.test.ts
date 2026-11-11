@@ -25,7 +25,7 @@ test('gera WebP sem EXIF e só registra a cópia depois do upload privado', asyn
         if (url.pathname === '/rest/v1/evidencias_lote') {
           assert.equal(url.searchParams.get('autorizada_catalogo'), 'eq.true');
           assert.equal(url.searchParams.get('revisao'), 'eq.aprovada');
-          if (req.method === 'GET') return Response.json([{ arquivo, copia_catalogo: registrada }]);
+          if (req.method === 'GET') return Response.json([{ arquivo, tipo: 'foto', copia_catalogo: registrada }]);
           assert.equal(req.method, 'PATCH');
           assert.equal(url.searchParams.get('arquivo'), 'eq.' + arquivo);
           assert.deepEqual(await req.json(), { copia_catalogo: copia });
@@ -83,7 +83,7 @@ test('avança para a próxima página mesmo quando fotos perdem a autorização'
           assert.equal(consulta.get('order'), 'lote_id.asc,chave.asc');
           return Response.json(cursor ? [proxima] : primeiraPagina);
         }
-        return Response.json(consulta.get('chave') === 'eq.foto-25' ? [{ copia_catalogo: copia }] : []);
+        return Response.json(consulta.get('chave') === 'eq.foto-25' ? [{ tipo: 'foto', copia_catalogo: copia }] : []);
       },
     },
   });

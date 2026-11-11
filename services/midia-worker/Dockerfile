@@ -10,6 +10,7 @@ RUN apt-get update \
 
 # O build FALHA se faltar algum recurso que o worker exige (em vez de falhar só quando chegar o primeiro vídeo).
 RUN ffmpeg -hide_banner -encoders 2>/dev/null | grep -q libx265 \
+ && ffmpeg -hide_banner -encoders 2>/dev/null | grep -q libx264 \
  && ffmpeg -hide_banner -encoders 2>/dev/null | grep -q libsvtav1 \
  && ffmpeg -hide_banner -filters 2>/dev/null | grep -q libvmaf
 
