@@ -19,3 +19,14 @@
 ## Bloqueio: e-mail de recuperação
 
 O modelo padrão "Reset password" do Supabase manda **só o link**, sem `{{ .Token }}`, e o painel só deixa editar modelos com **SMTP próprio**. Até configurar o SMTP, a recuperação por código dos apps Logística, Agricultor e Cliente (DOC 025 e 026) não funciona. Precisa de um provedor e credenciais do usuário.
+
+## E-mail pré-configurado (pedido do usuário: cadastrar o SMTP depois)
+
+O modelo está pronto em `supabase/templates/recuperar-senha.html` (assunto no comentário da primeira linha). Ele usa `{{ .Token }}`, que é o código que as telas de recuperação dos apps esperam (6 a 10 dígitos).
+
+Quando houver um provedor (Resend, Brevo, Amazon SES ou o SMTP de um e-mail da empresa):
+
+1. Supabase `agro` > Authentication > Emails > **SMTP Settings**: ligar o SMTP próprio e preencher host, porta, usuário, senha, e-mail e nome do remetente ("AgroDireto"). As credenciais não vão para o repositório.
+2. Authentication > Emails > **Reset password**: colar o assunto e o corpo do arquivo acima e salvar.
+3. Authentication > **Rate Limits**: subir o limite de e-mails por hora para o volume do piloto.
+4. Testar pelo "Esqueci minha senha" de um app com uma conta real (roteiros nos DOC 025 e 026).

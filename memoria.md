@@ -6,8 +6,8 @@ Aplicado no `agro` em 11/11 (ensaio com rollback antes): `20261111100000` a `202
 
 BLOQUEIO: o modelo "Reset password" padrão manda só link; editar exige SMTP próprio. A recuperação por código dos apps não funciona até o usuário fornecer um SMTP.
 
-Agentes: Oferta e Identidade (Codex, conta Padrão) pararam no limite de 5h (volta às 21:55); Logística (Claude, Padrão) pausada, porque o que sobra dela depende de F03.
+Agentes (18:30): Oferta no Claude "jaogroote" (D03, plano) e Identidade no Claude "Padrão" (B01 etapa 2, plano); Logística (Claude "Padrão") pausada, porque o que sobra dela depende de F03. Codex "Padrão" volta às 21:55 e Codex "trabalho" está com menos de 5% na semana. As rotinas das 22:00 foram pausadas.
 
-Pendências do usuário: SMTP próprio (provedor e credenciais); ensaio em aparelho (roteiros nos DOC 025 e 026). Inclusão de membro: só por e-mail por enquanto, convite no futuro (caminho no DOC 027).
+Pendências do usuário: SMTP próprio (provedor e credenciais; modelo e passo a passo prontos em `supabase/templates/recuperar-senha.html` e DOC 028); ensaio em aparelho (roteiros nos DOC 025 e 026). Inclusão de membro: só por e-mail por enquanto, convite no futuro (caminho no DOC 027).
 
 Próximo passo: Oferta segue para D03/D07 e Identidade para a B01 etapa 2 (seletor de contexto e inclusão de membros nas telas).
