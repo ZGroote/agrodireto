@@ -10,7 +10,7 @@ Um Maestro (Claude Code, andar térreo) e um agente por andar. Cada andar é um 
 |---|---|---|
 | Oferta e mídia | D01, D02, D07, D08, E00, E01, E02 | `apps/agricultor`, `apps/cliente`, `services/midia-worker` |
 | Logística | G03, G04, G05, G06, G08 (e o que falta de B04) | `apps/logistica` |
-| Identidade e operação | B01, B02, B03, B05, C01, C04 | `apps/administrador`, telas de sessão dos apps |
+| Identidade e operação | B01, B05, C01, C04 (B02 e B03 passaram para a Logística em 11/11) | `apps/administrador`, telas de sessão dos apps |
 
 Ficam fora por enquanto: negociação (F) e pagamento (G01, G02, G07), que dependem de lote publicado (E01).
 
