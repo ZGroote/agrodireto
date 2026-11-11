@@ -14,6 +14,10 @@ export const rotasCliente = {
   onboarding: '/onboarding',
   paywall: '/paywall',
   entrar: '/entrar',
+  criarConta: '/criar-conta',
+
+  // Cadastro da empresa compradora (sem tab bar)
+  empresa: '/empresa',
 
   // Tabs
   inicio: '/inicio',
@@ -77,4 +81,6 @@ export const telasCliente: { numero: string; nome: string; href: Href }[] = [
   { numero: '22', nome: 'Faturas e financeiro', href: rotasCliente.faturas },
   { numero: '23', nome: 'Mensagens', href: rotasCliente.mensagens },
   { numero: '24', nome: 'Configurações', href: rotasCliente.perfil },
+  { numero: '25', nome: 'Criar conta', href: rotasCliente.criarConta },
+  { numero: '26', nome: 'Cadastro da empresa', href: rotasCliente.empresa },
 ];

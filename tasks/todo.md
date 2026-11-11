@@ -163,6 +163,8 @@ Etapa 0 iniciada em 10/11/2026. O estado de cada tarefa está na lista abaixo.
 
 - [ ] Concluída e verificada.
 
+**Progresso:** desde 11/11 o comprador cria conta, cadastra a empresa (CNPJ validado, inclusive alfanumérico), acompanha a análise e corrige ajustes; a equipe aprova no Administrador e só empresa aprovada vê o catálogo. Verificado no banco de homologação. Falta ensaio pelas telas com contas reais e os termos do comprador.
+
 **Responsável:** Cliente + backend. **Dependências:** B03.
 
 **Entrega e aceite:** Gravar empresa, contatos e endereço necessários ao piloto com estado de aprovação.

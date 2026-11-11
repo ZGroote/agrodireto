@@ -42,6 +42,8 @@ Um arquivo por passo, em ordem. Nome: `AAAA-MM-DD_NNN_titulo-curto.md`.
 | 013 | 2026-11-11 | [Inspeção de qualidade dos lotes](2026-11-11_013_inspecao-dos-lotes.md) |
 | 014 | 2026-11-11 | [Ampliação do piloto](2026-11-11_014_ampliacao-do-piloto.md) |
 | 015 | 2026-11-11 | [Organizações e várias propriedades](2026-11-11_015_organizacoes-e-propriedades.md) |
+| 016 | 2026-11-11 | [Pesquisa das decisões do piloto ampliado](2026-11-11_016_pesquisa-decisoes-piloto-ampliado.md) |
+| 017 | 2026-11-11 | [Empresa compradora](2026-11-11_017_empresa-compradora.md) |
 
 ## Documentos de referência
 
