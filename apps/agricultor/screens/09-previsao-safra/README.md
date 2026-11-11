@@ -11,7 +11,7 @@ Estimativa, faixa estimada e etapa.
 - **Vai para:** volta
 
 ## Dados
-Lidos por `hooks/dados.ts` (usePrevisao, useCatalogo). Hoje vêm de dados-demo (fictício).
+Lidos e gravados por `lib/culturas.ts` na tabela `culturas` (RPC `salvar_previsao`). Unidade vem do catálogo `catalogo_culturas`; faixa opcional, sem ±10% assumido.
 
 ## Observações
 Faixa = ±10% da estimativa (regra a confirmar). Etapa abre uma folha de opções.

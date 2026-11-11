@@ -11,7 +11,7 @@ Cadastrar o que está sendo plantado.
 - **Vai para:** volta
 
 ## Dados
-Lidos por `hooks/dados.ts` (useCatalogo, useCulturaRascunho). Hoje vêm de dados-demo (fictício).
+Cultura escolhida de `catalogo_culturas`; gravada em `culturas` pela RPC `salvar_cultura` (`lib/culturas.ts`). Etapas ainda vêm de `hooks/dados.ts` (useCatalogo).
 
 ## Observações
 CRIADA ALÉM DO MOCKUP.

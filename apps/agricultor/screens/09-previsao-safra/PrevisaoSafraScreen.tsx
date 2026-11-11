@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from 'react';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
-import { AppText, Button, DateField, ListRow, Screen, ScreenHeader, TextField, TextLink } from '@agrodireto/ui';
-import { lerCulturas, previsaoValida, salvarPrevisao, type CulturaLocal, type PrevisaoLocal } from '@/lib/culturasLocais';
+import { AppText, Button, DateField, ListRow, Screen, ScreenHeader, SelectField, TextField, TextLink } from '@agrodireto/ui';
+import { lerCulturas, previsaoValida, salvarPrevisao, type Cultura, type Previsao, type Unidade } from '@/lib/culturas';
 import { rotasAgricultor } from '@/routes';
 
 export default function PrevisaoSafraScreen() {
@@ -11,7 +11,7 @@ export default function PrevisaoSafraScreen() {
 
 function PrevisaoPorCultura({ id }: { id?: string }) {
   const router = useRouter();
-  const [culturas, setCulturas] = useState<CulturaLocal[]>();
+  const [culturas, setCulturas] = useState<Cultura[]>();
   const [erro, setErro] = useState(false);
 
   useFocusEffect(useCallback(() => {
@@ -28,7 +28,7 @@ function PrevisaoPorCultura({ id }: { id?: string }) {
 
   return (
     <Screen withTabBar header={<ScreenHeader title="Previsão de safra" />}>
-      {erro && <AppText>Não foi possível carregar as culturas deste dispositivo.</AppText>}
+      {erro && <AppText>Não foi possível carregar as culturas. Verifique a conexão e tente novamente.</AppText>}
       {!erro && !culturas && <AppText>Carregando culturas…</AppText>}
       {culturas?.length === 0 && (
         <>
@@ -38,7 +38,7 @@ function PrevisaoPorCultura({ id }: { id?: string }) {
       )}
       {!!culturas?.length && (
         <>
-          {id && <AppText>Esta cultura não está disponível neste dispositivo.</AppText>}
+          {id && <AppText>Esta cultura não está mais disponível.</AppText>}
           <AppText variant="label">Escolha a cultura</AppText>
           {culturas.map((item) => (
             <ListRow key={item.id} title={item.cultura} subtitle={item.variedade || undefined} onPress={() => router.replace({
@@ -56,40 +56,42 @@ function peso(valor: string) {
   return /^\d+$/.test(texto) ? Number(texto) : 0;
 }
 
-function FormularioPrevisao({ cultura }: { cultura: CulturaLocal }) {
+const nomesUnidade: Record<Unidade, string> = { kg: 'Quilos (kg)', cx: 'Caixas (cx)', t: 'Toneladas (t)' };
+
+function FormularioPrevisao({ cultura }: { cultura: Cultura }) {
   const router = useRouter();
-  const [estimativa, setEstimativa] = useState(cultura.previsao?.estimativaKg?.toString() ?? '');
-  const [minimo, setMinimo] = useState(cultura.previsao?.minimoKg?.toString() ?? '');
-  const [maximo, setMaximo] = useState(cultura.previsao?.maximoKg?.toString() ?? '');
+  const [unidade, setUnidade] = useState<Unidade | undefined>(cultura.previsao?.unidade ?? (cultura.unidades.length === 1 ? cultura.unidades[0] : undefined));
+  const [estimativa, setEstimativa] = useState(cultura.previsao?.estimativa.toString() ?? '');
+  const [minimo, setMinimo] = useState(cultura.previsao?.minimo?.toString() ?? '');
+  const [maximo, setMaximo] = useState(cultura.previsao?.maximo?.toString() ?? '');
   const [colheita, setColheita] = useState(cultura.previsao?.colheita ?? '');
-  const [erro, setErro] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
   const [salvando, setSalvando] = useState(false);
   const gravando = useRef(false);
 
-  const previsao: PrevisaoLocal = {
-    estimativaKg: peso(estimativa),
+  const previsao: Previsao | null = unidade ? {
+    unidade,
+    estimativa: peso(estimativa),
     colheita,
-    minimoKg: minimo.trim() ? peso(minimo) : undefined,
-    maximoKg: maximo.trim() ? peso(maximo) : undefined,
-  };
-  const valida = previsaoValida(previsao);
-  const quantidadeValida = Number.isSafeInteger(previsao.estimativaKg) && previsao.estimativaKg > 0;
+    minimo: minimo.trim() ? peso(minimo) : undefined,
+    maximo: maximo.trim() ? peso(maximo) : undefined,
+  } : null;
+  const valida = !!previsao && previsaoValida(previsao, cultura.unidades);
+  const quantidadeValida = peso(estimativa) > 0;
   const faixaInvalida = !!(minimo.trim() || maximo.trim()) && (
-    !previsao.minimoKg || !previsao.maximoKg
-    || !Number.isSafeInteger(previsao.minimoKg) || !Number.isSafeInteger(previsao.maximoKg)
-    || previsao.minimoKg > previsao.estimativaKg || previsao.maximoKg < previsao.estimativaKg
+    !peso(minimo) || !peso(maximo) || peso(minimo) > peso(estimativa) || peso(maximo) < peso(estimativa)
   );
 
   async function salvar() {
-    if (!valida || gravando.current) return;
+    if (!valida || !previsao || gravando.current) return;
     gravando.current = true;
     setSalvando(true);
-    setErro(false);
+    setErro(null);
     try {
-      await salvarPrevisao(cultura.id, previsao);
+      await salvarPrevisao(cultura, previsao);
       router.back();
-    } catch {
-      setErro(true);
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : 'Não foi possível salvar a previsão. Tente novamente.');
     } finally {
       gravando.current = false;
       setSalvando(false);
@@ -99,19 +101,22 @@ function FormularioPrevisao({ cultura }: { cultura: CulturaLocal }) {
   return (
     <Screen
       withTabBar
-      header={<ScreenHeader title="Previsão de safra" subtitle="A previsão fica salva neste dispositivo." />}
+      header={<ScreenHeader title="Previsão de safra" subtitle="A previsão é uma estimativa e não conta como estoque." />}
       footer={<Button label="Salvar previsão" disabled={!valida} loading={salvando} onPress={() => void salvar()} />}
     >
       <AppText variant="heading">{cultura.cultura}</AppText>
       {!!cultura.variedade && <AppText variant="caption">{cultura.variedade}</AppText>}
       <DateField label="Data prevista de colheita" value={colheita} onChange={setColheita} />
-      <TextField label="Estimativa de colheita" value={estimativa} onChangeText={setEstimativa} suffix="kg" keyboardType="number-pad" editable={!salvando} />
-      {!!estimativa.trim() && !quantidadeValida && <AppText variant="caption">Informe um número inteiro de quilos maior que zero.</AppText>}
+      <SelectField label="Unidade" value={unidade} onChange={setUnidade}
+        options={cultura.unidades.map((u) => ({ label: nomesUnidade[u], value: u }))}
+        emptyMessage="Esta cultura não tem unidade no catálogo." />
+      <TextField label="Estimativa de colheita" value={estimativa} onChangeText={setEstimativa} suffix={unidade} keyboardType="number-pad" editable={!salvando} />
+      {!!estimativa.trim() && !quantidadeValida && <AppText variant="caption">Informe um número inteiro maior que zero.</AppText>}
       <AppText variant="label">Faixa estimada (opcional)</AppText>
-      <TextField label="Mínimo" value={minimo} onChangeText={setMinimo} suffix="kg" keyboardType="number-pad" editable={!salvando} />
-      <TextField label="Máximo" value={maximo} onChangeText={setMaximo} suffix="kg" keyboardType="number-pad" editable={!salvando} />
+      <TextField label="Mínimo" value={minimo} onChangeText={setMinimo} suffix={unidade} keyboardType="number-pad" editable={!salvando} />
+      <TextField label="Máximo" value={maximo} onChangeText={setMaximo} suffix={unidade} keyboardType="number-pad" editable={!salvando} />
       {faixaInvalida && <AppText variant="caption">Preencha os dois limites e deixe a estimativa dentro da faixa.</AppText>}
-      {erro && <AppText accessibilityLiveRegion="polite">Não foi possível salvar a previsão. Tente novamente.</AppText>}
+      {erro && <AppText accessibilityLiveRegion="polite">{erro}</AppText>}
     </Screen>
   );
 }

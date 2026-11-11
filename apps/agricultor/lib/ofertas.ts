@@ -1,6 +1,6 @@
 import { formatarPeriodo, lerPeriodo } from '@agrodireto/ui';
 import type { ResultadoInspecao } from '@agrodireto/dominio';
-import { lerDataColheita } from '@/lib/culturasLocais';
+import { lerDataColheita } from '@/lib/culturas';
 import { precoValido } from '@/lote/LoteDraftContext';
 import type { LoteDraft } from '@/lote/rascunhosLote';
 import { supabase } from './supabase';

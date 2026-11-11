@@ -1,7 +1,8 @@
 import { useRouter } from 'expo-router';
-import { AppText, Card, DateField, kg, Screen, ScreenHeader, TextArea, TextField, TextLink } from '@agrodireto/ui';
+import { AppText, Card, DateField, Screen, ScreenHeader, TextArea, TextField, TextLink } from '@agrodireto/ui';
 import { precoValido, useLoteDraft } from '@/lote/LoteDraftContext';
 import { LoteDraftFooter } from '@/lote/LoteDraftFooter';
+import { formatarQuantidade } from '@/lib/culturas';
 import { useCulturasLote } from '@/lote/useCulturasLote';
 import { rotasAgricultor } from '@/routes';
 
@@ -34,7 +35,7 @@ export default function PrecoRetiradaScreen() {
       {previsao && (
         <Card>
           <AppText variant="bodyStrong">Previsão da cultura</AppText>
-          <AppText variant="caption">{kg(previsao.estimativaKg)} · {previsao.colheita}</AppText>
+          <AppText variant="caption">{formatarQuantidade(previsao)} · {previsao.colheita}</AppText>
           {draft.dataColheita !== previsao.colheita && (
             <TextLink label="Usar data prevista de colheita" onPress={() => update({ dataColheita: previsao.colheita })} />
           )}

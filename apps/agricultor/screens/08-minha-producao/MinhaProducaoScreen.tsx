@@ -1,15 +1,15 @@
 import { useCallback, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { CalendarDays, Package, Plus, Sprout, Tag } from 'lucide-react-native';
-import { AppText, Card, CalendarMonth, Divider, kg, ListRow, Screen, ScreenHeader } from '@agrodireto/ui';
-import { lerCulturas, lerDataColheita, type CulturaLocal } from '@/lib/culturasLocais';
+import { AppText, Card, CalendarMonth, Divider, ListRow, Screen, ScreenHeader } from '@agrodireto/ui';
+import { formatarQuantidade, lerCulturas, lerDataColheita, type Cultura } from '@/lib/culturas';
 import { rotasAgricultor } from '@/routes';
 
 export default function MinhaProducaoScreen() {
   const router = useRouter();
   const hoje = new Date();
   const [mes, setMes] = useState({ ano: hoje.getFullYear(), mes: hoje.getMonth() });
-  const [culturas, setCulturas] = useState<CulturaLocal[] | null>(null);
+  const [culturas, setCulturas] = useState<Cultura[] | null>(null);
   const [erroCulturas, setErroCulturas] = useState(false);
 
   useFocusEffect(useCallback(() => {
@@ -31,8 +31,8 @@ export default function MinhaProducaoScreen() {
   return (
     <Screen withTabBar header={<ScreenHeader title="Minha produção" />}>
       <Card>
-        <AppText variant="heading">Culturas neste dispositivo</AppText>
-        {erroCulturas && <AppText variant="caption">Não foi possível abrir as culturas salvas.</AppText>}
+        <AppText variant="heading">Minhas culturas</AppText>
+        {erroCulturas && <AppText variant="caption">Não foi possível abrir as culturas. Verifique a conexão.</AppText>}
         {!erroCulturas && culturas?.length === 0 && <AppText variant="caption">Nenhuma cultura cadastrada.</AppText>}
         {registros.map((cultura) => (
           <ListRow
@@ -54,7 +54,7 @@ export default function MinhaProducaoScreen() {
             key={id}
             icon={CalendarDays}
             title={`${previsao ? 'Editar' : 'Registrar'} previsão · ${cultura}`}
-            subtitle={[variedade, previsao && `${kg(previsao.estimativaKg)} · ${previsao.colheita}`].filter(Boolean).join(' · ') || undefined}
+            subtitle={[variedade, previsao && `${formatarQuantidade(previsao)} · ${previsao.colheita}`].filter(Boolean).join(' · ') || undefined}
             onPress={() => router.push({ pathname: rotasAgricultor.previsao, params: { id } })}
           />
         ))}

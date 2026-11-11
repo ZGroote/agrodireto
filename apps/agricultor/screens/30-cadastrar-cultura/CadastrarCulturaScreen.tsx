@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Camera, Image as ImageIcon, Ruler, Sprout, Trash2 } from 'lucide-react-native';
+import { Camera, Home, Image as ImageIcon, Ruler, Sprout, Trash2 } from 'lucide-react-native';
 import { classificarArquivo } from '@agrodireto/dominio';
 import {
   AcaoSheet,
@@ -20,7 +20,7 @@ import {
   TextLink,
 } from '@agrodireto/ui';
 import { useCatalogo } from '@/hooks/dados';
-import { areaValida, lerCulturas, salvarCultura } from '@/lib/culturasLocais';
+import { areaValida, lerCatalogo, lerCulturas, lerPropriedades, salvarCultura, type ItemCatalogo } from '@/lib/culturas';
 import { opcoes } from '@/lib/opcoes';
 import { escolherDaGaleria, usarCamera, type ArquivoEscolhido } from '@/lib/selecionarMidia';
 
@@ -33,7 +33,10 @@ export default function CadastrarCulturaScreen() {
 function FormularioCultura({ id }: { id?: string }) {
   const router = useRouter();
   const catalogo = useCatalogo();
-  const [cultura, setCultura] = useState('');
+  const [itens, setItens] = useState<ItemCatalogo[]>([]);
+  const [propriedades, setPropriedades] = useState<{ id: string; nome: string }[]>([]);
+  const [propriedadeId, setPropriedadeId] = useState<string>();
+  const [catalogoId, setCatalogoId] = useState<string>();
   const [variedade, setVariedade] = useState('');
   const [area, setArea] = useState('');
   const [plantio, setPlantio] = useState('');
@@ -41,25 +44,38 @@ function FormularioCultura({ id }: { id?: string }) {
   const [foto, setFoto] = useState<string>();
   const [escolher, setEscolher] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
-  const [leitura, setLeitura] = useState<'carregando' | 'pronto' | 'erro'>(id ? 'carregando' : 'pronto');
+  const [leitura, setLeitura] = useState<'carregando' | 'pronto' | 'erro' | 'sem-propriedade'>('carregando');
   const [salvando, setSalvando] = useState(false);
   const gravando = useRef(false);
 
   useEffect(() => {
-    if (!id) return;
     let ativo = true;
-    void lerCulturas().then((culturas) => {
+    void Promise.all([lerCatalogo(), lerPropriedades(), id ? lerCulturas() : Promise.resolve([])]).then(([catalogoRemoto, props, culturas]) => {
       if (!ativo) return;
-      const registro = culturas.find((item) => item.id === id);
-      if (!registro) {
-        setLeitura('erro');
+      setItens(catalogoRemoto);
+      setPropriedades(props);
+      if (!props.length) {
+        setLeitura('sem-propriedade');
         return;
       }
-      setCultura(registro.cultura);
-      setVariedade(registro.variedade);
-      setArea(registro.area);
-      setPlantio(registro.plantio);
-      setEtapa(registro.etapa || undefined);
+      setPropriedadeId(props[0].id);
+      if (id) {
+        const registro = culturas.find((item) => item.id === id);
+        if (!registro) {
+          setLeitura('erro');
+          return;
+        }
+        setPropriedadeId(registro.propriedadeId);
+        setCatalogoId(registro.catalogoId);
+        // Cultura desativada no catálogo continua aparecendo na edição.
+        if (!catalogoRemoto.some((item) => item.id === registro.catalogoId)) {
+          setItens([...catalogoRemoto, { id: registro.catalogoId, nome: registro.cultura, unidades: registro.unidades }]);
+        }
+        setVariedade(registro.variedade);
+        setArea(registro.area);
+        setPlantio(registro.plantio);
+        setEtapa(registro.etapa || undefined);
+      }
       setLeitura('pronto');
     }, () => {
       if (ativo) setLeitura('erro');
@@ -92,17 +108,17 @@ function FormularioCultura({ id }: { id?: string }) {
   ];
 
   const titulo = id ? 'Editar cultura' : 'Cadastrar cultura';
-  const valido = !!cultura.trim() && areaValida(area);
+  const valido = !!propriedadeId && !!catalogoId && areaValida(area);
   async function salvar() {
     if (!valido || leitura !== 'pronto' || gravando.current) return;
     gravando.current = true;
     setSalvando(true);
     setErro(null);
     try {
-      await salvarCultura({ cultura, variedade, area, plantio, etapa: etapa ?? '' }, id);
+      await salvarCultura({ propriedadeId: propriedadeId ?? '', catalogoId: catalogoId ?? '', variedade, area, plantio, etapa: etapa ?? '' }, id);
       router.back();
-    } catch {
-      setErro('Não foi possível salvar a cultura. Tente novamente.');
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : 'Não foi possível salvar a cultura. Tente novamente.');
     } finally {
       gravando.current = false;
       setSalvando(false);
@@ -112,14 +128,18 @@ function FormularioCultura({ id }: { id?: string }) {
   if (leitura !== 'pronto') {
     return (
       <Screen header={<ScreenHeader title={titulo} />}>
-        <AppText>{leitura === 'carregando' ? 'Carregando cultura…' : 'Não foi possível abrir a cultura.'}</AppText>
+        <AppText>
+          {leitura === 'carregando' ? 'Carregando…'
+            : leitura === 'sem-propriedade' ? 'Envie o cadastro da propriedade antes de cadastrar culturas.'
+              : 'Não foi possível abrir a cultura. Verifique a conexão e tente novamente.'}
+        </AppText>
       </Screen>
     );
   }
 
   return (
     <Screen
-      header={<ScreenHeader title={titulo} subtitle="Os dados da cultura ficam neste dispositivo." />}
+      header={<ScreenHeader title={titulo} subtitle="A cultura fica salva na sua conta." />}
       footer={<Button label="Salvar cultura" disabled={!valido} loading={salvando} onPress={() => void salvar()} />}
     >
       <View style={styles.foto}>
@@ -136,7 +156,13 @@ function FormularioCultura({ id }: { id?: string }) {
         {erro ? <AlertBanner tone="danger" title={erro} onPress={() => setErro(null)} /> : null}
       </View>
 
-      <TextField label="Cultura" icon={Sprout} value={cultura} onChangeText={setCultura} editable={!salvando} />
+      {propriedades.length > 1 && (
+        <SelectField label="Propriedade" icon={Home} value={propriedadeId}
+          options={propriedades.map((p) => ({ label: p.nome, value: p.id }))} onChange={setPropriedadeId} />
+      )}
+      <SelectField label="Cultura" icon={Sprout} value={catalogoId}
+        options={itens.map((item) => ({ label: item.nome, value: item.id }))} onChange={setCatalogoId}
+        emptyMessage="O catálogo de culturas do piloto ainda não foi publicado." />
       <TextField label="Variedade" placeholder="Ex.: Italiano" value={variedade} onChangeText={setVariedade} autoCapitalize="words" />
       <TextField label="Área plantada" icon={Ruler} suffix="ha" keyboardType="decimal-pad" value={area} onChangeText={setArea} editable={!salvando} />
       {!!area.trim() && !areaValida(area) && <AppText variant="caption">Informe uma área maior que zero em hectares.</AppText>}

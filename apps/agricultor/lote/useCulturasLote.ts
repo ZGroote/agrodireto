@@ -1,9 +1,9 @@
 import { useCallback, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
-import { lerCulturas, type CulturaLocal } from '@/lib/culturasLocais';
+import { lerCulturas, type Cultura } from '@/lib/culturas';
 
 export function useCulturasLote() {
-  const [culturas, setCulturas] = useState<CulturaLocal[]>([]);
+  const [culturas, setCulturas] = useState<Cultura[]>([]);
   useFocusEffect(useCallback(() => {
     let ativo = true;
     void lerCulturas().then(
