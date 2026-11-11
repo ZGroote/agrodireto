@@ -1,3 +1,4 @@
+import { mensagemEscolherEmpresa, organizacaoEmUso, trocarContexto } from './organizacoes';
 import { exigirSessao, supabase } from './supabase';
 
 export const tiposCarga = [
@@ -41,23 +42,24 @@ const campos = 'organizacao_id,razao_social,cnpj,contato_nome,contato_telefone,c
 /** "sp, MG / pr" → ['SP', 'MG', 'PR'] */
 export const lerUfs = (texto: string) => texto.toUpperCase().split(/[^A-Z]+/).filter(Boolean);
 
-// ponytail: mostra a primeira transportadora da conta; escolher entre várias vem com a troca de contexto (B01).
+/** Cadastro da transportadora em uso (B01). Sem empresa e sem vínculo: null (formulário novo). */
 export async function lerCadastroTransportadora(): Promise<CadastroTransportadora | null> {
   if (!supabase) throw new Error();
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) throw new Error();
-  // Filtra pelas organizações da conta: a equipe lê todos os cadastros pela RLS.
-  const { data: membros, error: erroMembros } = await supabase.from('membros_organizacao')
-    .select('organizacao_id,papel').eq('usuario_id', session.user.id)
-    .returns<{ organizacao_id: string; papel: CadastroTransportadora['papel'] }[]>();
-  if (erroMembros) throw erroMembros;
-  if (!membros.length) return null;
-  const { data, error } = await supabase.from('cadastros_transportadora').select(campos)
-    .in('organizacao_id', membros.map((m) => m.organizacao_id))
-    .order('enviada_em').order('organizacao_id').limit(1).maybeSingle<Omit<CadastroTransportadora, 'papel'>>();
-  if (error) throw error;
-  if (!data) return null;
-  return { ...data, papel: membros.find((m) => m.organizacao_id === data.organizacao_id)?.papel ?? 'membro' };
+  const organizacao = await organizacaoEmUso();
+  if (!organizacao) return null;
+  const [membro, cadastro] = await Promise.all([
+    supabase.from('membros_organizacao').select('papel')
+      .eq('usuario_id', session.user.id).eq('organizacao_id', organizacao)
+      .maybeSingle<{ papel: CadastroTransportadora['papel'] }>(),
+    supabase.from('cadastros_transportadora').select(campos)
+      .eq('organizacao_id', organizacao).maybeSingle<Omit<CadastroTransportadora, 'papel'>>(),
+  ]);
+  if (membro.error) throw membro.error;
+  if (cadastro.error) throw cadastro.error;
+  if (!cadastro.data) return null;
+  return { ...cadastro.data, papel: membro.data?.papel ?? 'membro' };
 }
 
 export async function enviarCadastroTransportadora(form: FormTransportadora, atual: CadastroTransportadora | null) {
@@ -86,7 +88,7 @@ export async function enviarCadastroTransportadora(form: FormTransportadora, atu
     p_ufs_atendidas: ufs,
     p_tipos_carga: form.tiposCarga,
   };
-  const { error } = atual
+  const { data: criada, error } = atual
     ? await supabase.rpc('reenviar_cadastro_transportadora', { ...dados, p_organizacao_id: atual.organizacao_id, p_enviada_em: atual.enviada_em })
     : await supabase.rpc('enviar_cadastro_transportadora', dados);
   if (error?.code === 'PT409') throw new Error('O cadastro mudou. Saia e abra a versão atual.');
@@ -94,4 +96,6 @@ export async function enviarCadastroTransportadora(form: FormTransportadora, atu
   if (error?.code === '23514') throw new Error('Confira o CNPJ, a UF e os estados atendidos.');
   if (error?.code === '42501') throw new Error(atual ? 'Só o titular da transportadora pode reenviar o cadastro.' : 'Esta conta não pode enviar cadastro de transportadora.');
   if (error) throw new Error('Não foi possível enviar o cadastro. Tente novamente.');
+  // Primeiro envio criou a empresa: o próprio envio é a escolha do usuário.
+  if (!atual) await trocarContexto(criada as string).catch(() => { throw new Error(`Cadastro enviado. ${mensagemEscolherEmpresa}`); });
 }

@@ -7,6 +7,7 @@ import {
   enviarCadastroTransportadora, lerCadastroTransportadora, tiposCarga,
   type CadastroTransportadora, type FormTransportadora, type TipoCarga,
 } from '@/lib/transportadora';
+import { mensagemEscolherEmpresa } from '@/lib/organizacoes';
 import { rotasLogistica } from '../../routes';
 
 const vazio: FormTransportadora = {
@@ -29,7 +30,7 @@ export default function TransportadoraScreen() {
   const router = useRouter();
   const [cadastro, setCadastro] = useState<CadastroTransportadora | null>(null);
   const [form, setForm] = useState(vazio);
-  const [estado, setEstado] = useState<'carregando' | 'pronto' | 'erroLeitura'>('carregando');
+  const [estado, setEstado] = useState<'carregando' | 'pronto' | 'erroLeitura' | 'escolher'>('carregando');
   const [salvando, setSalvando] = useState(false);
   const [mensagem, setMensagem] = useState('');
 
@@ -39,11 +40,14 @@ export default function TransportadoraScreen() {
     setEstado('pronto');
   }
 
+  const leituraFalhou = (falha: unknown) =>
+    setEstado(falha instanceof Error && falha.message === mensagemEscolherEmpresa ? 'escolher' : 'erroLeitura');
+
   useEffect(() => {
     let ativo = true;
     lerCadastroTransportadora().then(
       (atual) => { if (ativo) mostrar(atual); },
-      () => { if (ativo) setEstado('erroLeitura'); },
+      (falha) => { if (ativo) leituraFalhou(falha); },
     );
     return () => { ativo = false; };
   }, []);
@@ -64,7 +68,7 @@ export default function TransportadoraScreen() {
     try {
       await enviarCadastroTransportadora(form, cadastro);
       const primeiroEnvio = !cadastro;
-      await lerCadastroTransportadora().then(mostrar, () => setEstado('erroLeitura'));
+      await lerCadastroTransportadora().then(mostrar, leituraFalhou);
       if (primeiroEnvio) router.push(rotasLogistica.veiculos);
     } catch (falha) {
       setMensagem(falha instanceof Error && falha.message ? falha.message : 'Não foi possível enviar o cadastro. Tente novamente.');
@@ -92,6 +96,12 @@ export default function TransportadoraScreen() {
     >
       {estado === 'carregando' && <AppText>Carregando cadastro…</AppText>}
       {estado === 'erroLeitura' && <AppText>Não foi possível abrir o cadastro. Saia desta tela e tente novamente.</AppText>}
+      {estado === 'escolher' && (
+        <>
+          <AppText>{mensagemEscolherEmpresa}</AppText>
+          <Button label="Escolher empresa" onPress={() => router.push(rotasLogistica.empresas)} />
+        </>
+      )}
       {cadastro && (
         <View style={styles.status}>
           <StatusPill dot {...situacao[cadastro.status]} />
