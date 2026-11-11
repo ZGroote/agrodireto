@@ -44,6 +44,16 @@ export async function apagarEvidencia(chave: string) {
   await executar('readwrite', (store) => store.delete(chave));
 }
 
+/** No navegador não há progresso de envio pelo fetch: avisa 0 e 1. Devolve o status HTTP. */
+export async function enviarArquivoLocal(chave: string, url: string, mime: string, onProgresso: (fracao: number) => void) {
+  const arquivo: unknown = await executar('readonly', (store) => store.get(chave));
+  if (!(arquivo instanceof Blob) || !arquivo.size) throw new Error('Arquivo indisponível neste dispositivo.');
+  onProgresso(0);
+  const resposta = await fetch(url, { method: 'PUT', body: arquivo, headers: { 'content-type': mime, 'x-upsert': 'false' } });
+  if (resposta.ok) onProgresso(1);
+  return resposta.status;
+}
+
 export async function lerBytesEvidencia(chave: string, limite: number) {
   const arquivo: unknown = await executar('readonly', (store) => store.get(chave));
   if (!(arquivo instanceof Blob) || !arquivo.size) throw new Error('Arquivo indisponível neste dispositivo.');

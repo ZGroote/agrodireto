@@ -3,7 +3,7 @@ import { formatarDuracao, type Midia } from '@agrodireto/dominio';
 import { Foto, radius } from '@agrodireto/ui';
 
 type Props = {
-  midia: Midia;
+  midia: Pick<Midia, 'tipo' | 'uri' | 'duracaoSeg'>;
   /** Miniatura quadrada */
   tamanho?: number;
   /** Prévia larga (largura 100%) */
@@ -15,7 +15,7 @@ type Props = {
  * (a miniatura real de vídeo vem com o processamento no servidor).
  */
 export function MidiaPreview({ midia, tamanho, altura }: Props) {
-  const real = midia.uri !== 'demo';
+  const real = !!midia.uri && midia.uri !== 'demo';
   if (midia.tipo === 'foto' && real) {
     const dim = tamanho ? { width: tamanho, height: tamanho } : { width: '100%' as const, height: altura ?? 150 };
     return <Image source={{ uri: midia.uri }} resizeMode="cover" style={[dim, { borderRadius: radius.media }]} accessibilityLabel="Foto" />;

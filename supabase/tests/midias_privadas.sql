@@ -96,6 +96,14 @@ begin
   begin perform public.confirmar_midia(base || 'foto-1.jpg'); raise exception 'Terceiro confirmou mídia alheia';
   exception when sqlstate 'PT409' then null; end;
 
+  -- D07: a URL assinada de envio (createSignedUploadUrl) passa por esta mesma policy de insert.
+  -- Membro da organização que não é o autor também não envia para a reserva pendente de outro.
+  perform set_config('request.jwt.claims','{"sub":"54000000-0000-0000-0000-000000000002","aal":"aal1"}',true);
+  begin
+    insert into storage.objects (bucket_id, name, metadata) values ('midias', base || 'foto-2.jpg', '{"size":1000}');
+    raise exception 'Membro não autor enviou arquivo na reserva de outro';
+  exception when insufficient_privilege then null; end;
+
   perform set_config('request.jwt.claims','{"sub":"54000000-0000-0000-0000-000000000001","aal":"aal1"}',true);
   begin
     insert into storage.objects (bucket_id, name, metadata) values ('midias', base || 'sem-reserva.jpg', '{"size":1000}');
