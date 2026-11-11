@@ -3,8 +3,14 @@ import { join } from 'node:path';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { config } from './config.ts';
 import { prepararCopiaFoto } from './copiaFoto.ts';
+import { prepararCopiaVideo } from './video.ts';
 
-type Registro = { arquivo: string; copia_catalogo: string | null };
+type Registro = { arquivo: string; tipo: 'foto' | 'video'; copia_catalogo: string | null };
+// Nomes legados ("foto"): desde a D08 também preparam vídeo (cópia MP4 H.264).
+const SAIDA = {
+  foto: { originais: ['jpg', 'png', 'webp'], extensao: 'webp', contentType: 'image/webp' },
+  video: { originais: ['mp4', 'mov'], extensao: 'mp4', contentType: 'video/mp4' },
+} as const;
 type FotoPendente = { lote_id: string; chave: string };
 type ResultadoPendente = FotoPendente & ({ caminho: string } | { erro: string });
 const uuid = /^[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}$/;
@@ -18,7 +24,7 @@ export async function prepararFotosPendentes(cliente: SupabaseClient, informar: 
 
   while (true) {
     const consulta = cliente.from('evidencias_lote').select('lote_id,chave')
-      .eq('tipo', 'foto').eq('revisao', 'aprovada').eq('autorizada_catalogo', true)
+      .eq('revisao', 'aprovada').eq('autorizada_catalogo', true)
       .is('copia_catalogo', null).order('lote_id').order('chave').limit(tamanhoPagina);
     if (ultima) {
       consulta.or(`lote_id.gt.${ultima.lote_id},and(lote_id.eq.${ultima.lote_id},chave.gt.${ultima.chave})`);
@@ -45,17 +51,18 @@ export async function prepararFotosPendentes(cliente: SupabaseClient, informar: 
 
 export async function prepararFotoCatalogo(cliente: SupabaseClient, lote: string, chave: string) {
   if (!uuid.test(lote) || !chaveValida.test(chave)) throw new Error('Informe um lote e uma chave válidos.');
-  const { data, error } = await cliente.from('evidencias_lote').select('arquivo,copia_catalogo')
-    .eq('lote_id', lote).eq('chave', chave).eq('tipo', 'foto')
+  const { data, error } = await cliente.from('evidencias_lote').select('arquivo,tipo,copia_catalogo')
+    .eq('lote_id', lote).eq('chave', chave)
     .eq('revisao', 'aprovada').eq('autorizada_catalogo', true).maybeSingle<Registro>();
   if (error) throw new Error('Não foi possível consultar a evidência.');
-  if (!data) throw new Error('Foto aprovada e autorizada não encontrada.');
+  if (!data) throw new Error('Mídia aprovada e autorizada não encontrada.');
+  const saida = SAIDA[data.tipo];
   if (data.copia_catalogo) return data.copia_catalogo;
 
   const [produtor, loteOrigem, arquivo, ...sobras] = data.arquivo.split('/');
   const extensao = arquivo?.split('.').at(-1);
   if (!produtor || !uuid.test(produtor) || loteOrigem !== lote || sobras.length ||
-      !extensao || !['jpg', 'png', 'webp'].includes(extensao) || arquivo !== chave + '.' + extensao) {
+      !extensao || !(saida.originais as readonly string[]).includes(extensao) || arquivo !== chave + '.' + extensao) {
     throw new Error('O caminho do original não corresponde à evidência.');
   }
 
@@ -66,14 +73,14 @@ export async function prepararFotoCatalogo(cliente: SupabaseClient, lote: string
       throw new Error('Original indisponível ou acima do limite de tamanho.');
     }
     const entrada = join(pasta, 'original');
-    const saida = join(pasta, 'copia.webp');
+    const copia = join(pasta, 'copia.' + saida.extensao);
     await writeFile(entrada, Buffer.from(await original.arrayBuffer()));
-    const resultado = await prepararCopiaFoto(entrada, saida);
+    const resultado = data.tipo === 'foto' ? await prepararCopiaFoto(entrada, copia) : await prepararCopiaVideo(entrada, copia);
     if (resultado.status !== 'pronta') throw new Error(resultado.motivo ?? 'A cópia não foi preparada.');
 
-    const caminho = lote + '/' + chave + '.webp';
+    const caminho = lote + '/' + chave + '.' + saida.extensao;
     const { error: falhaEnvio } = await cliente.storage.from('fotos-catalogo')
-      .upload(caminho, await readFile(saida), { contentType: 'image/webp', upsert: true, cacheControl: '0' });
+      .upload(caminho, await readFile(copia), { contentType: saida.contentType, upsert: true, cacheControl: '0' });
     if (falhaEnvio) throw new Error('Não foi possível gravar a cópia privada.');
 
     const registro = await cliente.from('evidencias_lote').update({ copia_catalogo: caminho })

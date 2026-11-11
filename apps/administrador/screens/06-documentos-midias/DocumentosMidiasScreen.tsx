@@ -1,11 +1,13 @@
 import { useCallback, useState } from 'react';
+import { Image, Linking, StyleSheet } from 'react-native';
 import { useFocusEffect } from 'expo-router';
-import { AppText, Button, Card, ListRow, Screen, ScreenHeader, TextArea } from '@agrodireto/ui';
-import { baixarOriginal, listarPendentes, revisarEvidencia, type EvidenciaPendente } from '@/lib/evidencias';
+import { AppText, Button, Card, ListRow, Screen, ScreenHeader, TextArea, radius } from '@agrodireto/ui';
+import { baixarOriginal, linkRevisao, listarPendentes, revisarEvidencia, type EvidenciaPendente } from '@/lib/evidencias';
 
 export default function DocumentosMidiasScreen() {
   const [pendentes, setPendentes] = useState<EvidenciaPendente[]>([]);
   const [selecionada, setSelecionada] = useState<EvidenciaPendente | null>(null);
+  const [previa, setPrevia] = useState('');
   const [motivo, setMotivo] = useState('');
   const [mensagem, setMensagem] = useState('');
   const [carregou, setCarregou] = useState(false);
@@ -49,12 +51,20 @@ export default function DocumentosMidiasScreen() {
             setSelecionada(item);
             setMotivo('');
             setMensagem('');
+            setPrevia('');
+            if (item.tipo === 'foto') void linkRevisao(item).then(setPrevia, () => setMensagem('Não foi possível carregar a prévia.'));
           }} />
         </Card>
       ))}
       {selecionada && (
         <Card>
           <AppText variant="heading">{selecionada.produto}</AppText>
+          {!!previa && <Image source={{ uri: previa }} resizeMode="contain" style={styles.previa} accessibilityLabel="Foto em revisão"
+            onError={() => setMensagem('Não foi possível exibir a foto. Baixe para revisar.')} />}
+          {selecionada.tipo === 'video' && <Button label="Assistir vídeo" variant="secondary" disabled={ocupado} onPress={() => {
+            void linkRevisao(selecionada).then((url) => Linking.openURL(url))
+              .catch(() => setMensagem('Não foi possível abrir o vídeo. Baixe para revisar.'));
+          }} />}
           <Button label="Baixar para revisão" variant="secondary" disabled={ocupado} onPress={() => {
             void baixarOriginal(selecionada.arquivo).catch(() => setMensagem('Não foi possível baixar o arquivo.'));
           }} />
@@ -67,3 +77,7 @@ export default function DocumentosMidiasScreen() {
     </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  previa: { width: '100%', height: 240, borderRadius: radius.card },
+});

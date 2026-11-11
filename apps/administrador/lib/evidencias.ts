@@ -23,6 +23,15 @@ export async function baixarOriginal(arquivo: string) {
   await Linking.openURL(data.signedUrl);
 }
 
+/** Link temporário para revisar na tela. Vídeo: 15 min, porque o player busca por partes enquanto toca. */
+export async function linkRevisao(item: EvidenciaPendente) {
+  if (!supabase) throw new Error();
+  const { data, error } = await supabase.storage.from('evidencias-lote')
+    .createSignedUrl(item.arquivo, item.tipo === 'video' ? 900 : 60);
+  if (error) throw error;
+  return data.signedUrl;
+}
+
 export async function revisarEvidencia(item: EvidenciaPendente, aprovada: boolean, motivo: string) {
   if (!supabase) throw new Error();
   const { error } = await supabase.rpc('revisar_evidencia_lote', {

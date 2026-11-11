@@ -94,6 +94,7 @@ Condições do Maestro:
 ## Decisões fora do pedido e limites
 
 - **Escopo e visibilidade:** as perguntas (a) e (b) ficaram sem resposta e segui a proposta. O lote continua em `evidencias_lote` até a consolidação na D08. Não existe mais seletor de visibilidade: toda mídia é privada.
+  - **Decisão do Maestro (11/11, ao juntar):** aceitas as três escolhas (lote em `evidencias_lote`, drone como vídeo, tudo privado por enquanto). O seletor de visibilidade do mockup da tela 05 **volta quando a D08 definir o que o comprador vê**.
 - **Envio só por ação do usuário:** é o botão do rodapé ou "Tentar de novo". Não há envio em segundo plano, por timer nem ao reconectar, como na D02. A sessão em segundo plano do iOS pode continuar o PUT, mas a confirmação só acontece na próxima ação do usuário.
 - **Remover da fila não desfaz a reserva no servidor:** a reserva continua contando na cota até a retenção, porque não há RPC de descarte de mídia. Para remover mídia já enviada, também falta RPC; ficou fora do escopo.
 - **Drone vira vídeo:** a opção "Vídeo de drone" continua no menu, mas grava como vídeo. Não há coluna para essa marca.
