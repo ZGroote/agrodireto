@@ -15,3 +15,12 @@ export const supabase = url && chave ? createClient(url, chave, {
 }) : null;
 
 if (supabase) acompanharSessao(supabase);
+
+/**
+ * Antes de gravar: renova o token se preciso. Sem sessão válida, o Auth emite SIGNED_OUT
+ * e o layout (app) volta para Entrar; a gravação não sai.
+ */
+export async function exigirSessao() {
+  const { data } = supabase ? await supabase.auth.getSession() : { data: { session: null } };
+  if (!data.session) throw new Error('Sua sessão expirou. Entre novamente.');
+}
