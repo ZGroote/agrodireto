@@ -33,7 +33,7 @@ begin
   begin perform public.salvar_cultura(null, prop, 'd0100000-0000-0000-0000-0000000000c1', '', 0, null, ''); raise exception 'Aceitou área zero'; exception when check_violation then null; end;
   -- Unidade inválida é recusada; a válida grava.
   begin perform public.salvar_previsao(cult, 't', 100, null, null, '2027-01-10'); raise exception 'Aceitou unidade fora da cultura'; exception when sqlstate 'PT422' then null; end;
-  begin perform public.salvar_previsao(cult, 'sc', 100, null, null, '2027-01-10'); raise exception 'Aceitou unidade inexistente'; exception when sqlstate 'PT422' then null; end;
+  begin perform public.salvar_previsao(cult, 'dz', 100, null, null, '2027-01-10'); raise exception 'Aceitou unidade inexistente'; exception when sqlstate 'PT422' then null; end;
   begin perform public.salvar_previsao(cult, 'kg', 0, null, null, '2027-01-10'); raise exception 'Aceitou estimativa zero'; exception when check_violation then null; end;
   begin perform public.salvar_previsao(cult, 'kg', 100, 120, 150, '2027-01-10'); raise exception 'Aceitou mínimo acima da estimativa'; exception when check_violation then null; end;
   begin perform public.salvar_previsao(cult, 'kg', 100, 90, null, '2027-01-10'); raise exception 'Aceitou faixa pela metade'; exception when check_violation then null; end;

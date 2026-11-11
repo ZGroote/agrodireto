@@ -26,8 +26,9 @@ const datasFonte = ast.statements.filter((no) => nomes.includes(no.name?.text) |
   (ts.isVariableStatement(no) && no.declarationList.declarations.some((d) => nomes.includes(d.name.getText(ast)))))
   .map((no) => no.getText(ast)).join('\n');
 const ui = carregar('', {}, datasFonte);
+const atributos = carregar('../lote/atributosSegmento.ts', {});
 const culturas = carregar('../lib/culturas.ts', { './supabase': { supabase: null } });
-const remotoReal = carregar('../lib/rascunhosRemotos.ts', { '@agrodireto/ui': ui, './culturas': culturas, './supabase': { supabase: null } });
+const remotoReal = carregar('../lib/rascunhosRemotos.ts', { '@agrodireto/ui': ui, './culturas': culturas, './supabase': { supabase: null }, '@/lote/atributosSegmento': atributos });
 
 function ambiente() {
   const disco = new Map();
@@ -37,6 +38,7 @@ function ambiente() {
   const chave = () => `@agrodireto/agricultor/lotes-rascunhos/v2/${estado.conta}`;
   const dependencias = {
     '@react-native-async-storage/async-storage': { getItem: async (k) => disco.get(k) ?? null, setItem: async (k, v) => disco.set(k, v) },
+    './atributosSegmento': atributos,
     './arquivosEvidencia': { armazenarEvidencia: async (k, uri) => arquivos.set(k, uri), apagarEvidencia: async (k) => arquivos.delete(k) },
     '@/lib/supabase': { supabase: { auth: { getSession: async () => ({ data: { session: { user: { id: estado.conta } } } }) } } },
     '@/lib/rascunhosRemotos': {
@@ -71,7 +73,7 @@ test('rascunho parcial aceita ausência e recusa valores preenchidos inválidos'
   for (const parcial of [
     { quantidade: '0' }, { quantidade: '-1' }, { quantidade: 'NaN' }, { quantidade: '1000000001' },
     { precoUnitario: '0' }, { precoUnitario: '1,234' }, { precoUnitario: '1000000001' },
-    { unidade: 'sc' }, { padrao: 'A'.repeat(121) }, { validade: '31/02/2026' },
+    { unidade: 'dz' }, { padrao: 'A'.repeat(121) }, { validade: '31/02/2026' },
     { retirada: '22/11 a 21/11/2026' }, { retirada: '31/02 a 03/03/2026' },
   ]) assert.throws(() => remotoReal.validarRascunho({ ...campos, ...parcial }));
 });
@@ -160,4 +162,38 @@ test('valor inválido não substitui a última versão local ou remota válida',
   await assert.rejects(a.mod.salvarRascunhoLote('lote-1', 'novo', { ...a.campos, quantidade: '0' }));
   assert.equal((await a.mod.lerRascunhosLote())[0].campos.quantidade, '12');
   assert.equal(a.servidor.get('autor-a/lote-1').campos.quantidade, '12');
+});
+
+test('D09: só os campos do segmento vão ao servidor, com números e textos legíveis', () => {
+  const graos = remotoReal.validarRascunho({ ...ambiente().campos, unidade: 'sc', segmento: 'graos', atributos: {
+    origem_classificacao: 'declarada_vendedor', tipo_grao: 'tipo_1', umidade_max_pct: '14,0', impurezas_max_pct: '1', acondicionamento: 'big_bag',
+  } });
+  assert.equal(graos.p_unidade, 'sc');
+  assert.equal(graos.p_atributos.umidade_max_pct, 14);
+  assert.equal(graos.p_calibre, '');
+  assert.equal(graos.p_padrao, 'Tipo 1 · umidade até 14% · impurezas até 1% · Declarada pelo vendedor');
+  assert.equal(graos.p_embalagem, 'Big bag');
+  // Campo de outro segmento digitado antes da troca de cultura não vai ao servidor.
+  const horti = remotoReal.validarRascunho({ ...ambiente().campos, unidade: 'cx', segmento: 'hortifruti', atributos: {
+    padrao_qualidade: 'extra', embalagem: 'caixa_plastica', peso_medio_embalagem_kg: '20', umidade_max_pct: '14',
+  } });
+  assert.equal(JSON.stringify(Object.keys(horti.p_atributos).sort()), JSON.stringify(['embalagem', 'padrao_qualidade', 'peso_medio_embalagem_kg']));
+  assert.equal(horti.p_embalagem, 'Caixa plástica · 20 kg');
+  for (const ruim of [{ umidade_max_pct: '31' }, { impurezas_max_pct: 'abc' }, { tipo_grao: 'tipo_9' }]) {
+    assert.throws(() => remotoReal.validarRascunho({ ...ambiente().campos, segmento: 'graos', atributos: ruim }));
+  }
+  assert.throws(() => remotoReal.validarRascunho({ ...ambiente().campos, unidade: 'cx', segmento: 'hortifruti', atributos: { peso_medio_embalagem_kg: '0' } }));
+  assert.equal(atributos.faltandoObrigatorio('hortifruti', 'cx', { padrao_qualidade: 'extra', embalagem: 'granel' }), 'Peso médio da caixa (kg)');
+  assert.equal(atributos.faltandoObrigatorio('hortifruti', 'kg', { padrao_qualidade: 'extra', embalagem: 'granel' }), undefined);
+  assert.equal(atributos.faltandoObrigatorio('agroindustria', 'kg', {}), undefined);
+});
+
+test('D09: segmento, atributos e saca sobrevivem ao reinício no aparelho', async () => {
+  const a = ambiente();
+  a.estado.online = false;
+  await a.mod.salvarRascunhoLote('lote-sc', 'padrao', { ...a.campos, unidade: 'sc', segmento: 'graos', atributos: { tipo_grao: 'tipo_2' } });
+  const [lido] = await a.abrir().lerRascunhosLote();
+  assert.equal(lido.campos.unidade, 'sc');
+  assert.equal(lido.campos.segmento, 'graos');
+  assert.equal(lido.campos.atributos.tipo_grao, 'tipo_2');
 });

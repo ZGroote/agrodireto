@@ -1,9 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ehSegmento, type Segmento } from './atributosSegmento';
 import { apagarEvidencia, armazenarEvidencia } from './arquivosEvidencia';
 import { supabase } from '@/lib/supabase';
 import { descartarRascunhoRemoto, enviarRascunho, lerRascunhosRemotos, validarRascunho } from '@/lib/rascunhosRemotos';
 
-export type Unidade = 'kg' | 'cx' | 't';
+export type Unidade = 'kg' | 'cx' | 't' | 'sc';
 export type EtapaLote = 'novo' | 'padrao' | 'preco' | 'revisar';
 export type EvidenciaDraft = { id: string; tipo: 'foto' | 'video'; uri?: string; nome: string };
 
@@ -11,6 +12,10 @@ export type LoteDraft = {
   produto?: string;
   culturaId?: string;
   propriedadeId?: string;
+  /** Segmento da cultura no catálogo (D09): define os atributos do lote. */
+  segmento?: Segmento;
+  /** Atributos do segmento, como digitados no formulário (texto). */
+  atributos: Record<string, string>;
   origem?: string;
   quantidade: string;
   unidade: Unidade;
@@ -28,7 +33,7 @@ export type LoteDraft = {
 export type RascunhoSalvo = { id: string; etapa: EtapaLote; campos: LoteDraft; pendente?: boolean };
 
 export const loteVazio: LoteDraft = {
-  quantidade: '', unidade: 'kg', evidencias: [], precoUnitario: '',
+  quantidade: '', unidade: 'kg', atributos: {}, evidencias: [], precoUnitario: '',
   dataColheita: '', retirada: '', condicoes: '', validade: '',
 };
 
@@ -80,8 +85,15 @@ function lerCampos(dados: unknown): LoteDraft {
     campos[campo] = valor;
   }
   const unidade: unknown = Reflect.get(dados, 'unidade');
-  if (unidade !== 'kg' && unidade !== 'cx' && unidade !== 't') throw new Error('Unidade inválida');
+  if (unidade !== 'kg' && unidade !== 'cx' && unidade !== 't' && unidade !== 'sc') throw new Error('Unidade inválida');
   campos.unidade = unidade;
+  const segmento: unknown = Reflect.get(dados, 'segmento');
+  if (ehSegmento(segmento)) campos.segmento = segmento;
+  const atributos: unknown = Reflect.get(dados, 'atributos');
+  campos.atributos = {};
+  if (atributos && typeof atributos === 'object') {
+    for (const [k, v] of Object.entries(atributos)) if (typeof v === 'string') campos.atributos[k] = v;
+  }
   const evidencias: unknown = Reflect.get(dados, 'evidencias');
   if (Array.isArray(evidencias)) campos.evidencias = evidencias.map(lerEvidencia);
   return campos;

@@ -9,6 +9,7 @@ export const UNIDADES: { label: string; value: Unidade }[] = [
   { label: 'kg', value: 'kg' },
   { label: 'cx', value: 'cx' },
   { label: 't', value: 't' },
+  { label: 'sc (saca 60 kg)', value: 'sc' },
 ];
 
 export function precoValido(valor: string) {
