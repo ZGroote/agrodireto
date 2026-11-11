@@ -18,7 +18,7 @@ Etapa 0 iniciada em 10/11/2026. O estado de cada tarefa está na lista abaixo.
 
 ### A01 — Fechar o recorte operacional
 
-- [ ] Concluída e verificada.
+- [x] Concluída e verificada. Decisões aprovadas pelo usuário em 11/11/2026 (DOC 040).
 
 **Estado:** recorte inicial registrado em [piloto.md](../DOC/piloto.md). Região e culturas ficam pendentes por decisão do usuário; demais decisões têm responsável proposto e marco de fechamento.
 
