@@ -23,8 +23,10 @@ type Ctx = {
   draft: LoteDraft;
   update: (parcial: Partial<LoteDraft>) => void;
   salvar: (etapa: EtapaLote) => Promise<boolean>;
+  tentarEnviar: () => Promise<boolean>;
   descartar: () => Promise<boolean>;
-  operacao: 'livre' | 'gravando' | 'salvo' | 'erro';
+  operacao: 'livre' | 'gravando' | 'salvo' | 'pendente' | 'erro';
+  mensagem: string;
 };
 
 const LoteDraftContext = createContext<Ctx | null>(null);
@@ -34,14 +36,19 @@ export function LoteDraftProvider({ id, children }: { id: string; children: Reac
   const [leitura, setLeitura] = useState<'carregando' | 'pronto' | 'erro'>(idLoteValido(id) ? 'carregando' : 'erro');
   const [tentativa, setTentativa] = useState(0);
   const [operacao, setOperacao] = useState<Ctx['operacao']>('livre');
+  const [mensagem, setMensagem] = useState('');
   const ocupado = useRef(false);
+  const ultimaEtapa = useRef<EtapaLote>('novo');
 
   useEffect(() => {
     if (!idLoteValido(id)) return;
     let ativo = true;
     void lerRascunhosLote().then((registros) => {
       if (!ativo) return;
-      setDraft(registros.find((registro) => registro.id === id)?.campos ?? loteVazio);
+      const registro = registros.find((registro) => registro.id === id);
+      ultimaEtapa.current = registro?.etapa ?? 'novo';
+      setDraft(registro?.campos ?? loteVazio);
+      setOperacao(registro ? (registro.pendente !== false ? 'pendente' : 'salvo') : 'livre');
       setLeitura('pronto');
     }, () => {
       if (ativo) setLeitura('erro');
@@ -53,23 +60,33 @@ export function LoteDraftProvider({ id, children }: { id: string; children: Reac
     if (ocupado.current) return;
     setDraft((anterior) => ({ ...anterior, ...parcial }));
     setOperacao('livre');
+    setMensagem('');
   }
 
   async function gravar(etapa: EtapaLote | null) {
     if (ocupado.current) return false;
     ocupado.current = true;
     setOperacao('gravando');
+    setMensagem('');
     try {
       if (etapa === null) {
         await descartarRascunhoLote(id);
         setDraft(loteVazio);
       } else {
-        setDraft(await salvarRascunhoLote(id, etapa, draft));
+        ultimaEtapa.current = etapa;
+        const resultado = await salvarRascunhoLote(id, etapa, draft);
+        setDraft(resultado.campos);
+        if (resultado.pendente) {
+          setOperacao('pendente');
+          setMensagem(resultado.mensagem);
+          return false;
+        }
       }
       setOperacao(etapa === null ? 'livre' : 'salvo');
       return true;
-    } catch {
+    } catch (erro) {
       setOperacao('erro');
+      setMensagem(erro instanceof Error ? erro.message : 'Não foi possível gravar a alteração.');
       return false;
     } finally {
       ocupado.current = false;
@@ -93,7 +110,7 @@ export function LoteDraftProvider({ id, children }: { id: string; children: Reac
   }
 
   return (
-    <LoteDraftContext.Provider value={{ id, draft, update, salvar: gravar, descartar: () => gravar(null), operacao }}>
+    <LoteDraftContext.Provider value={{ id, draft, update, salvar: gravar, tentarEnviar: () => gravar(ultimaEtapa.current), descartar: () => gravar(null), operacao, mensagem }}>
       {children}
     </LoteDraftContext.Provider>
   );

@@ -40,9 +40,10 @@ export default function MeusLotesScreen() {
       {erroRascunhos && <AppText>Não foi possível abrir os rascunhos deste dispositivo.</AppText>}
       {!erroRascunhos && locais.length > 0 && (
         <Card>
-          <AppText variant="heading">Rascunhos neste dispositivo</AppText>
-          {locais.map(({ id, etapa, campos }) => (
-            <ListRow key={id} title={campos.produto?.trim() || 'Lote em preparação'} subtitle={nomesEtapas[etapa]} onPress={() => router.push(rotasAgricultor.rascunhoLote(id, etapa))} />
+          <AppText variant="heading">Rascunhos</AppText>
+          {estado === 'erro' && <AppText>Publicação não consultada. Os itens abaixo podem já ter sido publicados.</AppText>}
+          {locais.map(({ id, etapa, campos, pendente }) => (
+            <ListRow key={id} title={campos.produto?.trim() || 'Lote em preparação'} subtitle={`${nomesEtapas[etapa]} · ${pendente !== false ? 'Envio pendente' : 'Salvo no servidor'}`} onPress={() => router.push(rotasAgricultor.rascunhoLote(id, etapa))} />
           ))}
         </Card>
       )}

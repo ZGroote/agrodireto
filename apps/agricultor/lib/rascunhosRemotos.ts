@@ -32,7 +32,7 @@ export function validarRascunho(campos: LoteDraft) {
   }
   if (campos.condicoes.trim().length > 2000) throw new Error('As condições aceitam até 2000 caracteres.');
   const retirada = campos.retirada.trim() ? lerPeriodo(campos.retirada.trim()) : null;
-  if (campos.retirada.trim() && (!retirada || formatarPeriodo(...retirada) !== campos.retirada.trim())) {
+  if (campos.retirada.trim() && (!retirada || retirada[1] < retirada[0] || formatarPeriodo(...retirada) !== campos.retirada.trim())) {
     throw new Error('Confira o período de retirada.');
   }
   const iso = (data: Date) => `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}-${String(data.getDate()).padStart(2, '0')}`;

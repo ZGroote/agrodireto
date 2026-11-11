@@ -60,6 +60,7 @@ export async function publicarOferta(id: string, lote: LoteDraft) {
   }
   const { error } = await supabase.rpc('publicar_oferta_lote', {
     p_rascunho_id: id,
+    p_propriedade_id: lote.propriedadeId,
     p_produto: lote.produto,
     p_quantidade: Number(quantidade.replace(/\./g, '')),
     p_unidade: lote.unidade,
