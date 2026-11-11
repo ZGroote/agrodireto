@@ -44,6 +44,7 @@ Um arquivo por passo, em ordem. Nome: `AAAA-MM-DD_NNN_titulo-curto.md`.
 | 015 | 2026-11-11 | [Organizações e várias propriedades](2026-11-11_015_organizacoes-e-propriedades.md) |
 | 016 | 2026-11-11 | [Pesquisa das decisões do piloto ampliado](2026-11-11_016_pesquisa-decisoes-piloto-ampliado.md) |
 | 017 | 2026-11-11 | [Empresa compradora](2026-11-11_017_empresa-compradora.md) |
+| 018 | 2026-11-11 | [Worker de mídia: gravação segura, sanitização obrigatória e fila recuperável (D04–D06)](2026-11-11_018_worker-gravacao-sanitizacao-fila.md) |
 
 ## Documentos de referência
 
