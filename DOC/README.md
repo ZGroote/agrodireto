@@ -64,6 +64,8 @@ Um arquivo por passo, em ordem. Nome: `AAAA-MM-DD_NNN_titulo-curto.md`.
 | 035 | 2026-11-11 | [Mídia autorizada no catálogo: foto e vídeo (D08)](2026-11-11_035_d08-midia-autorizada.md) |
 | 036 | 2026-11-11 | [Telas do Administrador por papel da equipe (B05, etapa 2)](2026-11-11_036_b05-app-administrador.md) |
 | 037 | 2026-11-11 | [Rascunho de propriedade só apagado após envio confirmado (C01)](2026-11-11_037_c01-rascunho-migra-uma-vez.md) |
+| 038 | 2026-11-11 | [Proposta: campos e documentos por segmento (D09/D10)](2026-11-11_038_proposta-d09-campos-por-segmento.md) |
+| 039 | 2026-11-11 | [Proposta: recorte do piloto (A01)](2026-11-11_039_proposta-a01-recorte-piloto.md) |
 
 ## Documentos de referência
 
