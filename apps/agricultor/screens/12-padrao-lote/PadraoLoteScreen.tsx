@@ -13,21 +13,34 @@ import {
   ScreenHeader,
   SelectField,
   spacing,
+  TextField,
 } from '@agrodireto/ui';
 import { MiniaturaEvidenciaLote } from '@/lote/MiniaturaEvidenciaLote';
-import { useCatalogo } from '@/hooks/dados';
-import { opcoes } from '@/lib/opcoes';
+import { atributosParaServidor, CAMPOS_SEGMENTO, faltandoObrigatorio } from '@/lote/atributosSegmento';
+import { useCulturasLote } from '@/lote/useCulturasLote';
 import { escolherDaGaleria, usarCamera, type ArquivoEscolhido } from '@/lib/selecionarMidia';
 import { useLoteDraft, type EvidenciaDraft } from '@/lote/LoteDraftContext';
 import { LoteDraftFooter } from '@/lote/LoteDraftFooter';
 import { rotasAgricultor } from '@/routes';
 
-/** 12 · Padrão do lote (2/3) — padrão, calibre, embalagem e evidências (até 100 fotos e 100 vídeos). */
+/** 12 · Padrão do lote (2/3) — atributos do segmento da cultura (D09) e evidências (até 100 fotos e 100 vídeos). */
 export default function PadraoLoteScreen() {
   const router = useRouter();
   const { id, draft, update } = useLoteDraft();
-  const catalogo = useCatalogo();
-  const msg = 'Selecione um produto com padrões cadastrados.';
+  const culturas = useCulturasLote();
+  const segmento = draft.segmento ?? culturas.find((c) => c.id === draft.culturaId)?.segmento;
+  const campos = segmento ? CAMPOS_SEGMENTO[segmento] : [];
+  const falta = faltandoObrigatorio(segmento, draft.unidade, draft.atributos);
+  // Mantém padrão/calibre/embalagem (texto) em dia: a revisão (14) e a publicação seguem lendo esses campos.
+  const mudar = (chave: string, valor: string) => {
+    const atributos = { ...draft.atributos, [chave]: valor };
+    let textos = {};
+    try {
+      const r = atributosParaServidor(segmento, draft.unidade, atributos);
+      textos = { padrao: r.p_padrao, calibre: r.p_calibre, embalagem: r.p_embalagem };
+    } catch { /* número ainda incompleto: o envio mostra o erro */ }
+    update({ segmento, atributos, ...textos });
+  };
   const [adicionar, setAdicionar] = useState(false);
   const [recusados, setRecusados] = useState<ArquivoRecusado[]>([]);
   const usados = contarMidias(draft.evidencias);
@@ -68,11 +81,19 @@ export default function PadraoLoteScreen() {
   return (
     <Screen
       header={<ScreenHeader title="Padrão do lote" step="2/3" subtitle="Defina o padrão e a embalagem." onBack={() => router.dismissTo(rotasAgricultor.rascunhoLote(id, 'novo'))} />}
-      footer={<LoteDraftFooter etapa="padrao" proxima="preco" />}
+      footer={<LoteDraftFooter etapa="padrao" proxima="preco" disabled={!!falta} />}
     >
-      <SelectField label="Padrão" value={draft.padrao} options={opcoes(catalogo.padroes)} onChange={(padrao) => update({ padrao })} emptyMessage={msg} />
-      <SelectField label="Calibre" value={draft.calibre} options={opcoes(catalogo.calibres)} onChange={(calibre) => update({ calibre })} emptyMessage={msg} />
-      <SelectField label="Embalagem" value={draft.embalagem} options={opcoes(catalogo.embalagens)} onChange={(embalagem) => update({ embalagem })} emptyMessage={msg} />
+      {!segmento && <AppText color="textSecondary">Selecione a cultura do lote na etapa anterior.</AppText>}
+      {segmento && campos.length === 0 && <AppText color="textSecondary">Este segmento ainda não tem campos de padrão.</AppText>}
+      {campos.map((campo) => campo.tipo === 'lista' ? (
+        <SelectField key={campo.chave} label={campo.rotulo} value={draft.atributos[campo.chave]} options={campo.opcoes ?? []}
+          onChange={(valor) => mudar(campo.chave, valor)} />
+      ) : (
+        <TextField key={campo.chave} label={campo.rotulo} value={draft.atributos[campo.chave] ?? ''}
+          keyboardType={campo.tipo === 'numero' ? 'decimal-pad' : 'default'} maxLength={campo.tipo === 'numero' ? 7 : 60}
+          onChangeText={(valor) => mudar(campo.chave, valor)} />
+      ))}
+      {!!falta && <AppText variant="caption" color="textSecondary">Para continuar, preencha: {falta}.</AppText>}
 
       <View style={styles.evid}>
         <AppText variant="label">Evidências do lote ({draft.evidencias.length})</AppText>

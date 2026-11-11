@@ -16,7 +16,7 @@ export type OfertaCatalogo = {
   cidade: string;
   uf: string;
   quantidade: number;
-  unidade: 'kg' | 'cx' | 't';
+  unidade: 'kg' | 'cx' | 't' | 'sc';
   preco_centavos: number;
   colheita: string | null;
   retirada_inicio: string;

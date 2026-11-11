@@ -40,7 +40,7 @@ begin
   begin perform public.salvar_rascunho_lote('teste-1',prop,cult,'novo',1000000001,'kg',1,'','','','',null,null,null,null); raise exception 'Aceitou excesso'; exception when check_violation then null; end;
   begin perform public.salvar_rascunho_lote('teste-1',prop,cult,'novo',1,'kg',0,'','','','',null,null,null,null); raise exception 'Aceitou preço zero'; exception when check_violation then null; end;
   begin perform public.salvar_rascunho_lote('teste-1',prop,cult,'novo',1,'t',1,'','','','',null,null,null,null); raise exception 'Aceitou unidade fora da cultura'; exception when sqlstate 'PT422' then null; end;
-  begin perform public.salvar_rascunho_lote('teste-1',prop,cult,'novo',1,'sc',1,'','','','',null,null,null,null); raise exception 'Aceitou unidade inexistente'; exception when sqlstate 'PT422' then null; end;
+  begin perform public.salvar_rascunho_lote('teste-1',prop,cult,'novo',1,'dz',1,'','','','',null,null,null,null); raise exception 'Aceitou unidade inexistente'; exception when sqlstate 'PT422' then null; end;
   begin perform public.salvar_rascunho_lote('ID INVÁLIDO',prop,cult,'novo',1,'kg',1,'','','','',null,null,null,null); raise exception 'Aceitou id inválido'; exception when check_violation then null; end;
   begin perform public.salvar_rascunho_lote('teste-1',prop,cult,'publicado',1,'kg',1,'','','','',null,null,null,null); raise exception 'Aceitou etapa inválida'; exception when check_violation then null; end;
   begin perform public.salvar_rascunho_lote('teste-1',prop,cult,'novo',1,'kg',1,repeat('A',121),'','','',null,null,null,null); raise exception 'Aceitou qualidade longa'; exception when check_violation then null; end;
@@ -85,7 +85,7 @@ do $$ begin if exists(select 1 from public.rascunhos_lote) then raise exception 
 reset role;
 do $$
 begin
-  if has_function_privilege('anon','public.salvar_rascunho_lote(text,uuid,uuid,text,numeric,text,bigint,text,text,text,text,date,date,date,date)','execute')
+  if has_function_privilege('anon','public.salvar_rascunho_lote(text,uuid,uuid,text,numeric,text,bigint,text,text,text,text,date,date,date,date,jsonb)','execute')
     or has_function_privilege('anon','public.descartar_rascunho_lote(text)','execute')
     or has_table_privilege('anon','public.rascunhos_lote','select') then raise exception 'Privilégio indevido para anon'; end if;
 end $$;
