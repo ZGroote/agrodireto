@@ -23,7 +23,7 @@ begin
   perform public.salvar_rascunho_lote('teste-1',prop,cult,'novo',null,'kg',null,'','','','',null,null,null,null);
   select * into strict r from public.rascunhos_lote where rascunho_id = 'teste-1';
   if r.quantidade is not null or r.preco_centavos is not null or r.autor <> auth.uid() then raise exception 'Parcial ou autoria inválida'; end if;
-  perform public.salvar_rascunho_lote('teste-1',prop,cult,'revisar',12.5,'cx',1234,'A','Grande','Caixa','Seco','2026-11-20','2026-11-21','2026-11-22','2026-11-23');
+  perform public.salvar_rascunho_lote('teste-1',prop,cult,'revisar',12.5,'cx',1234,'A','Grande','Caixa','Seco','2026-11-20','2026-11-21','2026-11-22','2026-11-23','{"padrao_qualidade":"extra","embalagem":"caixa_plastica","peso_medio_embalagem_kg":20}'::jsonb);
   select * into strict r from public.rascunhos_lote where rascunho_id = 'teste-1';
   if r.quantidade <> 12.5 or r.preco_centavos <> 1234 or r.padrao <> 'A' or r.calibre <> 'Grande'
     or r.embalagem <> 'Caixa' or r.condicoes <> 'Seco' or r.etapa <> 'revisar'
@@ -32,7 +32,7 @@ begin
     or r.retirada_fim <> '2026-11-22' or r.validade <> '2026-11-23'
     then raise exception 'Campos não reabriram'; end if;
   -- Repetição e última gravação do mesmo autor: uma única linha.
-  perform public.salvar_rascunho_lote('teste-1',prop,cult,'preco',14,'kg',1500,'B','','','',null,null,null,null);
+  perform public.salvar_rascunho_lote('teste-1',prop,cult,'preco',14,'kg',1500,'B','','','',null,null,null,null,'{"padrao_qualidade":"primeira_cat1","embalagem":"caixa_plastica"}'::jsonb);
   if (select count(*) from public.rascunhos_lote) <> 1 or
     (select quantidade from public.rascunhos_lote) <> 14 then raise exception 'Upsert duplicou ou ignorou gravação'; end if;
   if exists(select 1 from public.ofertas_lote where rascunho_id = 'teste-1') then raise exception 'Rascunho foi publicado'; end if;
