@@ -135,6 +135,10 @@ export async function otimizarVideo(entrada: string, saida: string, executar: Ex
     return mantida('Formato sem decodificador no worker (ex.: R3D, BRAW, ARI, CRM): original mantido sem tratar metadados.');
   }
   if (!sonda.temVideo) return { status: 'falhou', tipo: 'video', bytesEntrada, motivo: 'O arquivo não tem faixa de vídeo.' };
+  // ponytail: falhou volta à fila até 3 tentativas (cada uma refaz download + ffprobe); status terminal se pesar.
+  if (sonda.duracaoSeg > config.duracaoMaxVideoSeg) {
+    return { status: 'falhou', tipo: 'video', bytesEntrada, motivo: `Vídeo com ${Math.ceil(sonda.duracaoSeg)} s passa do limite de ${config.duracaoMaxVideoSeg} s.` };
+  }
 
   const codec = config.codecVideo;
   const temporarios: string[] = [];

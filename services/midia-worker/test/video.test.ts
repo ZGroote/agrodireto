@@ -27,14 +27,15 @@ const JSON_FFPROBE = JSON.stringify({
  * FFmpeg simulado: o ffprobe devolve um JSON; a codificação grava um arquivo cujo tamanho depende do CRF;
  * a medição do VMAF devolve, em ordem, as notas da lista.
  */
-function ffmpegSimulado(opcoes: { notas: (number | undefined)[]; tamanhoPorCrf?: (crf: number) => number; semVideo?: boolean; ffprobeFalha?: boolean; copiaFalha?: boolean }) {
+function ffmpegSimulado(opcoes: { notas: (number | undefined)[]; tamanhoPorCrf?: (crf: number) => number; semVideo?: boolean; ffprobeFalha?: boolean; copiaFalha?: boolean; duracao?: string }) {
   const chamadas: { tipo: 'sonda' | 'codificar' | 'vmaf' | 'copiar'; crf?: number }[] = [];
   const notas = [...opcoes.notas];
   const executar: Executor = async (programa, args) => {
     if (programa === config.ffprobe) {
       chamadas.push({ tipo: 'sonda' });
       if (opcoes.ffprobeFalha) throw new Error('Invalid data found when processing input');
-      return { stdout: opcoes.semVideo ? JSON.stringify({ streams: [{ codec_type: 'audio' }] }) : JSON_FFPROBE, stderr: '' };
+      if (opcoes.semVideo) return { stdout: JSON.stringify({ streams: [{ codec_type: 'audio' }] }), stderr: '' };
+      return { stdout: opcoes.duracao ? JSON_FFPROBE.replace('"28.0"', JSON.stringify(opcoes.duracao)) : JSON_FFPROBE, stderr: '' };
     }
     if (args.some((a) => a.includes('libvmaf'))) {
       chamadas.push({ tipo: 'vmaf' });
@@ -135,6 +136,15 @@ describe('otimização de vídeo (lógica, com FFmpeg simulado)', () => {
     const { executar } = ffmpegSimulado({ notas: [], semVideo: true });
     const r = await otimizarVideo(entrada, join(pasta, 'f.otimizado.mp4'), executar);
     assert.equal(r.status, 'falhou');
+  });
+
+  it('vídeo acima de 60 s pela duração real (ffprobe) falha sem codificar', async () => {
+    const entrada = await criarOriginal('g.mp4');
+    const { executar, chamadas } = ffmpegSimulado({ notas: [], duracao: '60.4' });
+    const r = await otimizarVideo(entrada, join(pasta, 'g.otimizado.mp4'), executar);
+    assert.equal(r.status, 'falhou');
+    assert.match(r.motivo ?? '', /61 s passa do limite de 60 s/);
+    assert.deepEqual(chamadas.map((c) => c.tipo), ['sonda']);
   });
 
   it('o despachante manda a extensão da lista de vídeos para o otimizador de vídeo', async () => {

@@ -6,6 +6,9 @@ insert into public.organizacoes (id, nome) values ('53000000-0000-0000-0000-0000
 insert into public.propriedades (id, usuario_id, organizacao_id, nome, cidade, uf, area, culturas)
 values ('53000000-0000-0000-0000-000000000020','53000000-0000-0000-0000-000000000001',
         '53000000-0000-0000-0000-000000000010','Fazenda mídia','Cidade teste','SP',1,'Tomate');
+-- Desde a D03 a leitura de midias é por organização, não por autor.
+insert into public.membros_organizacao (organizacao_id, usuario_id, papel)
+values ('53000000-0000-0000-0000-000000000010','53000000-0000-0000-0000-000000000001','titular');
 insert into public.midias (id, autor_id, propriedade_id, tipo, arquivo, criada_em) values
  ('53000000-0000-0000-0000-0000000000a1','53000000-0000-0000-0000-000000000001','53000000-0000-0000-0000-000000000020',
   'foto','53000000-0000-0000-0000-000000000020/a.jpg', now() - interval '2 minutes'),

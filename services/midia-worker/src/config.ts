@@ -20,6 +20,8 @@ export const config = {
   /** Quanto o CRF baixa a cada tentativa que não atinge o VMAF mínimo, e quantas tentativas */
   passoCrf: 3,
   tentativasVideo: 3,
+  /** Duração máxima aceita do vídeo, em segundos (D03). A duração declarada pelo app não vale: conta a do ffprobe */
+  duracaoMaxVideoSeg: 60,
   /** Qualidade do WebP com perda (0 a 100) e PSNR mínimo (dB) entre original e otimizado */
   webpQualidade: numero(process.env.WEBP_QUALIDADE, 90),
   psnrMinimoDb: numero(process.env.PSNR_MINIMO_DB, 38),
