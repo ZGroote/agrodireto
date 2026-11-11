@@ -79,10 +79,10 @@ export function EvidenciasPublicadas({ lote, rascunho, retirada }: { lote: strin
           <Button variant="secondary" label={`Baixar ${item.tipo === 'foto' ? 'foto' : 'vídeo'} ${indice + 1}`}
             onPress={() => void baixarEvidencia(item.arquivo).catch(() => setMensagem('Não foi possível baixar. Tente novamente.'))} />
           {!item.solicitada_em && !retirada && <Button label="Enviar à equipe para revisão" disabled={!!ocupada} onPress={() => void pedirRevisao(item.chave)} />}
-          {item.tipo === 'foto' && item.revisao === 'aprovada' && (!retirada || item.autorizada_catalogo) && (
+          {item.revisao === 'aprovada' && (!retirada || item.autorizada_catalogo) && (
             <>
               {item.autorizada_catalogo && !retirada && <AppText variant="caption">{item.copia_catalogo ? 'Cópia disponível aos compradores autorizados.' : 'Aguardando preparo da cópia para o catálogo.'}</AppText>}
-              <Button label={item.autorizada_catalogo ? 'Retirar foto do catálogo' : 'Autorizar foto no catálogo'} variant="secondary"
+              <Button label={`${item.autorizada_catalogo ? 'Retirar' : 'Autorizar'} ${item.tipo === 'foto' ? 'foto' : 'vídeo'} ${item.autorizada_catalogo ? 'do' : 'no'} catálogo`} variant="secondary"
                 disabled={!!ocupada} onPress={() => void mudarAutorizacao(item)} />
             </>
           )}
