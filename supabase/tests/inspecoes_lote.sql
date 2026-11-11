@@ -7,11 +7,13 @@ insert into auth.users (id, aud, role, email) values
  ('52000000-0000-0000-0000-000000000004','authenticated','authenticated','inspecao-fora@example.invalid');
 insert into public.equipe_agrodireto values ('52000000-0000-0000-0000-000000000002');
 insert into agrodireto_privado.compradores_catalogo values ('52000000-0000-0000-0000-000000000003');
-insert into public.propriedades (usuario_id,nome,cidade,uf,area,culturas,status)
-values ('52000000-0000-0000-0000-000000000001','Fazenda teste','Cidade teste','SP',1,'Tomate','aprovada');
+insert into public.organizacoes (id,nome) values ('52000000-0000-0000-0000-000000000020','Fazenda teste');
+insert into public.propriedades (id,organizacao_id,usuario_id,nome,cidade,uf,area,culturas,status)
+values ('52000000-0000-0000-0000-000000000021','52000000-0000-0000-0000-000000000020',
+        '52000000-0000-0000-0000-000000000001','Fazenda teste','Cidade teste','SP',1,'Tomate','aprovada');
 insert into public.ofertas_lote
-  (id,produtor_id,rascunho_id,produto,quantidade,unidade,preco_centavos,retirada_inicio,retirada_fim,validade,padrao,calibre,embalagem,condicoes)
-values ('52000000-0000-0000-0000-000000000010','52000000-0000-0000-0000-000000000001','teste-inspecao',
+  (id,produtor_id,propriedade_id,rascunho_id,produto,quantidade,unidade,preco_centavos,retirada_inicio,retirada_fim,validade,padrao,calibre,embalagem,condicoes)
+values ('52000000-0000-0000-0000-000000000010','52000000-0000-0000-0000-000000000001','52000000-0000-0000-0000-000000000021','teste-inspecao',
         'Tomate',1,'kg',100,current_date,current_date+2,current_date+2,'','','','');
 insert into public.evidencias_lote (lote_id,chave,arquivo,tipo,enviada_em,revisao)
 values ('52000000-0000-0000-0000-000000000010','foto-inspecao','teste-inspecao-foto.jpg','foto',now(),'aprovada');

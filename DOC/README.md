@@ -40,11 +40,13 @@ Um arquivo por passo, em ordem. Nome: `AAAA-MM-DD_NNN_titulo-curto.md`.
 | 011 | 2026-11-11 | [Fotos autorizadas no catálogo](2026-11-11_011_fotos-no-catalogo.md) |
 | 012 | 2026-11-11 | [Preparo em lote das fotos do catálogo](2026-11-11_012_preparo-em-lote-das-fotos.md) |
 | 013 | 2026-11-11 | [Inspeção de qualidade dos lotes](2026-11-11_013_inspecao-dos-lotes.md) |
+| 014 | 2026-11-11 | [Ampliação do piloto](2026-11-11_014_ampliacao-do-piloto.md) |
+| 015 | 2026-11-11 | [Organizações e várias propriedades](2026-11-11_015_organizacoes-e-propriedades.md) |
 
 ## Documentos de referência
 
 - [Plano de desenvolvimento do piloto](../tasks/plan.md)
-- [Backlog executável do piloto — 43 tarefas](../tasks/todo.md)
+- [Backlog executável do piloto — 55 tarefas](../tasks/todo.md)
 
 - [Arquitetura](arquitetura.md)
 - [Design system](design-system.md)

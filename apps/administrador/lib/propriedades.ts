@@ -12,7 +12,7 @@ export async function listarPendencias() {
 export async function lerPropriedade(id: string) {
   if (!supabase) throw new Error();
   const { data, error } = await supabase.from('propriedades').select(camposPropriedadeEnviada)
-    .eq('usuario_id', id).maybeSingle<PropriedadeEnviada>();
+    .eq('id', id).maybeSingle<PropriedadeEnviada>();
   if (error) throw error;
   return data;
 }
@@ -20,7 +20,7 @@ export async function lerPropriedade(id: string) {
 export async function revisarPropriedade(cadastro: PropriedadeEnviada, motivo: string | null) {
   if (!supabase) throw new Error();
   const { error } = await supabase.rpc('revisar_propriedade', {
-    p_usuario_id: cadastro.usuario_id,
+    p_id: cadastro.id,
     p_enviada_em: cadastro.enviada_em,
     p_motivo: motivo,
   });

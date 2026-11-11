@@ -1,5 +1,6 @@
 export type PropriedadeEnviada = {
-  usuario_id: string;
+  id: string;
+  organizacao_id: string;
   nome: string;
   cidade: string;
   uf: string;
@@ -10,4 +11,4 @@ export type PropriedadeEnviada = {
   motivo_ajuste: string | null;
 };
 
-export const camposPropriedadeEnviada = 'usuario_id,nome,cidade,uf,area,culturas,status,enviada_em,motivo_ajuste';
+export const camposPropriedadeEnviada = 'id,organizacao_id,nome,cidade,uf,area,culturas,status,enviada_em,motivo_ajuste';

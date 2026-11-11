@@ -24,7 +24,7 @@ Etapa 0 iniciada em 10/11/2026. O estado de cada tarefa está na lista abaixo.
 
 **Responsável:** Produto/operação. **Dependências:** Nenhuma.
 
-**Entrega e aceite:** Registrar região, 2–4 culturas, participantes, unidades, aprovação, responsáveis, SLA e metas; registrar papel comercial, frete, perdas e decisão sobre paywall no piloto.
+**Entrega e aceite:** Registrar região, segmentos liberados por onda (ampliação de 11/11: hortifrúti, grãos, pecuária/origem animal, agroindústria), culturas/produtos iniciais, participantes, unidades, aprovação, responsáveis, SLA e metas; registrar papel comercial, frete, perdas e decisão sobre paywall no piloto.
 
 **Verificação:** Revisão com o responsável do negócio; questões não decididas ficam com responsável e prazo, sem valores inventados.
 
@@ -83,11 +83,11 @@ Etapa 0 iniciada em 10/11/2026. O estado de cada tarefa está na lista abaixo.
 
 - [ ] Concluída e verificada.
 
-**Progresso:** identidade via Auth e vínculo privado de equipe para o fluxo de propriedade. Isolamento e bloqueio de promoção verificados no banco. Empresas e vínculos dos demais perfis seguem pendentes.
+**Progresso:** identidade via Auth e vínculo privado de equipe para o fluxo de propriedade. Isolamento e bloqueio de promoção verificados no banco. Desde 11/11, organizações e membros (titular/membro) existem no banco, e o produtor ganha uma organização no primeiro envio de propriedade. Pendentes: incluir membros, organização do comprador e da transportadora, troca de contexto auditada.
 
 **Responsável:** Backend. **Dependências:** A01, A03.
 
-**Entrega e aceite:** Representar usuário, empresa/membro, papel e aprovação; acesso administrativo não pode ser autoatribuído; RLS nega acesso cruzado por padrão.
+**Entrega e aceite:** Representar usuário, organização/membro, papel e aprovação; usuário pode pertencer a mais de uma organização com troca de contexto explícita e auditada (ampliação de 11/11); acesso administrativo não pode ser autoatribuído; RLS nega acesso cruzado por padrão.
 
 **Verificação:** Usuário A não lê/altera dados privados de B; usuário comum não se promove; endpoints rejeitam ausência de sessão.
 
@@ -139,7 +139,7 @@ Etapa 0 iniciada em 10/11/2026. O estado de cada tarefa está na lista abaixo.
 
 **Responsável:** App Administrador. **Dependências:** B01, B02.
 
-**Entrega e aceite:** Acesso por concessão autorizada; verificação real de segundo fator conforme regra; seis dígitos arbitrários não liberam acesso.
+**Entrega e aceite:** Acesso por concessão autorizada; papéis administrativos separados (geral, cadastral, comercial, logístico, financeiro, auditor, suporte), cada um só com o necessário (ampliação de 11/11); verificação real de segundo fator conforme regra; seis dígitos arbitrários não liberam acesso.
 
 **Verificação:** Testar usuário sem permissão, segundo fator inválido e revogação de acesso.
 
@@ -149,11 +149,11 @@ Etapa 0 iniciada em 10/11/2026. O estado de cada tarefa está na lista abaixo.
 
 - [ ] Concluída e verificada.
 
-**Progresso:** o rascunho é separado por conta e pode ser enviado ao Supabase. O resumo e o checklist mostram a situação remota. Após pedido de ajustes, o produtor pode corrigir e reenviar. Falta ensaio completo pela interface.
+**Progresso:** o rascunho é separado por conta e pode ser enviado ao Supabase. O resumo e o checklist mostram a situação remota. Após pedido de ajustes, o produtor pode corrigir e reenviar. Desde 11/11, a propriedade tem id próprio, pertence a uma organização e pode haver várias por organização; o lote fica ligado à propriedade. Falta ensaio completo pela interface e a tela para escolher entre várias propriedades.
 
 **Responsável:** Agricultor + backend. **Dependências:** B02.
 
-**Entrega e aceite:** Salvar dados validados e recuperar ao reiniciar; associar ao usuário/empresa real; rascunho antes do cadastro migra uma vez.
+**Entrega e aceite:** Salvar dados validados e recuperar ao reiniciar; propriedade com id próprio pertencendo a uma organização, várias por organização, por migration nova sem editar as anteriores (ampliação de 11/11); rascunho antes do cadastro migra uma vez.
 
 **Verificação:** Criar, reabrir, editar e simular falha; nenhum ID fixo; segunda migração do rascunho não duplica registro.
 
@@ -356,6 +356,76 @@ Etapa 0 iniciada em 10/11/2026. O estado de cada tarefa está na lista abaixo.
 
 **Escopo provável:** hook de catálogo; OfertasScreen; detalhe de oferta; filtro; teste.
 
+### D09 — Configurar catálogo por segmento
+
+- [ ] Concluída e verificada.
+
+**Origem:** ampliação do piloto em 11/11/2026 ([plan.md §12](plan.md#12-ampliação-do-piloto-11112026)).
+
+**Responsável:** Backend + Agricultor. **Dependências:** B01, C01, decisão de atributos por segmento.
+
+**Entrega e aceite:** Segmentos (hortifrúti, grãos, pecuária/origem animal, agroindústria) com categorias, atributos, unidades e regras de validação em configuração; o cadastro de cultura e de lote mostra só os campos do segmento; incluir um segmento novo não exige mudar o núcleo.
+
+**Verificação:** Criar produto de cada segmento; campo de outro segmento não aparece nem é aceito no servidor; unidade incompatível é rejeitada.
+
+**Escopo provável:** migração de segmentos/atributos; packages/dominio/segmentos.ts (novo); formulário de cultura e lote; teste.
+
+### D10 — Exigir documentos por segmento
+
+- [ ] Concluída e verificada.
+
+**Origem:** ampliação do piloto em 11/11/2026 ([plan.md §12](plan.md#12-ampliação-do-piloto-11112026)).
+
+**Responsável:** Backend + Administrador. **Dependências:** D09, decisão sobre documentos sanitários.
+
+**Entrega e aceite:** Documentos obrigatórios por segmento com validade; oferta sem documento válido não é publicada; alerta de vencimento para produtor e operação.
+
+**Verificação:** Publicação bloqueada sem documento; documento vencido retira a oferta do catálogo; arquivo segue privado.
+
+**Escopo provável:** migração de documentos; Storage privado; tela de documentos; teste.
+
+### D11 — Separar estados da disponibilidade
+
+- [ ] Concluída e verificada.
+
+**Origem:** ampliação do piloto em 11/11/2026 ([plan.md §12](plan.md#12-ampliação-do-piloto-11112026)).
+
+**Responsável:** Backend + Agricultor. **Dependências:** D01, D09.
+
+**Entrega e aceite:** Quantidade estimada, confirmada, reservada, disponível, comprometida e indisponível; previsão de safra existente vira estimado e nunca conta como estoque.
+
+**Verificação:** Estimado não aparece como disponível ao comprador; reserva reduz disponível; transições fora de ordem são rejeitadas.
+
+**Escopo provável:** migração/função de disponibilidade; packages/dominio; tela de previsão e lote; teste.
+
+### E03 — Publicar demandas do comprador
+
+- [ ] Concluída e verificada.
+
+**Origem:** ampliação do piloto em 11/11/2026 ([plan.md §12](plan.md#12-ampliação-do-piloto-11112026)).
+
+**Responsável:** Cliente + backend. **Dependências:** C02, D09.
+
+**Entrega e aceite:** Comprador publica demanda estruturada: produto, especificação, quantidade, unidade, qualidade, região, entrega, prazo, frequência, pagamento e documentos exigidos; pode editar e encerrar.
+
+**Verificação:** Demanda persiste e reaparece; outra empresa não edita; campos seguem o segmento do produto.
+
+**Escopo provável:** migração de demandas; telas do Cliente; hook; teste.
+
+### E04 — Cruzar demandas e ofertas com explicação
+
+- [ ] Concluída e verificada.
+
+**Origem:** ampliação do piloto em 11/11/2026 ([plan.md §12](plan.md#12-ampliação-do-piloto-11112026)).
+
+**Responsável:** Backend + Agricultor + Cliente. **Dependências:** E01, E03, D11.
+
+**Entrega e aceite:** Sugestões de ofertas para uma demanda e de demandas para um produtor, por produto, qualidade, quantidade, local, prazo, preço e documentos; cada sugestão mostra os critérios que bateram.
+
+**Verificação:** Oferta incompatível não aparece; sugestão traz o motivo; estimativa nunca aparece como disponível.
+
+**Escopo provável:** função de matching no banco; listas nos dois apps; teste com casos-limite.
+
 ### Checkpoint da etapa 2
 
 - [ ] Critério do marco correspondente em plan.md demonstrado com dados persistidos e perfis autorizados.
@@ -411,6 +481,20 @@ Etapa 0 iniciada em 10/11/2026. O estado de cada tarefa está na lista abaixo.
 
 **Escopo provável:** tabela/políticas de mensagens; função/hook; uma integração de tela por entrega; teste.
 
+### F05 — Configurar compras recorrentes
+
+- [ ] Concluída e verificada.
+
+**Origem:** ampliação do piloto em 11/11/2026 ([plan.md §12](plan.md#12-ampliação-do-piloto-11112026)).
+
+**Responsável:** Cliente + backend. **Dependências:** E03, F03.
+
+**Entrega e aceite:** Comprador agenda demanda semanal ou mensal; o sistema gera a próxima demanda e avisa quando a compra precisa ser organizada; pausar e encerrar.
+
+**Verificação:** Virada de período gera uma única demanda; pausa interrompe; histórico liga cada demanda à recorrência.
+
+**Escopo provável:** migração de recorrência; agendamento; tela do Cliente; teste.
+
 ### Checkpoint da etapa 3
 
 - [ ] Critério do marco correspondente em plan.md demonstrado com dados persistidos e perfis autorizados.
@@ -424,7 +508,7 @@ Etapa 0 iniciada em 10/11/2026. O estado de cada tarefa está na lista abaixo.
 
 **Responsável:** Backend financeiro. **Dependências:** F03; PSP e condição de pagamento definidos.
 
-**Entrega e aceite:** Usar um método de pagamento; validar callback; associar valores ao pedido; distinguir pagamento, assinatura e repasse.
+**Entrega e aceite:** AgroDireto Pay: PSP habilitado para marketplace com split, sem custódia própria (ampliação de 11/11); usar um método de pagamento; validar callback; associar valores ao pedido; distinguir pagamento, assinatura e repasse.
 
 **Verificação:** Simular sucesso/falha/expiração, evento duplicado e fora de ordem; client não consegue marcar pagamento como aprovado.
 
@@ -490,6 +574,34 @@ Etapa 0 iniciada em 10/11/2026. O estado de cada tarefa está na lista abaixo.
 
 **Escopo provável:** comandos de viagem/recebimento; telas dos eventos; teste.
 
+### G07 — Mostrar comissão e tarifas antes de confirmar
+
+- [ ] Concluída e verificada.
+
+**Origem:** ampliação do piloto em 11/11/2026 ([plan.md §12](plan.md#12-ampliação-do-piloto-11112026)).
+
+**Responsável:** Backend financeiro + Cliente + Agricultor. **Dependências:** G01, decisão de comissão por segmento.
+
+**Entrega e aceite:** Comissão configurável por segmento, tipo de operação ou contrato; antes de confirmar, comprador e produtor veem valor bruto, comissão, frete, tarifas do provedor e valor líquido estimado.
+
+**Verificação:** Valores batem com o split enviado ao PSP; mudança de configuração não altera pedido já confirmado.
+
+**Escopo provável:** configuração de comissão; função de cálculo; telas de revisão; teste.
+
+### G08 — Aplicar requisitos logísticos por segmento
+
+- [ ] Concluída e verificada.
+
+**Origem:** ampliação do piloto em 11/11/2026 ([plan.md §12](plan.md#12-ampliação-do-piloto-11112026)).
+
+**Responsável:** Logística + backend. **Dependências:** G03, G04, D09.
+
+**Entrega e aceite:** Veículo e carga compatíveis com o segmento (refrigeração, transporte de animais, granel); ordem logística não é atribuída a veículo incompatível.
+
+**Verificação:** Tentar atribuir carga incompatível é rejeitado no servidor; requisitos aparecem para o transportador.
+
+**Escopo provável:** migração de tipos de veículo/carga; regra de atribuição; teste.
+
 ### Checkpoint da etapa 4
 
 - [ ] Critério do marco correspondente em plan.md demonstrado com dados persistidos e perfis autorizados.
@@ -545,9 +657,72 @@ Etapa 0 iniciada em 10/11/2026. O estado de cada tarefa está na lista abaixo.
 
 **Escopo provável:** função de retenção; agendamento; contrato de expiração; teste.
 
+### H05 — Publicar QR de rastreabilidade
+
+- [ ] Concluída e verificada.
+
+**Origem:** ampliação do piloto em 11/11/2026 ([plan.md §12](plan.md#12-ampliação-do-piloto-11112026)).
+
+**Responsável:** Backend + Agricultor. **Dependências:** G06, decisão sobre dados públicos.
+
+**Entrega e aceite:** Cada lote entregue gera um QR com página pública só com dados autorizados: produto, origem, data de colheita/produção, lote e qualidade; produtor escolhe se mostra o nome.
+
+**Verificação:** Página não expõe documento, valor, contato nem dado pessoal; QR de lote inexistente ou revogado não mostra nada.
+
+**Escopo provável:** visão pública restrita; página web; geração do QR; teste de exposição.
+
 ### Checkpoint da etapa 5
 
 - [ ] Critério do marco correspondente em plan.md demonstrado com dados persistidos e perfis autorizados.
+- [ ] Verificações relevantes aprovadas; limites de homologação registrados; próxima fase revisada.
+
+## Etapa 5A — Inteligência e institucional
+
+### J01 — Mostrar inteligência de mercado
+
+- [ ] Concluída e verificada.
+
+**Origem:** ampliação do piloto em 11/11/2026 ([plan.md §12](plan.md#12-ampliação-do-piloto-11112026)).
+
+**Responsável:** Backend + Cliente + Agricultor. **Dependências:** H02, decisão de fontes de preço.
+
+**Entrega e aceite:** Preços por produto e região separando negociado, anunciado, referência externa e estimativa; cada número mostra fonte, data, região, unidade e método.
+
+**Verificação:** Sem dados suficientes mostra estado vazio; estimativa nunca aparece como preço praticado.
+
+**Escopo provável:** visões agregadas; importação de referência; telas; teste.
+
+### J02 — Medir indicadores de ODS
+
+- [ ] Concluída e verificada.
+
+**Origem:** ampliação do piloto em 11/11/2026 ([plan.md §12](plan.md#12-ampliação-do-piloto-11112026)).
+
+**Responsável:** Backend + Administrador. **Dependências:** H02, decisão de metodologia.
+
+**Entrega e aceite:** Indicadores com fórmula, fonte, período e unidade: produtores e compradores ativos, volume e valor liquidado, participação de pequenos produtores, perdas e entregas.
+
+**Verificação:** Indicadores batem com consulta direta aos eventos; nenhum afirma redução sem dado comparável.
+
+**Escopo provável:** visões de indicadores; painel do Administrador; teste.
+
+### J03 — Organizar compras institucionais
+
+- [ ] Concluída e verificada.
+
+**Origem:** ampliação do piloto em 11/11/2026 ([plan.md §12](plan.md#12-ampliação-do-piloto-11112026)).
+
+**Responsável:** Cliente + Administrador + backend. **Dependências:** C02, E03, D10, decisão de programas.
+
+**Entrega e aceite:** Instituições (escolas, hospitais, PAA/PNAE) cadastram chamadas com requisitos de habilitação; a plataforma mostra produtores com documentos compatíveis, sem declarar elegibilidade; entrega e recebimento ficam registrados.
+
+**Verificação:** Produtor sem documento exigido não aparece como apto; a decisão de habilitação fica com quem valida, registrada em auditoria.
+
+**Escopo provável:** migração de instituições/chamadas; telas; teste.
+
+### Checkpoint da etapa 5A
+
+- [ ] Indicadores e mercado demonstrados com eventos reais do piloto.
 - [ ] Verificações relevantes aprovadas; limites de homologação registrados; próxima fase revisada.
 
 ## Etapa 6 — Homologação e piloto

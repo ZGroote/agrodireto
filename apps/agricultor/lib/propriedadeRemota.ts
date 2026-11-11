@@ -2,12 +2,13 @@ import { camposPropriedadeEnviada, type PropriedadeEnviada } from '@agrodireto/d
 import type { RascunhoPropriedade } from './rascunhoPropriedade';
 import { supabase } from './supabase';
 
+// ponytail: o app mostra uma propriedade por vez (a primeira enviada); escolher entre várias vem com a tela de propriedades.
 export async function lerPropriedadeEnviada(): Promise<PropriedadeEnviada | null> {
   if (!supabase) throw new Error();
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) throw new Error();
   const { data, error } = await supabase.from('propriedades').select(camposPropriedadeEnviada)
-    .eq('usuario_id', session.user.id).maybeSingle<PropriedadeEnviada>();
+    .order('enviada_em').order('id').limit(1).maybeSingle<PropriedadeEnviada>();
   if (error) throw error;
   return data;
 }
@@ -28,8 +29,10 @@ export async function enviarPropriedade(rascunho: RascunhoPropriedade, revisao?:
     p_area: area,
     p_culturas: rascunho.culturas,
   };
-  const { error } = revisao
-    ? await supabase.rpc('reenviar_propriedade', { ...dados, p_enviada_em: revisao })
+  const atual = revisao ? await lerPropriedadeEnviada() : null;
+  if (revisao && !atual) throw new Error('O cadastro mudou. Volte e abra a versão atual.');
+  const { error } = atual
+    ? await supabase.rpc('reenviar_propriedade', { ...dados, p_id: atual.id, p_enviada_em: revisao })
     : await supabase.rpc('enviar_propriedade', dados);
   if (error?.code === 'PT409') throw new Error('O cadastro mudou. Volte e abra a versão atual.');
   if (error?.code === '23514') throw new Error('Confira a UF e os limites dos campos da propriedade.');

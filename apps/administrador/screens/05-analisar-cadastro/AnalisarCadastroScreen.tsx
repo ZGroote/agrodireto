@@ -24,7 +24,7 @@ export default function AnalisarCadastroScreen() {
   }, [id]);
 
   async function revisar(motivoAjuste: string | null) {
-    if (!cadastro || cadastro.usuario_id !== id || ocupado || cadastro.status !== 'em_analise') return;
+    if (!cadastro || cadastro.id !== id || ocupado || cadastro.status !== 'em_analise') return;
     setOcupado(true);
     setMensagem('');
     try {
@@ -41,7 +41,7 @@ export default function AnalisarCadastroScreen() {
     <Screen header={<ScreenHeader title="Analisar propriedade" />}>
       {!id && <AppText>Selecione uma propriedade na lista de cadastros.</AppText>}
       {!!mensagem && !!id && <AppText accessibilityLiveRegion="polite">{mensagem}</AppText>}
-      {cadastro && cadastro.usuario_id === id && (
+      {cadastro && cadastro.id === id && (
         <>
           <Card>
             <ListRow title={cadastro.nome} subtitle={`${cadastro.cidade} · ${cadastro.uf}`} />

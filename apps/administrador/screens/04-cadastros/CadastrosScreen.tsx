@@ -27,8 +27,8 @@ export default function CadastrosScreen() {
       {estado === 'erro' && <AppText>Não foi possível consultar os cadastros. Confira sua conexão e entre novamente.</AppText>}
       {estado === 'pronto' && cadastros.length === 0 && <EmptyState icon={Building2} title="Nenhuma propriedade aguardando análise" />}
       {estado === 'pronto' && cadastros.map((cadastro) => (
-        <Card key={cadastro.usuario_id}>
-          <ListRow title={cadastro.nome} subtitle={`${cadastro.cidade} · ${cadastro.uf}`} onPress={() => router.push(rotasAdministrador.analisarCadastro({ id: cadastro.usuario_id }))} />
+        <Card key={cadastro.id}>
+          <ListRow title={cadastro.nome} subtitle={`${cadastro.cidade} · ${cadastro.uf}`} onPress={() => router.push(rotasAdministrador.analisarCadastro({ id: cadastro.id }))} />
         </Card>
       ))}
     </Screen>
