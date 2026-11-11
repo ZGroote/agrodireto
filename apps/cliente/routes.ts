@@ -15,6 +15,7 @@ export const rotasCliente = {
   paywall: '/paywall',
   entrar: '/entrar',
   criarConta: '/criar-conta',
+  recuperarAcesso: '/recuperar-acesso',
 
   // Cadastro da empresa compradora (sem tab bar)
   empresa: '/empresa',
@@ -83,4 +84,5 @@ export const telasCliente: { numero: string; nome: string; href: Href }[] = [
   { numero: '24', nome: 'Configurações', href: rotasCliente.perfil },
   { numero: '25', nome: 'Criar conta', href: rotasCliente.criarConta },
   { numero: '26', nome: 'Cadastro da empresa', href: rotasCliente.empresa },
+  { numero: '27', nome: 'Recuperar acesso', href: rotasCliente.recuperarAcesso },
 ];

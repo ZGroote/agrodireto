@@ -35,6 +35,7 @@ export default function EntrarScreen() {
       {!supabase && <AppText>Ambiente de integração indisponível.</AppText>}
       {!!mensagem && <AppText accessibilityLiveRegion="polite">{mensagem}</AppText>}
       <Button label="Entrar" loading={ocupado} disabled={!supabase || ocupado || !email.includes('@') || !senha} onPress={() => void entrar()} />
+      <TextLink label="Esqueci minha senha" onPress={() => router.push(rotasAgricultor.recuperarAcesso)} />
       <TextLink label="Criar conta" onPress={() => router.push(rotasAgricultor.criarConta)} />
     </Screen>
   );
