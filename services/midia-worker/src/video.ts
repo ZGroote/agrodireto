@@ -81,6 +81,15 @@ export function argsCodificacao(entrada: string, saida: string, sonda: Sonda, cr
   ];
 }
 
+/**
+ * Reempacota sem recodificar: só a 1ª faixa de vídeo e a 1ª de áudio, sem metadados nem capítulos.
+ * As faixas de dados e legenda ficam de fora (drones gravam o GPS nelas).
+ */
+export function argsCopiaSemMetadados(entrada: string, saida: string): string[] {
+  return ['-y', '-hide_banner', '-loglevel', 'error', '-i', entrada, '-map', '0:v:0', '-map', '0:a:0?',
+    '-map_metadata', '-1', '-map_chapters', '-1', '-c', 'copy', '-movflags', '+faststart', saida];
+}
+
 /** Extrai a nota do texto que o libvmaf imprime: "VMAF score: 96.21" */
 export function lerVmaf(texto: string): number | undefined {
   const m = texto.match(/VMAF score:\s*([0-9]+(?:\.[0-9]+)?)/i);
@@ -111,17 +120,18 @@ const apagar = (caminho: string) => unlink(caminho).catch(() => undefined);
 /**
  * Otimiza um vídeo. Começa com o CRF padrão do codec e mede o VMAF; se a nota ficar abaixo do mínimo, baixa o CRF
  * (menos compressão) e tenta de novo. Entrega o primeiro resultado que atinge o mínimo, desde que seja menor que o original.
- * Se nenhuma tentativa servir, o original é mantido.
+ * Se nenhuma tentativa servir, entrega uma cópia sem metadados; se nem isso der, o original fica privado.
  */
 export async function otimizarVideo(entrada: string, saida: string, executar: Executor = executarReal): Promise<Resultado> {
   const bytesEntrada = (await stat(entrada)).size;
-  const mantida = (motivo: string): Resultado => ({ status: 'mantida', tipo: 'video', bytesEntrada, motivo });
+  // mantida = sem cópia segura: o original pode ter GPS e fica privado.
+  const mantida = (motivo: string): Resultado => ({ status: 'mantida', tipo: 'video', bytesEntrada, motivo: `${motivo} Fica privada.` });
 
   let sonda: Sonda;
   try {
     sonda = await sondar(entrada, executar);
   } catch {
-    return mantida('Formato sem decodificador no worker (ex.: R3D, BRAW, ARI, CRM): original mantido.');
+    return mantida('Formato sem decodificador no worker (ex.: R3D, BRAW, ARI, CRM): original mantido sem tratar metadados.');
   }
   if (!sonda.temVideo) return { status: 'falhou', tipo: 'video', bytesEntrada, motivo: 'O arquivo não tem faixa de vídeo.' };
 
@@ -129,6 +139,21 @@ export async function otimizarVideo(entrada: string, saida: string, executar: Ex
   const temporarios: string[] = [];
   let crf: number = config.crfInicial[codec];
   let ultimaNota: number | undefined;
+
+  /** Sanitizar é obrigatório; comprimir, não. Sem compressão aceita, entrega a cópia sem metadados. */
+  const semCompressao = async (porque: string): Promise<Resultado> => {
+    try {
+      await executar(config.ffmpeg, argsCopiaSemMetadados(entrada, saida));
+    } catch {
+      await apagar(saida);
+      return mantida(`${porque} A cópia sem metadados falhou: original mantido.`);
+    }
+    return {
+      status: 'pronta', tipo: 'video', arquivoSaida: saida, formatoSaida: 'mp4', bytesEntrada,
+      bytesSaida: (await stat(saida)).size, largura: sonda.largura, altura: sonda.altura,
+      qualidade: { codec: 'copia' }, motivo: `${porque} Entregue cópia sem recodificar e sem metadados.`,
+    };
+  };
 
   try {
     for (let tentativa = 0; tentativa < config.tentativasVideo; tentativa += 1) {
@@ -140,7 +165,7 @@ export async function otimizarVideo(entrada: string, saida: string, executar: Ex
 
       if (nota !== undefined && nota >= config.vmafMinimo) {
         const bytesSaida = (await stat(tmp)).size;
-        if (bytesSaida >= bytesEntrada) return mantida('O resultado não ficou menor que o original: original mantido.');
+        if (bytesSaida >= bytesEntrada) return await semCompressao('A compressão não ficou menor que o original.');
         await rename(tmp, saida);
         return {
           status: 'pronta',
@@ -156,8 +181,8 @@ export async function otimizarVideo(entrada: string, saida: string, executar: Ex
       }
       crf = Math.max(0, crf - config.passoCrf);
     }
-    return mantida(
-      `Nenhuma tentativa atingiu o VMAF mínimo de ${config.vmafMinimo}${ultimaNota !== undefined ? ` (última nota: ${ultimaNota.toFixed(1)})` : ''}: original mantido.`,
+    return await semCompressao(
+      `Nenhuma tentativa atingiu o VMAF mínimo de ${config.vmafMinimo}${ultimaNota !== undefined ? ` (última nota: ${ultimaNota.toFixed(1)})` : ''}.`,
     );
   } catch (e) {
     return { status: 'falhou', tipo: 'video', bytesEntrada, motivo: e instanceof Error ? e.message : 'Erro ao processar o vídeo.' };

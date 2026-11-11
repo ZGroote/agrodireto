@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { after, before, describe, it } from 'node:test';
 import { config } from '../src/config.ts';
 import { processarArquivo } from '../src/processar.ts';
-import { argsCodificacao, lerVmaf, otimizarVideo, type Executor, type Sonda } from '../src/video.ts';
+import { argsCodificacao, argsCopiaSemMetadados, executarReal, lerVmaf, otimizarVideo, type Executor, type Sonda } from '../src/video.ts';
 
 let pasta = '';
 before(async () => {
@@ -27,8 +27,8 @@ const JSON_FFPROBE = JSON.stringify({
  * FFmpeg simulado: o ffprobe devolve um JSON; a codificação grava um arquivo cujo tamanho depende do CRF;
  * a medição do VMAF devolve, em ordem, as notas da lista.
  */
-function ffmpegSimulado(opcoes: { notas: (number | undefined)[]; tamanhoPorCrf?: (crf: number) => number; semVideo?: boolean; ffprobeFalha?: boolean }) {
-  const chamadas: { tipo: 'sonda' | 'codificar' | 'vmaf'; crf?: number }[] = [];
+function ffmpegSimulado(opcoes: { notas: (number | undefined)[]; tamanhoPorCrf?: (crf: number) => number; semVideo?: boolean; ffprobeFalha?: boolean; copiaFalha?: boolean }) {
+  const chamadas: { tipo: 'sonda' | 'codificar' | 'vmaf' | 'copiar'; crf?: number }[] = [];
   const notas = [...opcoes.notas];
   const executar: Executor = async (programa, args) => {
     if (programa === config.ffprobe) {
@@ -40,6 +40,12 @@ function ffmpegSimulado(opcoes: { notas: (number | undefined)[]; tamanhoPorCrf?:
       chamadas.push({ tipo: 'vmaf' });
       const nota = notas.shift();
       return { stdout: '', stderr: nota === undefined ? 'sem nota' : `[Parsed_libvmaf_2] VMAF score: ${nota.toFixed(6)}` };
+    }
+    if (args.includes('copy')) {
+      chamadas.push({ tipo: 'copiar' });
+      if (opcoes.copiaFalha) throw new Error('codec not currently supported in container');
+      await writeFile(args[args.length - 1] as string, Buffer.alloc(12_000));
+      return { stdout: '', stderr: '' };
     }
     const crf = Number(args[args.indexOf('-crf') + 1]);
     chamadas.push({ tipo: 'codificar', crf });
@@ -84,33 +90,44 @@ describe('otimização de vídeo (lógica, com FFmpeg simulado)', () => {
     assert.equal(r.qualidade?.crf, config.crfInicial[config.codecVideo] - config.passoCrf);
   });
 
-  it('nenhuma tentativa atinge o VMAF: mantém o original e não deixa lixo no disco', async () => {
+  it('nenhuma tentativa atinge o VMAF: entrega a cópia sem metadados e não deixa lixo no disco', async () => {
     const entrada = await criarOriginal('c.mp4');
     const saida = join(pasta, 'c.otimizado.mp4');
-    const { executar } = ffmpegSimulado({ notas: [90, 91, 92] });
+    const { executar, chamadas } = ffmpegSimulado({ notas: [90, 91, 92] });
 
     const r = await otimizarVideo(entrada, saida, executar);
 
-    assert.equal(r.status, 'mantida');
-    assert.match(r.motivo ?? '', /VMAF/);
-    await assert.rejects(access(saida));
-    assert.deepEqual((await readdir(pasta)).filter((n) => n.startsWith('c.otimizado')), []);
+    assert.equal(r.status, 'pronta');
+    assert.equal(r.qualidade?.codec, 'copia');
+    assert.match(r.motivo ?? '', /VMAF.*sem metadados/);
+    assert.equal(chamadas.at(-1)?.tipo, 'copiar');
+    assert.deepEqual((await readdir(pasta)).filter((n) => n.startsWith('c.otimizado')), ['c.otimizado.mp4']);
   });
 
-  it('o resultado não pode ficar maior que o original', async () => {
+  it('compressão maior que o original: entrega a cópia sem metadados, nunca o original', async () => {
     const entrada = await criarOriginal('d.mp4', 3000);
     const { executar } = ffmpegSimulado({ notas: [97], tamanhoPorCrf: () => 9000 });
     const r = await otimizarVideo(entrada, join(pasta, 'd.otimizado.mp4'), executar);
-    assert.equal(r.status, 'mantida');
-    assert.match(r.motivo ?? '', /menor/);
+    assert.equal(r.status, 'pronta');
+    assert.match(r.motivo ?? '', /menor.*sem metadados/);
   });
 
-  it('formato sem decodificador (R3D, BRAW, ARI, CRM): mantém o original', async () => {
+  it('se nem a cópia sem metadados sair, o original fica privado e não sobra arquivo', async () => {
+    const entrada = await criarOriginal('g.mov');
+    const saida = join(pasta, 'g.otimizado.mp4');
+    const { executar } = ffmpegSimulado({ notas: [90, 91, 92], copiaFalha: true });
+    const r = await otimizarVideo(entrada, saida, executar);
+    assert.equal(r.status, 'mantida');
+    assert.match(r.motivo ?? '', /privada/);
+    await assert.rejects(access(saida));
+  });
+
+  it('formato sem decodificador (R3D, BRAW, ARI, CRM): mantém o original privado', async () => {
     const entrada = await criarOriginal('e.r3d');
     const { executar } = ffmpegSimulado({ notas: [], ffprobeFalha: true });
     const r = await otimizarVideo(entrada, join(pasta, 'e.otimizado.mp4'), executar);
     assert.equal(r.status, 'mantida');
-    assert.match(r.motivo ?? '', /decodificador/);
+    assert.match(r.motivo ?? '', /decodificador.*privada/);
   });
 
   it('arquivo sem faixa de vídeo falha com motivo', async () => {
@@ -184,5 +201,26 @@ describe('FFmpeg de verdade', { skip: ffmpegCompleto() ? false : 'ffmpeg com lib
       assert.equal(r.largura, 640);
       assert.ok((await stat(r.arquivoSaida as string)).size < r.bytesEntrada);
     }
+  });
+});
+
+describe('cópia de vídeo sem metadados (FFmpeg de verdade)', { skip: ffmpegCompleto() ? false : 'ffmpeg não encontrado' }, () => {
+  it('remove a localização e a faixa de legenda e mantém a resolução', async () => {
+    const entrada = join(pasta, 'com-gps.mov');
+    const legenda = join(pasta, 'gps.srt');
+    await writeFile(legenda, '1\n00:00:00,000 --> 00:00:01,000\nGPS(-23.5505,-46.6333)\n');
+    execFileSync(config.ffmpeg, ['-y', '-loglevel', 'error', '-f', 'lavfi', '-i', 'testsrc2=size=320x240:rate=10:duration=1', '-i', legenda,
+      '-map', '0', '-map', '1', '-c:v', 'libx264', '-c:s', 'mov_text', '-metadata', 'location=-23.5505-046.6333/',
+      '-metadata', 'com.apple.quicktime.location.ISO6709=-23.5505-046.6333/', '-pix_fmt', 'yuv420p', entrada]);
+    const sondar = (arquivo: string) => execFileSync(config.ffprobe, ['-v', 'error', '-print_format', 'json', '-show_streams', '-show_format', arquivo], { encoding: 'utf8' });
+    assert.match(sondar(entrada), /-23\.5505/, 'a entrada tem o local');
+
+    const saida = join(pasta, 'sem-gps.mp4');
+    await executarReal(config.ffmpeg, argsCopiaSemMetadados(entrada, saida));
+
+    const info = JSON.parse(sondar(saida)) as { streams: { codec_type: string; width?: number }[] };
+    assert.doesNotMatch(JSON.stringify(info), /23\.5505|"location|ISO6709/i);
+    assert.deepEqual(info.streams.map((s) => s.codec_type), ['video']);
+    assert.equal(info.streams[0]?.width, 320);
   });
 });

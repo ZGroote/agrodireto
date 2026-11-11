@@ -31,22 +31,23 @@ type Candidato = { buffer: Buffer; psnrDb?: number; rotulo: string };
 /**
  * Otimiza uma imagem para WebP SEM mudar a resolução.
  * Tenta WebP com perda em qualidade alta e confere o PSNR contra o original; se não passar, sobe a qualidade
- * e, por fim, usa WebP sem perda. Só entrega o resultado se ficar menor que o original.
+ * e, por fim, usa WebP sem perda. Se nada ficar menor, entrega o WebP sem perda mesmo assim: sem metadados é obrigatório.
  * Metadados (incluindo o GPS do celular) são removidos de propósito: o local exato da propriedade não pode vazar.
  */
 export async function otimizarImagem(entrada: string, saida: string): Promise<Resultado> {
   const bytesEntrada = (await stat(entrada)).size;
-  const mantida = (motivo: string): Resultado => ({ status: 'mantida', tipo: 'foto', bytesEntrada, motivo });
+  // mantida = sem cópia segura: o original pode ter EXIF/GPS e fica privado.
+  const mantida = (motivo: string): Resultado => ({ status: 'mantida', tipo: 'foto', bytesEntrada, motivo: `${motivo} Fica privada.` });
 
   let meta: Metadata;
   try {
     meta = await sharp(entrada, { animated: true, failOn: 'none' }).metadata();
   } catch (e) {
-    return mantida(`Formato sem leitor de imagem no worker: original mantido. (${e instanceof Error ? e.message : 'erro'})`);
+    return mantida(`Formato sem leitor de imagem no worker: original mantido sem tratar metadados. (${e instanceof Error ? e.message : 'erro'})`);
   }
 
   const formato = meta.format ?? '';
-  if (VETORIAL.has(formato)) return mantida('Formato vetorial ou documento: original mantido.');
+  if (VETORIAL.has(formato)) return mantida('Formato vetorial ou documento: original mantido sem tratar metadados.');
 
   const largura = meta.width ?? 0;
   const altura = meta.pageHeight ?? meta.height ?? 0;
@@ -87,10 +88,13 @@ export async function otimizarImagem(entrada: string, saida: string): Promise<Re
     }
   }
 
-  if (candidatos.length === 0) return mantida('Nenhuma codificação manteve a qualidade mínima: original mantido.');
-
-  const melhor = candidatos.reduce((a, b) => (b.buffer.length < a.buffer.length ? b : a));
-  if (melhor.buffer.length >= bytesEntrada) return mantida('O resultado não ficou menor que o original: original mantido.');
+  let melhor = candidatos.reduce<Candidato | undefined>((a, b) => (!a || b.buffer.length < a.buffer.length ? b : a), undefined);
+  let motivo: string | undefined;
+  if (!melhor || melhor.buffer.length >= bytesEntrada) {
+    // Sanitizar é obrigatório; comprimir, não. Sem ganho, entrega a cópia sem perda e sem metadados, mesmo maior.
+    melhor = { buffer: await base().webp({ lossless: true, effort: 5 }).toBuffer(), rotulo: 'webp-sem-perda' };
+    motivo = 'A compressão não ficou menor: entregue cópia sem perda e sem metadados.';
+  }
 
   await writeFile(saida, melhor.buffer);
   return {
@@ -103,5 +107,6 @@ export async function otimizarImagem(entrada: string, saida: string): Promise<Re
     largura,
     altura,
     qualidade: { psnrDb: melhor.psnrDb === Infinity ? undefined : melhor.psnrDb, codec: melhor.rotulo },
+    motivo,
   };
 }

@@ -57,7 +57,10 @@ export type Midia = {
   expiraEm?: string;
 };
 
-/** mantida = o original ficou como veio (formato sem otimização, ou o resultado não ficou menor ou não manteve a qualidade) */
+/**
+ * pronta = arquivo sem metadados (comprimido ou, sem ganho, cópia sem perda) · mantida = o worker não conseguiu
+ * tirar os metadados (vetorial, sem decodificador, acima do limite): o original pode ter GPS e nunca é publicado
+ */
 export type StatusProcessamento = 'aguardando' | 'otimizando' | 'pronta' | 'mantida' | 'falhou';
 
 export const ROTULO_PROCESSAMENTO: Record<StatusProcessamento, string> = {

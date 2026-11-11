@@ -113,7 +113,7 @@ describe('otimização de imagem', () => {
     await writeFile(entrada, '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><circle cx="50" cy="50" r="40"/></svg>');
     const r = await otimizarImagem(entrada, join(pasta, 'desenho.webp'));
     assert.equal(r.status, 'mantida');
-    assert.match(r.motivo ?? '', /vetorial/i);
+    assert.match(r.motivo ?? '', /vetorial.*privada/i);
   });
 
   it('formato sem leitor (RAW de câmera): mantém o original em vez de falhar', async () => {
@@ -123,12 +123,50 @@ describe('otimização de imagem', () => {
     assert.equal(r.status, 'mantida');
   });
 
-  it('nunca entrega um arquivo maior que o original', async () => {
-    const entrada = join(pasta, 'minusculo.png');
-    await sharp({ create: { width: 4, height: 4, channels: 3, background: '#245943' } }).png({ compressionLevel: 9 }).toFile(entrada);
-    const r = await otimizarImagem(entrada, join(pasta, 'minusculo.webp'));
-    if (r.status === 'pronta') assert.ok((r.bytesSaida ?? Infinity) < r.bytesEntrada);
-    else assert.equal(r.status, 'mantida');
+  it('compressão sem ganho: entrega cópia sem perda, sem EXIF e na orientação certa, mesmo maior', async () => {
+    const entrada = join(pasta, 'pequena-com-gps.webp');
+    // WebP de qualidade mínima: o WebP de qualidade alta não fica menor e cai na cópia sem perda.
+    await sharp(pixelsDeFoto(240, 120), { raw: { width: 240, height: 120, channels: 3 } })
+      .webp({ quality: 1 })
+      .withMetadata({ orientation: 6 })
+      .withExifMerge({ IFD0: { Copyright: 'dado-sensivel' }, IFD3: { GPSLatitudeRef: 'S', GPSLatitude: '23/1 33/1 0/1' } })
+      .toFile(entrada);
+    const original = await sharp(entrada).metadata();
+    assert.ok(original.exif && original.orientation === 6, 'a entrada tem EXIF e orientação');
+
+    const saida = join(pasta, 'pequena-sem-gps.webp');
+    const r = await otimizarImagem(entrada, saida);
+
+    assert.equal(r.status, 'pronta', r.motivo ?? 'sem motivo');
+    assert.match(r.motivo ?? '', /sem perda e sem metadados/);
+    assert.equal(r.qualidade?.codec, 'webp-sem-perda');
+    const meta = await sharp(saida).metadata();
+    assert.equal(meta.exif, undefined);
+    assert.equal(meta.xmp, undefined);
+    assert.equal(meta.width, 120);
+    assert.equal(meta.height, 240);
+  });
+
+  it('compressão sem ganho: a cópia sem perda preserva a transparência', async () => {
+    const entrada = join(pasta, 'alfa-pequeno.webp');
+    const l = 200;
+    const a = 100;
+    const dados = Buffer.alloc(l * a * 4);
+    const rgb = pixelsDeFoto(l, a);
+    for (let i = 0; i < l * a; i += 1) {
+      rgb.copy(dados, i * 4, i * 3, i * 3 + 3);
+      dados[i * 4 + 3] = i % l < 50 ? 0 : 255;
+    }
+    await sharp(dados, { raw: { width: l, height: a, channels: 4 } }).webp({ quality: 1, alphaQuality: 0 }).toFile(entrada);
+
+    const saida = join(pasta, 'alfa-pequeno.saida.webp');
+    const r = await otimizarImagem(entrada, saida);
+
+    assert.equal(r.status, 'pronta', r.motivo ?? 'sem motivo');
+    assert.match(r.motivo ?? '', /sem perda/);
+    const meta = await sharp(saida).metadata();
+    assert.equal(meta.hasAlpha, true);
+    assert.equal(meta.width, l);
   });
 
   it('o despachante recusa formato fora da lista do negócio', async () => {
