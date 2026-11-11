@@ -73,9 +73,10 @@ export default function TransportadoraScreen() {
     }
   }
 
-  // Sem cadastro, preenche; com ajustes pedidos, corrige; em análise ou aprovado, só consulta.
-  const editavel = estado === 'pronto' && !salvando && (!cadastro || cadastro.status === 'ajustes_solicitados');
-  const podeEnviar = estado === 'pronto' && (!cadastro || cadastro.status === 'ajustes_solicitados');
+  // Sem cadastro, preenche; com ajustes pedidos, o titular corrige; em análise ou aprovado, só consulta.
+  const corrigir = cadastro?.status === 'ajustes_solicitados' && cadastro.papel === 'titular';
+  const editavel = estado === 'pronto' && !salvando && (!cadastro || corrigir);
+  const podeEnviar = estado === 'pronto' && (!cadastro || corrigir);
 
   return (
     <Screen
@@ -96,6 +97,9 @@ export default function TransportadoraScreen() {
           <StatusPill dot {...situacao[cadastro.status]} />
           {cadastro.status === 'ajustes_solicitados' && !!cadastro.motivo_ajuste && (
             <AppText variant="body">{cadastro.motivo_ajuste}</AppText>
+          )}
+          {cadastro.status === 'ajustes_solicitados' && cadastro.papel !== 'titular' && (
+            <AppText variant="body" color="textSecondary">Só o titular da transportadora pode corrigir e reenviar o cadastro.</AppText>
           )}
         </View>
       )}

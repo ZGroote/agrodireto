@@ -11,7 +11,7 @@ Logo + "Logística", título, descrição, Telefone, Receber código, Criar cont
 
 ## Conexões
 - **Chega de:** 00b Paywall
-- **Vai para:** 06 Início (Receber código) · 02 Transportadora (Criar conta)
+- **Vai para:** 06 Início ou 02 Transportadora (Entrar) · 01b Criar conta · 01c Recuperar acesso (Esqueci minha senha)
 
 ## Dados (fase de integração)
 Supabase Auth (OTP por SMS).

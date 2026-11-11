@@ -1,5 +1,5 @@
 import { formatarData, lerData } from '@agrodireto/ui';
-import { supabase } from './supabase';
+import { exigirSessao, supabase } from './supabase';
 
 export const tiposVeiculo = [
   { value: 'bau', label: 'Baú' },
@@ -85,6 +85,7 @@ function erroGravacao(error: { code?: string } | null, repetido: string) {
 
 export async function salvarVeiculo(organizacaoId: string, form: FormVeiculo, id: string | null) {
   if (!supabase) throw new Error('Ambiente de integração indisponível.');
+  await exigirSessao();
   const placa = form.placa.toUpperCase().replace(/[^0-9A-Z]/g, '');
   const renavam = form.renavam.replace(/\D/g, '');
   const capacidade = Number(form.capacidade.replace(/\D/g, ''));
@@ -104,6 +105,7 @@ export async function salvarVeiculo(organizacaoId: string, form: FormVeiculo, id
 
 export async function salvarMotorista(organizacaoId: string, form: FormMotorista, id: string | null) {
   if (!supabase) throw new Error('Ambiente de integração indisponível.');
+  await exigirSessao();
   const cpf = form.cpf.replace(/\D/g, '');
   const cnh = form.cnhNumero.replace(/\D/g, '');
   const validade = dataIso(form.cnhValidade);

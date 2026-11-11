@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { exigirSessao, supabase } from './supabase';
 
 export const tiposCarga = [
   { value: 'carga_seca', label: 'Carga seca' },
@@ -21,6 +21,8 @@ export type CadastroTransportadora = {
   status: 'em_analise' | 'ajustes_solicitados' | 'aprovada';
   enviada_em: string;
   motivo_ajuste: string | null;
+  /** Papel da conta nesta transportadora (só o titular reenvia o cadastro). */
+  papel: 'titular' | 'membro';
 };
 
 export type FormTransportadora = {
@@ -46,18 +48,21 @@ export async function lerCadastroTransportadora(): Promise<CadastroTransportador
   if (!session) throw new Error();
   // Filtra pelas organizações da conta: a equipe lê todos os cadastros pela RLS.
   const { data: membros, error: erroMembros } = await supabase.from('membros_organizacao')
-    .select('organizacao_id').eq('usuario_id', session.user.id);
+    .select('organizacao_id,papel').eq('usuario_id', session.user.id)
+    .returns<{ organizacao_id: string; papel: CadastroTransportadora['papel'] }[]>();
   if (erroMembros) throw erroMembros;
   if (!membros.length) return null;
   const { data, error } = await supabase.from('cadastros_transportadora').select(campos)
     .in('organizacao_id', membros.map((m) => m.organizacao_id))
-    .order('enviada_em').order('organizacao_id').limit(1).maybeSingle<CadastroTransportadora>();
+    .order('enviada_em').order('organizacao_id').limit(1).maybeSingle<Omit<CadastroTransportadora, 'papel'>>();
   if (error) throw error;
-  return data;
+  if (!data) return null;
+  return { ...data, papel: membros.find((m) => m.organizacao_id === data.organizacao_id)?.papel ?? 'membro' };
 }
 
 export async function enviarCadastroTransportadora(form: FormTransportadora, atual: CadastroTransportadora | null) {
   if (!supabase) throw new Error('Ambiente de integração indisponível.');
+  await exigirSessao();
   const cnpj = form.cnpj.toUpperCase().replace(/[^0-9A-Z]/g, '');
   const telefone = form.contatoTelefone.replace(/\D/g, '');
   const ufs = lerUfs(form.ufsAtendidas);
@@ -87,6 +92,6 @@ export async function enviarCadastroTransportadora(form: FormTransportadora, atu
   if (error?.code === 'PT409') throw new Error('O cadastro mudou. Saia e abra a versão atual.');
   if (error?.code === '23505') throw new Error('Este CNPJ já está cadastrado.');
   if (error?.code === '23514') throw new Error('Confira o CNPJ, a UF e os estados atendidos.');
-  if (error?.code === '42501') throw new Error('Esta conta não pode enviar cadastro de transportadora.');
+  if (error?.code === '42501') throw new Error(atual ? 'Só o titular da transportadora pode reenviar o cadastro.' : 'Esta conta não pode enviar cadastro de transportadora.');
   if (error) throw new Error('Não foi possível enviar o cadastro. Tente novamente.');
 }
