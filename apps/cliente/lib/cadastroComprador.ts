@@ -1,4 +1,5 @@
 import { camposCadastroComprador, cnpjValido, type CadastroComprador } from '@agrodireto/dominio';
+import { mensagemEscolherEmpresa, organizacaoEmUso, trocarContexto } from './organizacoes';
 import { supabase } from './supabase';
 
 export type DadosEmpresa = Pick<CadastroComprador,
@@ -11,11 +12,13 @@ export async function compradorAutorizado() {
   return !error && data === true;
 }
 
-// ponytail: uma empresa por conta por enquanto; "Trocar empresa" vem quando houver membros.
+/** Cadastro da empresa em uso (B01). Sem empresa e sem vínculo: null (formulário de empresa nova). */
 export async function lerCadastroComprador(): Promise<CadastroComprador | null> {
   if (!supabase) throw new Error('Ambiente de integração indisponível.');
+  const organizacao = await organizacaoEmUso();
+  if (!organizacao) return null;
   const { data, error } = await supabase.from('cadastros_comprador').select(camposCadastroComprador)
-    .order('enviada_em').limit(1).maybeSingle<CadastroComprador>();
+    .eq('organizacao_id', organizacao).maybeSingle<CadastroComprador>();
   if (error) throw error;
   return data;
 }
@@ -37,13 +40,16 @@ export async function enviarCadastroComprador(dados: DadosEmpresa, atual?: Cadas
     p_uf: dados.uf,
     p_endereco_entrega: dados.endereco_entrega,
   };
-  const { error } = atual
+  const { data: criada, error } = atual
     ? await supabase.rpc('reenviar_cadastro_comprador', {
       ...campos, p_organizacao_id: atual.organizacao_id, p_enviada_em: atual.enviada_em,
     })
     : await supabase.rpc('enviar_cadastro_comprador', campos);
+  if (error?.code === '42501' && atual) throw new Error('Só o titular corrige o cadastro da empresa.');
   if (error?.code === 'PT409') throw new Error('O cadastro mudou. Volte e abra a versão atual.');
   if (error?.code === '23505') throw new Error('Este CNPJ já está cadastrado. Fale com o suporte.');
   if (error?.code === '23514') throw new Error('Confira o CNPJ, a UF e os limites dos campos.');
   if (error) throw new Error('Não foi possível enviar o cadastro. Tente novamente.');
+  // Primeiro envio criou a empresa: o próprio envio é a escolha do usuário.
+  if (!atual) await trocarContexto(criada as string).catch(() => { throw new Error(`Cadastro enviado. ${mensagemEscolherEmpresa}`); });
 }

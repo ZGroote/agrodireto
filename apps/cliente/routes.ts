@@ -52,6 +52,10 @@ export const rotasCliente = {
   divergencia: (params: Pedido = {}): Href => ({ pathname: '/divergencia', params }),
   avaliar: (params: Pedido = {}): Href => ({ pathname: '/avaliar', params }),
   faturas: '/faturas',
+
+  // Empresa e equipe (sem tab bar)
+  empresas: '/empresas',
+  equipe: '/equipe',
 } as const;
 
 /** Catálogo das telas (mockup 3-cliente.jpeg) — usado no Mapa de telas (dev) e na documentação. */
@@ -85,4 +89,6 @@ export const telasCliente: { numero: string; nome: string; href: Href }[] = [
   { numero: '25', nome: 'Criar conta', href: rotasCliente.criarConta },
   { numero: '26', nome: 'Cadastro da empresa', href: rotasCliente.empresa },
   { numero: '27', nome: 'Recuperar acesso', href: rotasCliente.recuperarAcesso },
+  { numero: '28', nome: 'Trocar empresa', href: rotasCliente.empresas },
+  { numero: '29', nome: 'Equipe e permissões', href: rotasCliente.equipe },
 ];

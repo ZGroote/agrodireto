@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
 import type { CadastroComprador } from '@agrodireto/dominio';
 import { AppText, Button, Card, ListRow, Screen, ScreenHeader, TextField } from '@agrodireto/ui';
+import { mensagemEscolherEmpresa } from '@/lib/organizacoes';
 import { enviarCadastroComprador, lerCadastroComprador, type DadosEmpresa } from '@/lib/cadastroComprador';
 import { rotasCliente } from '@/routes';
 
@@ -20,7 +21,7 @@ export default function CadastroEmpresaScreen() {
   const router = useRouter();
   const [atual, setAtual] = useState<CadastroComprador | null>(null);
   const [dados, setDados] = useState<DadosEmpresa>(vazio);
-  const [estado, setEstado] = useState<'carregando' | 'pronto' | 'erro'>('carregando');
+  const [estado, setEstado] = useState<'carregando' | 'pronto' | 'erro' | 'escolher'>('carregando');
   const [ocupado, setOcupado] = useState(false);
   const [mensagem, setMensagem] = useState('');
 
@@ -37,7 +38,7 @@ export default function CadastroEmpresaScreen() {
         }
         setEstado('pronto');
       },
-      () => { if (ativo) setEstado('erro'); },
+      (erro) => { if (ativo) setEstado(erro instanceof Error && erro.message === mensagemEscolherEmpresa ? 'escolher' : 'erro'); },
     );
     return () => { ativo = false; };
   }, []);
@@ -64,6 +65,12 @@ export default function CadastroEmpresaScreen() {
     <Screen header={<ScreenHeader title="Sua empresa" subtitle="Dados para comprar no AgroDireto" />}>
       {estado === 'carregando' && <AppText>Carregando…</AppText>}
       {estado === 'erro' && <AppText>Não foi possível consultar o cadastro. Confira sua conexão e tente novamente.</AppText>}
+      {estado === 'escolher' && (
+        <>
+          <AppText>{mensagemEscolherEmpresa}</AppText>
+          <Button label="Escolher empresa" onPress={() => router.push(rotasCliente.empresas)} />
+        </>
+      )}
       {estado === 'pronto' && (
         <>
           {atual && (
