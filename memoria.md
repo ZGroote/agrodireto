@@ -12,4 +12,4 @@ Os andares ficam em `../.maestri/floors/`. O Maestri copiou o `node_modules` sem
 
 Arquivos: `DOC/2026-11-11_020_frentes-paralelas.md`, `DOC/README.md` e este arquivo.
 
-Status: D01 (Oferta) juntada no `main` (typecheck, lint e testes 18 + 43 passando); a migration `20261111100000_culturas.sql` ainda NÃO foi aplicada no `agro` e `supabase/tests/culturas.sql` nunca rodou. O catálogo de culturas está vazio até o usuário escolher as culturas do piloto. G03 (Logística) e C04 (Identidade) em andamento. Próximo passo: aplicar a migration e rodar o teste quando o usuário fizer login no Supabase.
+Status: D01 (Oferta) e G03 (Logística) juntadas no `main` (typecheck, lint e testes 18 + 43 passando). As migrations `20261111100000_culturas.sql` e `20261111110000_veiculos_motoristas.sql` ainda NÃO foram aplicadas no `agro`, e os testes `supabase/tests/culturas.sql` e `veiculos_motoristas.sql` nunca rodaram. O catálogo de culturas está vazio até o usuário escolher as culturas do piloto. C04 (Identidade) em andamento; D02 (Oferta) em plano. Próximo passo: aplicar as duas migrations e rodar os testes quando o usuário fizer login no Supabase.
