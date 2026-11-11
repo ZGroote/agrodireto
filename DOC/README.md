@@ -50,8 +50,10 @@ Um arquivo por passo, em ordem. Nome: `AAAA-MM-DD_NNN_titulo-curto.md`.
 | 021 | 2026-11-11 | [Cultura e previsão básica no Supabase (D01)](2026-11-11_021_d01-cultura-previsao.md) |
 | 022 | 2026-11-11 | [Veículos e motoristas da transportadora (G03)](2026-11-11_022_veiculos-motoristas.md) |
 | 023 | 2026-11-11 | [Aprovar comprador e transportadora no Administrador (C04)](2026-11-11_023_aprovacao-cadastros.md) |
+| 024 | 2026-11-11 | [Rascunho de lote no servidor (D02)](2026-11-11_024_d02-rascunho-lote.md) |
 | 025 | 2026-11-11 | [Recuperar acesso e papel do titular na Logística (B04)](2026-11-11_025_sessao-logistica-papel.md) |
 | 026 | 2026-11-11 | [Recuperar acesso no Agricultor e no Cliente (B02/B03)](2026-11-11_026_recuperar-acesso-agricultor-cliente.md) |
+| 027 | 2026-11-11 | [Membros por e-mail e troca de contexto auditada (B01, etapa 1)](2026-11-11_027_identidade-contexto.md) |
 
 ## Documentos de referência
 

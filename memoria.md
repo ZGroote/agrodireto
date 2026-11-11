@@ -1,15 +1,18 @@
 # Memória — última ação
 
-Em 11/11/2026, à tarde, o trabalho foi dividido em três frentes paralelas no Maestri (regras em `DOC/2026-11-11_020_frentes-paralelas.md`). Cada frente tem um andar (worktree) com ramo próprio, criado a partir do `main`:
+Em 11/11/2026, à noite, como Maestro das frentes paralelas (regras em `DOC/2026-11-11_020_frentes-paralelas.md`), juntei no `main`: D01 (021), G03 (022), C04 (023), D02 (024), B04 restante (025), B02/B03 recuperar acesso (026) e B01 etapa 1 (027). Typecheck, lint e testes (7 Agricultor + 18 domínio + 43 worker) passam. Ao juntar a D02, igualei o limite de preço do rascunho ao do lote publicado (1.000.000.000 centavos).
 
-| Agente | Conta | Ramo | Primeira tarefa |
-|---|---|---|---|
-| Oferta (Claude Code, effort medium) | jaogroote | `frente/oferta-midia` | D01 |
-| Logistica (Claude Code, effort medium; a conta Codex "trabalho" estava com menos de 5% do limite semanal) | Padrão (Claude) | `frente/logistica` | G03 |
-| Identidade (Codex, reasoning medium) | Padrão | `frente/identidade` | C04 |
+NÃO aplicado no `agro` (precisa do login do usuário no navegador), nesta ordem:
+- `20261111100000_culturas.sql`
+- `20261111110000_veiculos_motoristas.sql`
+- `20261111130000_rascunhos_lote.sql`
+- `20261111140000_papel_transportadora.sql`
+- `20261111150000_identidade_contexto.sql`
 
-Os andares ficam em `../.maestri/floors/`. O Maestri copiou o `node_modules` sem as pastas `dist` (que estão no `.gitignore`), por isso cada andar foi reinstalado com `npm ci`. Os testes do worker passaram em todos (43/43).
+Testes a rodar depois: `culturas`, `veiculos_motoristas`, `rascunhos_lote`, `papel_transportadora`, `identidade_contexto`, e de novo `transportadoras` e `compradores` (os reenvios mudaram). Também: `{{ .Token }}` no template "Reset Password" do Auth.
 
-Arquivos: `DOC/2026-11-11_020_frentes-paralelas.md`, `DOC/README.md` e este arquivo.
+Agentes: Oferta e Identidade (Codex, conta Padrão) pararam no limite de 5h (volta às 21:55); Logística (Claude, Padrão) pausada, porque o que sobra dela depende de F03.
 
-Status: D01 (Oferta), G03, o restante da B04 e a recuperação de acesso no Agricultor e no Cliente (Logística, B02/B03) e a C04 (Identidade) juntados no `main` (typecheck, lint e testes 18 + 43 passando). NÃO aplicadas no `agro`: `20261111100000_culturas.sql`, `20261111110000_veiculos_motoristas.sql` e `20261111140000_papel_transportadora.sql`. Testes a rodar depois: `culturas.sql`, `veiculos_motoristas.sql`, `papel_transportadora.sql` e de novo `transportadoras.sql`. Também falta pôr `{{ .Token }}` no template "Reset Password" do Auth. Catálogo de culturas vazio até o usuário escolher as culturas do piloto. D02 (Oferta) em andamento; Logística pausada (o que sobra dela depende do pedido, F03). Próximo passo: aplicar tudo isso quando o usuário fizer login no Supabase.
+Pendências do usuário: lista de culturas do piloto (catálogo vazio); confirmar inclusão de membro direto por e-mail pelo titular; ensaio em aparelho (roteiros nos DOC 025 e 026).
+
+Próximo passo: aplicar e testar no `agro`; depois, Oferta segue para D03/D07 e Identidade para a B01 etapa 2 (seletor de contexto e inclusão de membros nas telas).
