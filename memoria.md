@@ -1,6 +1,6 @@
 # Memória — última ação
 
-Em 11/11/2026, à noite, como Maestro das frentes paralelas (regras em `DOC/2026-11-11_020_frentes-paralelas.md`), juntei no `main`: D01 (021), G03 (022), C04 (023), D02 (024), B04 restante (025), B02/B03 recuperar acesso (026) B01 etapa 1 (027), D03 (029) e B01 etapa 2 no Agricultor (030). Typecheck, lint e testes (12 Agricultor + 18 domínio + 44 worker) passam. Ao juntar a D02, igualei o limite de preço do rascunho ao do lote publicado (1.000.000.000 centavos).
+Em 11/11/2026, à noite, como Maestro das frentes paralelas (regras em `DOC/2026-11-11_020_frentes-paralelas.md`), juntei no `main`: D01 (021), G03 (022), C04 (023), D02 (024), B04 restante (025), B02/B03 recuperar acesso (026) B01 etapa 1 (027), D03 (029) B01 etapa 2 no Agricultor (030) e no Cliente (032). Typecheck, lint e testes (12 Agricultor + 5 Cliente + 18 domínio + 44 worker) passam. Ao juntar a D02, igualei o limite de preço do rascunho ao do lote publicado (1.000.000.000 centavos).
 
 Aplicado no `agro` em 11/11 (ensaio com rollback antes): `20261111100000` a `20261111150000` a carga do catálogo `20261111160000` (63 culturas), `20261111170000` (mídia privada; corrigi um `case` dentro de `if`) e `20261111180000` (propriedade na organização). Os 11 testes de `supabase/tests/` passaram no banco real. Detalhes no DOC 027 e 028.
 

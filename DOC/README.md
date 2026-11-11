@@ -57,6 +57,7 @@ Um arquivo por passo, em ordem. Nome: `AAAA-MM-DD_NNN_titulo-curto.md`.
 | 028 | 2026-11-11 | [Aplicação no agro e catálogo de culturas](2026-11-11_028_aplicacao-agro-catalogo.md) |
 | 029 | 2026-11-11 | [Armazenamento privado de mídia (D03)](2026-11-11_029_d03-midia-privada.md) |
 | 030 | 2026-11-11 | [Organização escolhida no Agricultor (B01, etapa 2)](2026-11-11_030_b01-organizacao-produtor.md) |
+| 032 | 2026-11-11 | [Empresa em uso e equipe no Cliente (B01, etapa 2)](2026-11-11_032_b01-empresa-comprador.md) |
 
 ## Documentos de referência
 
