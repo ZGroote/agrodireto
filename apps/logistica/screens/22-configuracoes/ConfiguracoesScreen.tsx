@@ -2,11 +2,18 @@ import { StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Bell, CircleHelp, History, LogOut, ShieldCheck, User, Wallet } from 'lucide-react-native';
 import { AppText, Card, colors, EMPTY, ListRow, Screen, ScreenHeader, sizes, spacing, VStack } from '@agrodireto/ui';
+import { supabase } from '@/lib/supabase';
 import { rotasLogistica } from '../../routes';
 
 /** 22 · Configurações (tab Perfil) — conta e preferências. */
 export default function ConfiguracoesScreen() {
   const router = useRouter();
+
+  // Sem sessão, o layout de (app) já manda para Entrar; voltar ao início evita a pilha antiga.
+  async function sair() {
+    await supabase?.auth.signOut();
+    router.dismissTo('/');
+  }
 
   return (
     <Screen withTabBar header={<ScreenHeader title="Configurações" />}>
@@ -49,7 +56,7 @@ export default function ConfiguracoesScreen() {
       </VStack>
 
       <Card>
-        <ListRow icon={LogOut} title="Sair" tone="danger" chevron={false} onPress={() => router.dismissTo('/')} />
+        <ListRow icon={LogOut} title="Sair" tone="danger" chevron={false} onPress={() => void sair()} />
       </Card>
     </Screen>
   );
