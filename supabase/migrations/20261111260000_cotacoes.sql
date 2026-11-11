@@ -1,6 +1,7 @@
 begin;
 
 -- F01: cotação real. A empresa compradora vem explícita e o servidor confere a aprovação DELA (DOC 032).
+-- Depende de 20261111240000_inspecao_obrigatoria.sql (ofertas_lote.verificacao).
 -- Piloto só em SP, dentro do estado (DOC 040). Datas conferidas na RPC, nunca em CHECK.
 
 create table public.cotacoes (
@@ -50,10 +51,12 @@ begin
     raise insufficient_privilege using message = 'Empresa compradora não aprovada';
   end if;
 
-  -- Mesmo critério de vigência do catálogo.
+  -- Mesmo critério de vigência do catálogo (20261111240000, E00): declarado ou inspeção aprovada.
   select ol.quantidade, ol.unidade, p.organizacao_id, p.uf into o
     from public.ofertas_lote ol join public.propriedades p on p.id = ol.propriedade_id
    where ol.id = p_oferta_id and ol.retirada_em is null and p.status = 'aprovada'
+     and (ol.verificacao = 'declarado' or exists (
+       select 1 from public.inspecoes_lote i where i.lote_id = ol.id and i.resultado = 'aprovado'))
      and least(ol.validade, ol.retirada_fim) >= hoje;
   if not found then raise sqlstate 'PT404' using message = 'Oferta indisponível'; end if;
   if o.uf <> 'SP' then raise sqlstate 'PT422' using message = 'Piloto só atende operações dentro de SP'; end if;

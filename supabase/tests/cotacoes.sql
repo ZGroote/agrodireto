@@ -31,6 +31,19 @@ insert into public.ofertas_lote
   'cot-retirada','Tomate',100,'kg',500,current_date,current_date+10,current_date+10,'','','','', now()),
  ('66000000-0000-0000-0000-000000000032','66000000-0000-0000-0000-000000000001','66000000-0000-0000-0000-000000000021',
   'cot-pr','Tomate',100,'kg',500,current_date,current_date+10,current_date+10,'','','','', null);
+-- E00: inspeção obrigatória sem inspeção (34), com ressalvas (35) e aprovada (36).
+insert into public.ofertas_lote
+  (id, produtor_id, propriedade_id, rascunho_id, produto, quantidade, unidade, preco_centavos,
+   retirada_inicio, retirada_fim, validade, padrao, calibre, embalagem, condicoes, verificacao) values
+ ('66000000-0000-0000-0000-000000000034','66000000-0000-0000-0000-000000000001','66000000-0000-0000-0000-000000000020',
+  'cot-sem-inspecao','Carne',100,'kg',500,current_date,current_date+10,current_date+10,'','','','','inspecao_obrigatoria'),
+ ('66000000-0000-0000-0000-000000000035','66000000-0000-0000-0000-000000000001','66000000-0000-0000-0000-000000000020',
+  'cot-ressalvas','Carne',100,'kg',500,current_date,current_date+10,current_date+10,'','','','','inspecao_obrigatoria'),
+ ('66000000-0000-0000-0000-000000000036','66000000-0000-0000-0000-000000000001','66000000-0000-0000-0000-000000000020',
+  'cot-inspecionada','Carne',100,'kg',500,current_date,current_date+10,current_date+10,'','','','','inspecao_obrigatoria');
+insert into public.inspecoes_lote (lote_id, inspetor_id, embalagem_conforme, qualidade_conforme, resultado, evidencias_aprovadas) values
+ ('66000000-0000-0000-0000-000000000035','66000000-0000-0000-0000-000000000001', true, false, 'ressalvas', '{}'),
+ ('66000000-0000-0000-0000-000000000036','66000000-0000-0000-0000-000000000001', true, true, 'aprovado', '{}');
 set local role authenticated;
 
 -- Comprador: membro de uma empresa aprovada (11) e titular de uma em análise (12).
@@ -65,6 +78,11 @@ begin
  exception when sqlstate 'PT422' then null; end;
  begin perform public.solicitar_cotacao(a, '66000000-0000-0000-0000-000000000099', 1, 'Campinas','SP', current_date + 1, null); raise exception 'Oferta inexistente cotada';
  exception when sqlstate 'PT404' then null; end;
+ begin perform public.solicitar_cotacao(a, '66000000-0000-0000-0000-000000000034', 1, 'Campinas','SP', current_date + 1, null); raise exception 'Oferta sem inspeção obrigatória cotada';
+ exception when sqlstate 'PT404' then null; end;
+ begin perform public.solicitar_cotacao(a, '66000000-0000-0000-0000-000000000035', 1, 'Campinas','SP', current_date + 1, null); raise exception 'Oferta com inspeção com ressalvas cotada';
+ exception when sqlstate 'PT404' then null; end;
+ if public.solicitar_cotacao(a, '66000000-0000-0000-0000-000000000036', 1, 'Campinas','SP', current_date + 1, null) is null then raise exception 'Oferta inspecionada recusada'; end if;
  begin perform public.solicitar_cotacao(a, o, 1, 'Belo Horizonte','MG', current_date + 1, null); raise exception 'Entrega fora de SP aceita';
  exception when check_violation then null; end;
  begin insert into public.cotacoes (oferta_id, organizacao_id, produtora_organizacao_id, quantidade, unidade, entrega_cidade, entrega_uf, prazo_entrega)

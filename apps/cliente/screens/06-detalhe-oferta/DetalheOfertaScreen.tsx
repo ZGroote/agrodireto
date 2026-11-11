@@ -1,15 +1,17 @@
 import { useCallback, useState } from 'react';
-import { useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { rotulosInspecao, type OfertaCatalogo } from '@agrodireto/dominio';
-import { AppText, KeyValueRow, Screen, ScreenHeader, VStack } from '@agrodireto/ui';
+import { AppText, Button, KeyValueRow, Screen, ScreenHeader, VStack } from '@agrodireto/ui';
 import { consultarCatalogo, lerResultadoInspecao } from '@/lib/ofertas';
 import { FotosCatalogo } from '@/components/FotosCatalogo';
+import { rotasCliente } from '@/routes';
 
 function data(valor: string) {
   return valor.split('-').reverse().join('/');
 }
 
 export default function DetalheOfertaScreen() {
+  const router = useRouter();
   const { id } = useLocalSearchParams<{ id?: string }>();
   const [oferta, setOferta] = useState<OfertaCatalogo | null>(null);
   const [mensagem, setMensagem] = useState('Carregando oferta…');
@@ -38,7 +40,10 @@ export default function DetalheOfertaScreen() {
   }, [id]));
 
   return (
-    <Screen header={<ScreenHeader title={oferta?.produto ?? 'Detalhe da oferta'} subtitle={oferta ? `${oferta.fornecedor} · ${oferta.cidade}/${oferta.uf}` : undefined} />}>
+    <Screen
+      header={<ScreenHeader title={oferta?.produto ?? 'Detalhe da oferta'} subtitle={oferta ? `${oferta.fornecedor} · ${oferta.cidade}/${oferta.uf}` : undefined} />}
+      footer={oferta ? <Button label="Pedir cotação" onPress={() => router.push(rotasCliente.solicitarCotacao({ oferta: oferta.id }))} /> : undefined}
+    >
       {!!mensagem && <AppText accessibilityLiveRegion="polite">{mensagem}</AppText>}
       {oferta && (
         <VStack gap="xxs">
