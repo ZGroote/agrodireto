@@ -66,3 +66,7 @@ As chamadas com cinco argumentos (testes `compradores`, `culturas`, `rascunhos_l
 - `SeuCadastroScreen` ainda mostra "Consulta indisponível" quando falta escolher a organização. Só a tela 04 traz a mensagem de escolha.
 - Usuários que já enviaram propriedade antes desta versão não têm troca registrada. Na primeira abertura, o app pede que escolham a organização uma vez.
 - Lotes, rascunhos e culturas continuam por `produtor_id` (frente Oferta) e não seguem o contexto. **B01 continua não concluída:** faltam o Cliente (comprador) e a Logística (transportadora), as sessões reais e a troca concorrente em duas conexões.
+
+## Aplicação no agro (Maestro, 11/11)
+
+`20261111180000` aplicada depois da `20261111170000`. `propriedades.sql` e os demais testes que usam `enviar_propriedade` passaram no `agro`. Decisão confirmada pelo Maestro: com organização informada, membro (não só titular) pode enviar propriedade nova. O ensaio com contas reais pelas telas fica para o usuário.

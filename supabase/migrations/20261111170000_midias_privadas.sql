@@ -128,7 +128,7 @@ begin
   if m.enviada_em is not null then return 'enviada'; end if;
   if m.processamento = 'falhou' then return 'recusada'; end if;
 
-  if m.tamanho is null or m.tamanho > case m.tipo when 'foto' then 20971520 else 52428800 end then
+  if m.tamanho is null or m.tamanho > (case m.tipo when 'foto' then 20971520 else 52428800 end) then
     update public.midias set processamento = 'falhou', tentativas_processamento = 3,
            tamanho_original_bytes = m.tamanho,
            motivo_processamento = case m.tipo when 'foto' then 'Foto acima de 20 MiB.' else 'Vídeo acima de 50 MiB.' end
