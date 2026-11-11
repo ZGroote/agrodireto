@@ -5,6 +5,7 @@ import type { PropriedadeEnviada } from '@agrodireto/dominio';
 import { lerComprador, revisarComprador, type CompradorEmAnalise } from '@/lib/compradores';
 import { lerTransportadora, revisarTransportadora, nomesTiposCarga, type CadastroTransportadora } from '@/lib/transportadoras';
 import { lerPropriedade, revisarPropriedade } from '@/lib/propriedades';
+import { usePode } from '@/components/PapelEquipe';
 import { rotasAdministrador } from '@/routes';
 
 type Cadastro =
@@ -19,6 +20,7 @@ export default function AnalisarCadastroScreen() {
 
 function AnaliseCadastro({ id, tipo }: { id?: string; tipo?: string }) {
   const router = useRouter();
+  const podeRevisar = usePode()('escrever_cadastros');
   const tipoCadastro = tipo ?? 'propriedade';
   const comprador = tipoCadastro === 'comprador';
   const transportadora = tipoCadastro === 'transportadora';
@@ -116,7 +118,10 @@ function AnaliseCadastro({ id, tipo }: { id?: string; tipo?: string }) {
               <Button label="Voltar aos cadastros" onPress={() => router.dismissTo(rotasAdministrador.cadastros)} />
             </Card>
           )}
-          {!revisaoSalva && cadastro.dados.status === 'em_analise' && (
+          {!revisaoSalva && cadastro.dados.status === 'em_analise' && !podeRevisar && (
+            <AppText color="textSecondary">Seu papel permite consultar, mas não aprovar ou pedir ajustes.</AppText>
+          )}
+          {!revisaoSalva && cadastro.dados.status === 'em_analise' && podeRevisar && (
             <>
               <Button label={`Aprovar ${nome}`} disabled={ocupado} onPress={() => void revisar(null)} />
               <TextField label="Motivo do ajuste" value={motivo} onChangeText={setMotivo} editable={!ocupado} maxLength={500} />
