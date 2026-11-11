@@ -14,7 +14,7 @@ Voltar, título, lista (estado vazio), Adicionar veículo, Continuar.
 - **Vai para:** 04 Motoristas (Continuar)
 
 ## Dados (fase de integração)
-Veículos: tipo, capacidade, placa, situação (Regular).
+Veículos (G03): placa, RENAVAM, tipo, capacidade e validade do seguro, gravados por `salvar_veiculo`. Seguro vencido é recusado no cadastro.
 
 ## Pendências e observações
 Formulário de veículo sem mockup. "Continuar" não está no mockup (liga o cadastro).
