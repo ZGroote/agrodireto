@@ -1,9 +1,10 @@
 import { useCallback, useState } from 'react';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { FileText } from 'lucide-react-native';
 import { AppText, Card, EmptyState, ListRow, Screen, ScreenHeader, SegmentedControl, StatusPill, type StatusTone } from '@agrodireto/ui';
 import { listarCotacoes, type Cotacao, type StatusCotacao } from '@/lib/cotacoes';
 import { organizacaoEmUso } from '@/lib/organizacoes';
+import { rotasCliente } from '@/routes';
 
 type Aba = 'abertas' | 'respondidas' | 'encerradas';
 
@@ -28,6 +29,7 @@ const data = (iso: string) => iso.slice(0, 10).split('-').reverse().join('/');
  * Item: Card com oferta · quantidade, fornecedor, StatusPill.
  */
 export default function MinhasCotacoesScreen() {
+  const router = useRouter();
   const [aba, setAba] = useState<Aba>('abertas');
   const [cotacoes, setCotacoes] = useState<Cotacao[]>([]);
   const [mensagem, setMensagem] = useState('Carregando cotações…');
@@ -69,6 +71,9 @@ export default function MinhasCotacoesScreen() {
           />
         </Card>
       ))}
+      <Card>
+        <ListRow icon={FileText} title="Minhas demandas de compra" onPress={() => router.push(rotasCliente.demandas)} />
+      </Card>
     </Screen>
   );
 }

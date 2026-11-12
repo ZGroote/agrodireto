@@ -1,8 +1,9 @@
 import { useCallback, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
-import { MessageSquare } from 'lucide-react-native';
-import { AppText, Card, EmptyState, ListRow, Screen, ScreenHeader, StatusPill, VStack, type StatusTone } from '@agrodireto/ui';
+import { CalendarDays, MessageSquare, Search } from 'lucide-react-native';
+import { AppText, Card, Divider, EmptyState, ListRow, Screen, ScreenHeader, StatusPill, TextField, VStack, type StatusTone } from '@agrodireto/ui';
 import { listarCotacoes, type Cotacao, type StatusCotacao } from '@/lib/cotacoes';
+import { listarDemandasAbertas, type DemandaAberta } from '@/lib/demandas';
 import { organizacaoEmUso } from '@/lib/organizacoes';
 
 const SITUACAO: Record<StatusCotacao, { label: string; tone: StatusTone }> = {
@@ -14,10 +15,13 @@ const SITUACAO: Record<StatusCotacao, { label: string; tone: StatusTone }> = {
 
 const data = (iso: string) => iso.slice(0, 10).split('-').reverse().join('/');
 
-/** 16 · Cotações (Produção) — cotações recebidas dos compradores. Só leitura: responder entra na F02. */
+/** 16 · Cotações (Produção) — cotações recebidas dos compradores (F01) e demandas abertas (E03, somente leitura). */
 export default function CotacoesScreen() {
   const [cotacoes, setCotacoes] = useState<Cotacao[]>([]);
   const [mensagem, setMensagem] = useState('Carregando cotações…');
+  const [busca, setBusca] = useState('');
+  const [demandas, setDemandas] = useState<DemandaAberta[] | null>(null);
+  const [erroDemandas, setErroDemandas] = useState<string | null>(null);
 
   useFocusEffect(useCallback(() => {
     let ativo = true;
@@ -30,8 +34,73 @@ export default function CotacoesScreen() {
     return () => { ativo = false; };
   }, []));
 
+  useFocusEffect(
+    useCallback(() => {
+      let ativo = true;
+      setErroDemandas(null);
+      void listarDemandasAbertas(busca).then(
+        (lista) => {
+          if (ativo) setDemandas(lista);
+        },
+        (e) => {
+          if (ativo) {
+            setDemandas([]);
+            setErroDemandas(e instanceof Error ? e.message : 'Não foi possível carregar as demandas.');
+          }
+        },
+      );
+      return () => {
+        ativo = false;
+      };
+    }, [busca]),
+  );
+
   return (
-    <Screen withTabBar header={<ScreenHeader title="Cotações" />}>
+    <Screen withTabBar header={<ScreenHeader title="Cotações e demandas" />}>
+      <Card>
+        <VStack gap="sm">
+          <AppText variant="heading">Demandas abertas de compradores (SP)</AppText>
+          <TextField
+            icon={Search}
+            placeholder="Filtrar por cultura"
+            value={busca}
+            onChangeText={setBusca}
+          />
+          {erroDemandas ? (
+            <AppText variant="caption" color="textSecondary">
+              {erroDemandas}
+            </AppText>
+          ) : null}
+          {!erroDemandas && demandas === null ? (
+            <AppText variant="caption" color="textSecondary">
+              Carregando demandas…
+            </AppText>
+          ) : null}
+          {!erroDemandas && demandas !== null && demandas.length === 0 ? (
+            <AppText variant="caption" color="textSecondary">
+              Nenhuma demanda aberta encontrada para o filtro informado.
+            </AppText>
+          ) : null}
+          {!erroDemandas &&
+            demandas &&
+            demandas.map((d, i) => (
+              <VStack key={d.id} gap="xs">
+                {i > 0 ? <Divider /> : null}
+                <ListRow
+                  icon={CalendarDays}
+                  title={`${d.cultura} · ${d.quantidade.toLocaleString('pt-BR')} ${d.unidade}`}
+                  subtitle={[`${d.comprador} (${d.cidade}/${d.uf})`, `Até ${d.prazo}`, d.observacao]
+                    .filter(Boolean)
+                    .join(' · ')}
+                  trailing={<StatusPill label="Aberta" />}
+                  chevron={false}
+                />
+              </VStack>
+            ))}
+        </VStack>
+      </Card>
+
+      <AppText variant="heading">Cotações nos seus lotes</AppText>
       {!!mensagem && <AppText accessibilityLiveRegion="polite">{mensagem}</AppText>}
       {!mensagem && cotacoes.length === 0 ? (
         <EmptyState
