@@ -70,7 +70,7 @@ begin
  exception when sqlstate 'PT422' then null; end;
  begin perform public.solicitar_cotacao(a, o, 0, 'Campinas','SP', current_date + 1, null); raise exception 'Quantidade zero aceita';
  exception when sqlstate 'PT422' then null; end;
- begin perform public.solicitar_cotacao(a, o, 1, 'Campinas','SP', current_date - 1, null); raise exception 'Prazo no passado aceito';
+ begin perform public.solicitar_cotacao(a, o, 1, 'Campinas','SP', (now() at time zone 'America/Sao_Paulo')::date - 1, null); raise exception 'Prazo no passado aceito';
  exception when sqlstate 'PT422' then null; end;
  begin perform public.solicitar_cotacao(a, '66000000-0000-0000-0000-000000000031', 1, 'Campinas','SP', current_date + 1, null); raise exception 'Oferta retirada cotada';
  exception when sqlstate 'PT404' then null; end;
