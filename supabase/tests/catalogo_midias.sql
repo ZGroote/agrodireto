@@ -128,7 +128,7 @@ end $$;
 
 -- Oferta vencida some do catálogo.
 reset role;
-update public.ofertas_lote set retirada_inicio = current_date - 3, retirada_fim = current_date - 1, validade = current_date - 1
+update public.ofertas_lote set retirada_inicio = (now() at time zone 'America/Sao_Paulo')::date - 3, retirada_fim = (now() at time zone 'America/Sao_Paulo')::date - 1, validade = (now() at time zone 'America/Sao_Paulo')::date - 1
  where id = '55000000-0000-0000-0000-000000000030';
 set local role authenticated;
 do $$
