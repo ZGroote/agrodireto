@@ -1,0 +1,582 @@
+{
+ "verificacao": {
+  "coletado_em": "11/11/2026 21:35 (horário de Brasília)",
+  "commit": "162c710",
+  "ci": "GitHub Actions \"Verificar AgroDireto\": últimas 5 execuções no main concluídas com sucesso",
+  "builds": [
+   [
+    "Agricultor",
+    "ok"
+   ],
+   [
+    "Cliente",
+    "ok"
+   ],
+   [
+    "Logística",
+    "ok"
+   ],
+   [
+    "Administrador",
+    "ok"
+   ]
+  ],
+  "testes_codigo": [
+   [
+    "Administrador",
+    4
+   ],
+   [
+    "Agricultor",
+    24
+   ],
+   [
+    "Cliente",
+    8
+   ],
+   [
+    "Logística",
+    4
+   ],
+   [
+    "Domínio",
+    18
+   ],
+   [
+    "Worker de mídia",
+    46
+   ]
+  ],
+  "testes_codigo_falhos": 0,
+  "testes_banco_total": 17,
+  "testes_banco_aprovados": 17,
+  "testes_banco_nota": "1 falha na coleta (catalogo_midias.sql) causada pelo próprio teste ao comparar data em UTC; corrigido e reexecutado com sucesso. Não era defeito do sistema.",
+  "migrations_total": 26,
+  "migrations_aplicadas": 26,
+  "migrations_hoje": 14,
+  "commits": {
+   "2026-11-10": 12,
+   "2026-11-11": 85
+  }
+ },
+ "historico": [
+  {
+   "marco": "05/11",
+   "fonte": "Base de telas recebida (arquivo .rar)",
+   "tarefas": null,
+   "testes_codigo": null,
+   "testes_banco": 0,
+   "migrations": 0,
+   "nota": "Apenas telas e dados de demonstração; sem servidor."
+  },
+  {
+   "marco": "10/11",
+   "fonte": "Registros DOC e git",
+   "tarefas": {
+    "homologada": 2,
+    "nao_iniciada": 53
+   },
+   "testes_codigo": 42,
+   "testes_banco": 0,
+   "migrations": 0,
+   "nota": "A02 e A04 concluídas; domínio 15 e worker 27 testes."
+  },
+  {
+   "marco": "11/11 18h05",
+   "fonte": "Relatório anterior",
+   "tarefas": {
+    "homologada": 2,
+    "parcial": 23,
+    "nao_iniciada": 30
+   },
+   "testes_codigo": 61,
+   "testes_banco": 5,
+   "migrations": 12,
+   "nota": "Metodologia anterior: concluída / parcial / não iniciada. 5 suítes de banco testadas no agro."
+  },
+  {
+   "marco": "11/11 21h15",
+   "fonte": "Relatório das 21h15",
+   "tarefas": {
+    "implementada_ou_decidida": 24,
+    "outras": 31
+   },
+   "testes_codigo": 101,
+   "testes_banco": 16,
+   "migrations": 25,
+   "nota": "Metodologia intermediária: implementada ou decidida."
+  },
+  {
+   "marco": "11/11 21h35",
+   "fonte": "Esta coleta",
+   "tarefas": {
+    "homologada": 3,
+    "validada": 20,
+    "implementada": 3,
+    "em_desenvolvimento": 2,
+    "nao_iniciada": 27
+   },
+   "testes_codigo": 104,
+   "testes_banco": 17,
+   "migrations": 26,
+   "nota": "Metodologia atual de seis estados."
+  }
+ ],
+ "previsoes": [
+  {
+   "etapa": "Etapa 0",
+   "restam": [
+    "A03"
+   ],
+   "complexidade": "Baixa",
+   "dependencias": "Projeto Supabase separado para piloto",
+   "impl": "13–14/11",
+   "valid": "14/11",
+   "homol": "18–20/11",
+   "terceiros": "Novo projeto Supabase",
+   "otimista": "14/11",
+   "provavel": "20/11",
+   "pessimista": "27/11",
+   "confianca": "Média"
+  },
+  {
+   "etapa": "Etapa 1",
+   "restam": [
+    "Homologação das 9"
+   ],
+   "complexidade": "Baixa (só ensaio)",
+   "dependencias": "SMTP; ensaio em aparelho",
+   "impl": "Concluída",
+   "valid": "Concluída exceto B02/B03",
+   "homol": "18–25/11",
+   "terceiros": "SMTP",
+   "otimista": "15/11",
+   "provavel": "22/11",
+   "pessimista": "02/12",
+   "confianca": "Média"
+  },
+  {
+   "etapa": "Etapa 2",
+   "restam": [
+    "D10",
+    "D11",
+    "E01",
+    "E02",
+    "E04"
+   ],
+   "complexidade": "Média",
+   "dependencias": "D10 depende de validação profissional",
+   "impl": "13–18/11",
+   "valid": "14–19/11",
+   "homol": "20–28/11",
+   "terceiros": "RT/veterinário para D10",
+   "otimista": "19/11",
+   "provavel": "26/11",
+   "pessimista": "08/12",
+   "confianca": "Média"
+  },
+  {
+   "etapa": "Etapa 3",
+   "restam": [
+    "F02",
+    "F03",
+    "F04",
+    "F05"
+   ],
+   "complexidade": "Alta (concorrência e reserva atômica)",
+   "dependencias": "E01/E02 concluídas",
+   "impl": "13–21/11",
+   "valid": "18–24/11",
+   "homol": "25/11–05/12",
+   "terceiros": "—",
+   "otimista": "22/11",
+   "provavel": "02/12",
+   "pessimista": "12/12",
+   "confianca": "Média-baixa"
+  },
+  {
+   "etapa": "Etapa 4",
+   "restam": [
+    "G01",
+    "G02",
+    "G04",
+    "G05",
+    "G06",
+    "G07",
+    "G08"
+   ],
+   "complexidade": "Alta (pagamento, split, logística)",
+   "dependencias": "F03; conta sandbox do provedor",
+   "impl": "18–28/11",
+   "valid": "24/11–02/12",
+   "homol": "02–12/12",
+   "terceiros": "Provedor de pagamento (sandbox e contrato)",
+   "otimista": "02/12",
+   "provavel": "10/12",
+   "pessimista": "23/12",
+   "confianca": "Baixa"
+  },
+  {
+   "etapa": "Etapa 5",
+   "restam": [
+    "H01",
+    "H02",
+    "H03",
+    "H04",
+    "H05"
+   ],
+   "complexidade": "Alta (disputas, conciliação, retenção)",
+   "dependencias": "G06; regras jurídicas de perdas",
+   "impl": "26/11–05/12",
+   "valid": "01–08/12",
+   "homol": "08–18/12",
+   "terceiros": "Validação jurídica e contábil",
+   "otimista": "08/12",
+   "provavel": "17/12",
+   "pessimista": "09/01",
+   "confianca": "Baixa"
+  },
+  {
+   "etapa": "Etapa 5A",
+   "restam": [
+    "J01",
+    "J02",
+    "J03"
+   ],
+   "complexidade": "Média",
+   "dependencias": "H02; fontes de preço",
+   "impl": "03–12/12",
+   "valid": "08–15/12",
+   "homol": "15/12–08/01",
+   "terceiros": "Autorização de dados (CEAGESP/Cepea)",
+   "otimista": "15/12",
+   "provavel": "08/01",
+   "pessimista": "30/01",
+   "confianca": "Baixa"
+  },
+  {
+   "etapa": "Etapa 6",
+   "restam": [
+    "I01",
+    "I02",
+    "I03",
+    "I04",
+    "I05"
+   ],
+   "complexidade": "Alta (jornada completa, lojas, operação)",
+   "dependencias": "Todas as etapas anteriores",
+   "impl": "01–15/12",
+   "valid": "10–19/12",
+   "homol": "15/12–15/01",
+   "terceiros": "Contrato do provedor, lojas de aplicativos, SMTP",
+   "otimista": "15/12",
+   "provavel": "15/01",
+   "pessimista": "28/02",
+   "confianca": "Baixa"
+  }
+ ],
+ "gantt": [
+  {
+   "etapa": "Etapa 0",
+   "ini": "2026-11-10",
+   "impl": "2026-11-14",
+   "hom": "2026-11-20"
+  },
+  {
+   "etapa": "Etapa 1",
+   "ini": "2026-11-10",
+   "impl": "2026-11-11",
+   "hom": "2026-11-22"
+  },
+  {
+   "etapa": "Etapa 2",
+   "ini": "2026-11-10",
+   "impl": "2026-11-18",
+   "hom": "2026-11-26"
+  },
+  {
+   "etapa": "Etapa 3",
+   "ini": "2026-11-11",
+   "impl": "2026-11-21",
+   "hom": "2026-12-02"
+  },
+  {
+   "etapa": "Etapa 4",
+   "ini": "2026-11-11",
+   "impl": "2026-11-28",
+   "hom": "2026-12-10"
+  },
+  {
+   "etapa": "Etapa 5",
+   "ini": "2026-11-26",
+   "impl": "2026-12-05",
+   "hom": "2026-12-17"
+  },
+  {
+   "etapa": "Etapa 5A",
+   "ini": "2026-12-03",
+   "impl": "2026-12-12",
+   "hom": "2027-01-08"
+  },
+  {
+   "etapa": "Etapa 6",
+   "ini": "2026-12-01",
+   "impl": "2026-12-15",
+   "hom": "2027-01-15"
+  }
+ ],
+ "jornada": [
+  [
+   "Cadastro",
+   "B01–B05",
+   "validada"
+  ],
+  [
+   "Aprovação",
+   "C01–C04",
+   "validada"
+  ],
+  [
+   "Produção",
+   "D01",
+   "validada"
+  ],
+  [
+   "Lote",
+   "D02 · D09",
+   "validada"
+  ],
+  [
+   "Mídia",
+   "D03–D08",
+   "validada"
+  ],
+  [
+   "Publicação",
+   "E00 · E01 · E02",
+   "em_desenvolvimento"
+  ],
+  [
+   "Cotação",
+   "F01",
+   "validada"
+  ],
+  [
+   "Contraproposta",
+   "F02",
+   "nao_iniciada"
+  ],
+  [
+   "Pedido",
+   "F03",
+   "nao_iniciada"
+  ],
+  [
+   "Pagamento",
+   "G01 · G02",
+   "bloqueada"
+  ],
+  [
+   "Transporte",
+   "G04 · G05",
+   "nao_iniciada"
+  ],
+  [
+   "Recebimento",
+   "G06",
+   "nao_iniciada"
+  ],
+  [
+   "Repasse",
+   "H02",
+   "bloqueada"
+  ]
+ ],
+ "riscos": [
+  {
+   "risco": "Contrato com provedor de pagamento e split",
+   "impacto": 3,
+   "prob": 3,
+   "sev": "Crítica",
+   "consequencia": "Sem pagamento e repasse reais, o piloto não abre",
+   "resp": "Diretoria / financeiro",
+   "acao": "Solicitar propostas da Asaas e do Pagar.me e abrir conta sandbox"
+  },
+  {
+   "risco": "Ensaios em aparelho com contas reais ainda não feitos",
+   "impacto": 3,
+   "prob": 3,
+   "sev": "Crítica",
+   "consequencia": "Defeitos de interface e de sessão só aparecem no celular",
+   "resp": "Produto / QA",
+   "acao": "Executar os roteiros dos DOC 025, 026, 030–037"
+  },
+  {
+   "risco": "SMTP próprio não contratado",
+   "impacto": 3,
+   "prob": 2,
+   "sev": "Alta",
+   "consequencia": "Recuperação de senha por código não chega; limite baixo de e-mails",
+   "resp": "Engenharia",
+   "acao": "Contratar provedor e aplicar o modelo pronto (DOC 028)"
+  },
+  {
+   "risco": "Regras financeiras e responsabilidade por perdas sem validação",
+   "impacto": 3,
+   "prob": 2,
+   "sev": "Alta",
+   "consequencia": "Retrabalho em H01/H02 e exposição jurídica",
+   "resp": "Jurídico / contábil",
+   "acao": "Validar as suposições do DOC 039"
+  },
+  {
+   "risco": "Concorrência na reserva de pedidos (F03)",
+   "impacto": 3,
+   "prob": 2,
+   "sev": "Alta",
+   "consequencia": "Venda acima do disponível",
+   "resp": "Engenharia",
+   "acao": "Reserva atômica com teste em duas conexões"
+  },
+  {
+   "risco": "Worker de mídia ainda não roda no ambiente hospedado",
+   "impacto": 2,
+   "prob": 2,
+   "sev": "Média",
+   "consequencia": "Fotos e vídeos não otimizados no catálogo",
+   "resp": "Engenharia",
+   "acao": "Implantar o worker e testar com o Supabase agro"
+  },
+  {
+   "risco": "Isolamento entre organizações",
+   "impacto": 3,
+   "prob": 1,
+   "sev": "Média",
+   "consequencia": "Vazamento de dados entre empresas",
+   "resp": "Engenharia",
+   "acao": "Teste de troca de organização concorrente em duas conexões"
+  },
+  {
+   "risco": "Segurança e permissões da equipe",
+   "impacto": 3,
+   "prob": 1,
+   "sev": "Média",
+   "consequencia": "Acesso administrativo indevido",
+   "resp": "Engenharia / operação",
+   "acao": "Ligar o segundo fator (MFA) no primeiro cliente real"
+  },
+  {
+   "risco": "Validação de documentos em UTC (G03)",
+   "impacto": 1,
+   "prob": 3,
+   "sev": "Baixa",
+   "consequencia": "CNH ou seguro que vence no dia recusado após 21h",
+   "resp": "Engenharia",
+   "acao": "Trocar por data de São Paulo em nova migration"
+  }
+ ],
+ "bloqueios_top": [
+  "Contrato e conta sandbox do provedor de pagamento (bloqueia G01, G07, H02, I05)",
+  "Ensaios em aparelho com contas reais (impede qualquer tarefa de chegar a homologada)",
+  "SMTP próprio (bloqueia a recuperação de senha em B02, B03, B04 e a distribuição em I04)",
+  "Validação jurídica e contábil das suposições de comissão, frete, perdas e prazos (DOC 039)",
+  "Validação profissional sanitária e fiscal dos documentos por segmento (D10)"
+ ],
+ "marcos": [
+  {
+   "marco": "Cotação e contraproposta completas",
+   "aceite": "Comprador pede, produtor responde e contrapropõe com versão",
+   "deps": "F01, F02",
+   "resp": "Engenharia",
+   "janela": "14–18/11",
+   "evidencia": "Teste SQL + ensaio em aparelho"
+  },
+  {
+   "marco": "Pedido com reserva consistente",
+   "aceite": "Duas compras simultâneas não ultrapassam o disponível",
+   "deps": "F02, F03",
+   "resp": "Engenharia",
+   "janela": "17–24/11",
+   "evidencia": "Teste de concorrência em duas conexões"
+  },
+  {
+   "marco": "Pagamento em sandbox",
+   "aceite": "Pix de teste confirmado com split simulado",
+   "deps": "F03, conta sandbox",
+   "resp": "Engenharia + financeiro",
+   "janela": "20–28/11",
+   "evidencia": "Transação registrada no sandbox do provedor"
+  },
+  {
+   "marco": "Primeira ordem logística",
+   "aceite": "Pedido pago gera ordem com transportadora e veículo compatível",
+   "deps": "G02, G03, G04",
+   "resp": "Engenharia",
+   "janela": "24/11–01/12",
+   "evidencia": "Teste SQL + ordem visível no app Logística"
+  },
+  {
+   "marco": "Primeira entrega confirmada",
+   "aceite": "Coleta e recebimento com peso e fotos",
+   "deps": "G05, G06",
+   "resp": "Engenharia",
+   "janela": "26/11–04/12",
+   "evidencia": "Evidências de coleta e entrega no banco"
+  },
+  {
+   "marco": "Primeiro repasse simulado",
+   "aceite": "Repasse conciliado ao produtor no sandbox",
+   "deps": "H02",
+   "resp": "Engenharia + financeiro",
+   "janela": "01–10/12",
+   "evidencia": "Conciliação sem divergência"
+  },
+  {
+   "marco": "Transação completa em homologação",
+   "aceite": "Do lote publicado ao repasse, com contas de teste",
+   "deps": "Marcos 1–6",
+   "resp": "Produto",
+   "janela": "18/11–05/12 (provável 25/11 para o fluxo sem repasse)",
+   "evidencia": "Roteiro executado e registrado em DOC"
+  },
+  {
+   "marco": "Homologação nos quatro aplicativos",
+   "aceite": "Roteiros executados em Android e iOS",
+   "deps": "I01–I03",
+   "resp": "Produto / QA",
+   "janela": "08–22/12",
+   "evidencia": "Relatório de homologação por app"
+  },
+  {
+   "marco": "Piloto com usuários reais",
+   "aceite": "Participantes recrutados operando em SP",
+   "deps": "I04, contrato do provedor, SMTP",
+   "resp": "Diretoria / operação",
+   "janela": "Meados de dez a fevereiro (provável 1ª quinzena de jan)",
+   "evidencia": "Primeiros pedidos reais liquidados"
+  }
+ ],
+ "frentes_notas": {
+  "ganhos": [
+   "Quatro frentes em paralelo, mais a integração, cada uma em cópia própria do repositório e com ramo próprio",
+   "Aplicação no banco centralizada, sempre com ensaio desfeito antes",
+   "Revisão antes da integração pegou defeitos antes de chegarem ao banco"
+  ],
+  "gargalos": [
+   "Limites de uso das contas interromperam frentes e exigiram trocas",
+   "Confirmações manuais de permissão em parte das ferramentas",
+   "Instabilidade temporária do painel do Supabase durante a aplicação"
+  ],
+  "defeitos_revisao": [
+   "Erro de sintaxe PL/pgSQL (case dentro de if) que só aparecia no Postgres",
+   "Limite de preço do rascunho incompatível com o do lote publicado",
+   "Dois testes comparando datas em UTC em vez de São Paulo",
+   "Testes chamando funções de schema privado no papel de usuário",
+   "Teste desatualizado após campos obrigatórios da D09"
+  ],
+  "conflitos": [
+   "Duas frentes iriam reescrever a mesma função de publicação; dono definido antes de codar",
+   "Telas de cotação editadas por duas frentes; resolvido no ramo antes da integração"
+  ]
+ }
+}

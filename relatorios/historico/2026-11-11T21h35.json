@@ -1,0 +1,48 @@
+{
+ "coletado_em": "11/11/2026 21:35 (horário de Brasília)",
+ "commit": "162c710",
+ "estados": {
+  "homologada": 3,
+  "em_desenvolvimento": 2,
+  "validada": 20,
+  "implementada": 3,
+  "nao_iniciada": 27
+ },
+ "bloqueadas": 9,
+ "por_etapa": {
+  "Etapa 0": {
+   "homologada": 3,
+   "em_desenvolvimento": 1
+  },
+  "Etapa 1": {
+   "validada": 7,
+   "implementada": 2
+  },
+  "Etapa 2": {
+   "validada": 11,
+   "em_desenvolvimento": 1,
+   "implementada": 1,
+   "nao_iniciada": 3
+  },
+  "Etapa 3": {
+   "validada": 1,
+   "nao_iniciada": 4
+  },
+  "Etapa 4": {
+   "nao_iniciada": 7,
+   "validada": 1
+  },
+  "Etapa 5": {
+   "nao_iniciada": 5
+  },
+  "Etapa 5A": {
+   "nao_iniciada": 3
+  },
+  "Etapa 6": {
+   "nao_iniciada": 5
+  }
+ },
+ "testes_codigo": 104,
+ "testes_banco": 17,
+ "migrations": 26
+}
