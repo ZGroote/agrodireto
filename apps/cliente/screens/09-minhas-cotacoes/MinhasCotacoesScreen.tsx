@@ -37,6 +37,9 @@ export default function MinhasCotacoesScreen() {
       <Card>
         <ListRow title="Ver proposta" tone="primary" onPress={() => router.push(rotasCliente.negociacao())} />
       </Card>
+      <Card>
+        <ListRow icon={FileText} title="Minhas demandas de compra" onPress={() => router.push(rotasCliente.demandas)} />
+      </Card>
     </Screen>
   );
 }

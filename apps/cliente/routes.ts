@@ -53,9 +53,10 @@ export const rotasCliente = {
   avaliar: (params: Pedido = {}): Href => ({ pathname: '/avaliar', params }),
   faturas: '/faturas',
 
-  // Empresa e equipe (sem tab bar)
+  // Empresa, equipe e demandas (sem tab bar)
   empresas: '/empresas',
   equipe: '/equipe',
+  demandas: '/demandas',
 } as const;
 
 /** Catálogo das telas (mockup 3-cliente.jpeg) — usado no Mapa de telas (dev) e na documentação. */
@@ -91,4 +92,5 @@ export const telasCliente: { numero: string; nome: string; href: Href }[] = [
   { numero: '27', nome: 'Recuperar acesso', href: rotasCliente.recuperarAcesso },
   { numero: '28', nome: 'Trocar empresa', href: rotasCliente.empresas },
   { numero: '29', nome: 'Equipe e permissões', href: rotasCliente.equipe },
+  { numero: '30', nome: 'Demandas de compra', href: rotasCliente.demandas },
 ];

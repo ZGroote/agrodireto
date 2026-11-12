@@ -51,6 +51,9 @@ export default function InicioScreen() {
       <Card>
         <ListRow icon={FileText} title="Nenhuma cotação aberta" onPress={() => router.push(rotasCliente.cotacoes)} />
       </Card>
+      <Card>
+        <ListRow icon={Package} title="Minhas demandas de compra" subtitle="Publicar o que sua empresa precisa em SP" onPress={() => router.push(rotasCliente.demandas)} />
+      </Card>
 
       <View style={styles.section}>
         <AppText variant="heading">Próxima entrega</AppText>
