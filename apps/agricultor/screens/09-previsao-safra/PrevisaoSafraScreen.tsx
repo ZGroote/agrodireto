@@ -56,7 +56,7 @@ function peso(valor: string) {
   return /^\d+$/.test(texto) ? Number(texto) : 0;
 }
 
-const nomesUnidade: Record<Unidade, string> = { kg: 'Quilos (kg)', cx: 'Caixas (cx)', t: 'Toneladas (t)' };
+const nomesUnidade: Record<Unidade, string> = { kg: 'Quilos (kg)', cx: 'Caixas (cx)', t: 'Toneladas (t)', sc: 'Sacas de 60 kg (sc)' };
 
 function FormularioPrevisao({ cultura }: { cultura: Cultura }) {
   const router = useRouter();

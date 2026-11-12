@@ -1,19 +1,38 @@
 import { useCallback, useState } from 'react';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useFocusEffect } from 'expo-router';
 import { CalendarDays, MessageSquare, Search } from 'lucide-react-native';
-import { AppText, Card, Divider, EmptyState, ListRow, Screen, ScreenHeader, StatusPill, TextField, VStack } from '@agrodireto/ui';
-import { CotacaoItem } from '@/components/CotacaoItem';
-import { useCotacoes } from '@/hooks/dados';
+import { AppText, Card, Divider, EmptyState, ListRow, Screen, ScreenHeader, StatusPill, TextField, VStack, type StatusTone } from '@agrodireto/ui';
+import { listarCotacoes, type Cotacao, type StatusCotacao } from '@/lib/cotacoes';
 import { listarDemandasAbertas, type DemandaAberta } from '@/lib/demandas';
-import { rotasAgricultor } from '@/routes';
+import { organizacaoEmUso } from '@/lib/organizacoes';
 
-/** 16 · Cotações (Produção) — cotações recebidas e demandas abertas dos compradores (E03, somente leitura). */
+const SITUACAO: Record<StatusCotacao, { label: string; tone: StatusTone }> = {
+  solicitada: { label: 'Aguardando resposta', tone: 'warning' },
+  respondida: { label: 'Respondida', tone: 'success' },
+  recusada: { label: 'Recusada', tone: 'danger' },
+  expirada: { label: 'Expirada', tone: 'neutral' },
+};
+
+const data = (iso: string) => iso.slice(0, 10).split('-').reverse().join('/');
+
+/** 16 · Cotações (Produção) — cotações recebidas dos compradores (F01) e demandas abertas (E03, somente leitura). */
 export default function CotacoesScreen() {
-  const router = useRouter();
-  const cotacoes = useCotacoes();
+  const [cotacoes, setCotacoes] = useState<Cotacao[]>([]);
+  const [mensagem, setMensagem] = useState('Carregando cotações…');
   const [busca, setBusca] = useState('');
   const [demandas, setDemandas] = useState<DemandaAberta[] | null>(null);
   const [erroDemandas, setErroDemandas] = useState<string | null>(null);
+
+  useFocusEffect(useCallback(() => {
+    let ativo = true;
+    organizacaoEmUso()
+      .then((org) => (org ? listarCotacoes(org) : []))
+      .then(
+        (lista) => { if (ativo) { setCotacoes(lista); setMensagem(''); } },
+        (erro: unknown) => { if (ativo) setMensagem(erro instanceof Error ? erro.message : 'Não foi possível carregar as cotações.'); },
+      );
+    return () => { ativo = false; };
+  }, []));
 
   useFocusEffect(
     useCallback(() => {
@@ -82,7 +101,8 @@ export default function CotacoesScreen() {
       </Card>
 
       <AppText variant="heading">Cotações nos seus lotes</AppText>
-      {cotacoes.length === 0 ? (
+      {!!mensagem && <AppText accessibilityLiveRegion="polite">{mensagem}</AppText>}
+      {!mensagem && cotacoes.length === 0 ? (
         <EmptyState
           icon={MessageSquare}
           title="Nenhuma cotação recebida"
@@ -91,7 +111,15 @@ export default function CotacoesScreen() {
       ) : (
         <VStack gap="md">
           {cotacoes.map((c) => (
-            <CotacaoItem key={c.id} cotacao={c} onPress={() => router.push(rotasAgricultor.negociacao({ id: c.id }))} />
+            <Card key={c.id}>
+              <ListRow
+                icon={MessageSquare}
+                title={`${c.produto} · ${c.quantidade} ${c.unidade}`}
+                subtitle={`${c.comprador} · entrega ${data(c.prazo_entrega)} em ${c.entrega_cidade}/${c.entrega_uf}`}
+                below={<StatusPill dot {...SITUACAO[c.status]} />}
+              />
+              {!!c.mensagem && <AppText variant="caption" color="textSecondary">{c.mensagem}</AppText>}
+            </Card>
           ))}
         </VStack>
       )}

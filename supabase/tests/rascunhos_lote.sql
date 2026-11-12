@@ -23,7 +23,7 @@ begin
   perform public.salvar_rascunho_lote('teste-1',prop,cult,'novo',null,'kg',null,'','','','',null,null,null,null);
   select * into strict r from public.rascunhos_lote where rascunho_id = 'teste-1';
   if r.quantidade is not null or r.preco_centavos is not null or r.autor <> auth.uid() then raise exception 'Parcial ou autoria inválida'; end if;
-  perform public.salvar_rascunho_lote('teste-1',prop,cult,'revisar',12.5,'cx',1234,'A','Grande','Caixa','Seco','2026-11-20','2026-11-21','2026-11-22','2026-11-23');
+  perform public.salvar_rascunho_lote('teste-1',prop,cult,'revisar',12.5,'cx',1234,'A','Grande','Caixa','Seco','2026-11-20','2026-11-21','2026-11-22','2026-11-23','{"padrao_qualidade":"extra","embalagem":"caixa_plastica","peso_medio_embalagem_kg":20}'::jsonb);
   select * into strict r from public.rascunhos_lote where rascunho_id = 'teste-1';
   if r.quantidade <> 12.5 or r.preco_centavos <> 1234 or r.padrao <> 'A' or r.calibre <> 'Grande'
     or r.embalagem <> 'Caixa' or r.condicoes <> 'Seco' or r.etapa <> 'revisar'
@@ -32,7 +32,7 @@ begin
     or r.retirada_fim <> '2026-11-22' or r.validade <> '2026-11-23'
     then raise exception 'Campos não reabriram'; end if;
   -- Repetição e última gravação do mesmo autor: uma única linha.
-  perform public.salvar_rascunho_lote('teste-1',prop,cult,'preco',14,'kg',1500,'B','','','',null,null,null,null);
+  perform public.salvar_rascunho_lote('teste-1',prop,cult,'preco',14,'kg',1500,'B','','','',null,null,null,null,'{"padrao_qualidade":"primeira_cat1","embalagem":"caixa_plastica"}'::jsonb);
   if (select count(*) from public.rascunhos_lote) <> 1 or
     (select quantidade from public.rascunhos_lote) <> 14 then raise exception 'Upsert duplicou ou ignorou gravação'; end if;
   if exists(select 1 from public.ofertas_lote where rascunho_id = 'teste-1') then raise exception 'Rascunho foi publicado'; end if;
@@ -40,7 +40,7 @@ begin
   begin perform public.salvar_rascunho_lote('teste-1',prop,cult,'novo',1000000001,'kg',1,'','','','',null,null,null,null); raise exception 'Aceitou excesso'; exception when check_violation then null; end;
   begin perform public.salvar_rascunho_lote('teste-1',prop,cult,'novo',1,'kg',0,'','','','',null,null,null,null); raise exception 'Aceitou preço zero'; exception when check_violation then null; end;
   begin perform public.salvar_rascunho_lote('teste-1',prop,cult,'novo',1,'t',1,'','','','',null,null,null,null); raise exception 'Aceitou unidade fora da cultura'; exception when sqlstate 'PT422' then null; end;
-  begin perform public.salvar_rascunho_lote('teste-1',prop,cult,'novo',1,'sc',1,'','','','',null,null,null,null); raise exception 'Aceitou unidade inexistente'; exception when sqlstate 'PT422' then null; end;
+  begin perform public.salvar_rascunho_lote('teste-1',prop,cult,'novo',1,'dz',1,'','','','',null,null,null,null); raise exception 'Aceitou unidade inexistente'; exception when sqlstate 'PT422' then null; end;
   begin perform public.salvar_rascunho_lote('ID INVÁLIDO',prop,cult,'novo',1,'kg',1,'','','','',null,null,null,null); raise exception 'Aceitou id inválido'; exception when check_violation then null; end;
   begin perform public.salvar_rascunho_lote('teste-1',prop,cult,'publicado',1,'kg',1,'','','','',null,null,null,null); raise exception 'Aceitou etapa inválida'; exception when check_violation then null; end;
   begin perform public.salvar_rascunho_lote('teste-1',prop,cult,'novo',1,'kg',1,repeat('A',121),'','','',null,null,null,null); raise exception 'Aceitou qualidade longa'; exception when check_violation then null; end;
@@ -85,7 +85,7 @@ do $$ begin if exists(select 1 from public.rascunhos_lote) then raise exception 
 reset role;
 do $$
 begin
-  if has_function_privilege('anon','public.salvar_rascunho_lote(text,uuid,uuid,text,numeric,text,bigint,text,text,text,text,date,date,date,date)','execute')
+  if has_function_privilege('anon','public.salvar_rascunho_lote(text,uuid,uuid,text,numeric,text,bigint,text,text,text,text,date,date,date,date,jsonb)','execute')
     or has_function_privilege('anon','public.descartar_rascunho_lote(text)','execute')
     or has_table_privilege('anon','public.rascunhos_lote','select') then raise exception 'Privilégio indevido para anon'; end if;
 end $$;

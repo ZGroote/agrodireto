@@ -54,6 +54,9 @@ export default function NovoLoteScreen() {
               origem: propriedades.find((item) => item.id === cultura.propriedadeId)?.nome,
               produto: [cultura.cultura, cultura.variedade].filter(Boolean).join(' · '),
               unidade: cultura.unidades.includes(draft.unidade) ? draft.unidade : cultura.unidades[0],
+              // D09: trocar de segmento descarta os atributos do segmento anterior.
+              segmento: cultura.segmento,
+              ...(cultura.segmento !== draft.segmento ? { atributos: {}, padrao: '', calibre: '', embalagem: '' } : {}),
             });
           }}
         />

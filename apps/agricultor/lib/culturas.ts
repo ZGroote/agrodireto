@@ -1,6 +1,7 @@
+import type { Segmento } from '@/lote/atributosSegmento';
 import { supabase } from './supabase';
 
-export type Unidade = 'kg' | 'cx' | 't';
+export type Unidade = 'kg' | 'cx' | 't' | 'sc';
 
 export type ItemCatalogo = { id: string; nome: string; unidades: Unidade[] };
 
@@ -28,6 +29,7 @@ export type Cultura = DadosCultura & {
   /** Nome no catálogo */
   cultura: string;
   unidades: Unidade[];
+  segmento?: Segmento;
   previsao?: Previsao;
 };
 
@@ -35,7 +37,7 @@ type Linha = {
   id: string; propriedade_id: string; catalogo_id: string; variedade: string; area_ha: number;
   plantio: string | null; etapa: string; unidade: Unidade | null; estimativa: number | null;
   minimo: number | null; maximo: number | null; colheita: string | null;
-  catalogo_culturas: { nome: string; unidades: Unidade[] } | null;
+  catalogo_culturas: { nome: string; unidades: Unidade[]; segmento: Segmento } | null;
 };
 
 export function lerDataColheita(texto: string): Date | null {
@@ -102,7 +104,7 @@ export async function lerPropriedades(): Promise<{ id: string; nome: string }[]>
 
 export async function lerCulturas(): Promise<Cultura[]> {
   const { data, error } = await cliente().from('culturas')
-    .select('id, propriedade_id, catalogo_id, variedade, area_ha, plantio, etapa, unidade, estimativa, minimo, maximo, colheita, catalogo_culturas(nome, unidades)')
+    .select('id, propriedade_id, catalogo_id, variedade, area_ha, plantio, etapa, unidade, estimativa, minimo, maximo, colheita, catalogo_culturas(nome, unidades, segmento)')
     .order('criada_em').order('id').returns<Linha[]>();
   if (error) throw error;
   return data.map((l) => ({
@@ -111,6 +113,7 @@ export async function lerCulturas(): Promise<Cultura[]> {
     catalogoId: l.catalogo_id,
     cultura: l.catalogo_culturas?.nome ?? '',
     unidades: l.catalogo_culturas?.unidades ?? [],
+    segmento: l.catalogo_culturas?.segmento,
     variedade: l.variedade,
     area: String(l.area_ha).replace('.', ','),
     plantio: deISO(l.plantio),

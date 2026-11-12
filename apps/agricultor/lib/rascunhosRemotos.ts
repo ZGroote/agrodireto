@@ -1,4 +1,5 @@
 import { formatarPeriodo, lerPeriodo } from '@agrodireto/ui';
+import { atributosParaServidor, type Segmento } from '@/lote/atributosSegmento';
 import type { EtapaLote, LoteDraft, RascunhoSalvo, Unidade } from '@/lote/rascunhosLote';
 import { lerDataColheita } from './culturas';
 import { supabase } from './supabase';
@@ -26,9 +27,13 @@ export function validarRascunho(campos: LoteDraft) {
   const centavos = preco ? Math.round(Number(preco.replace(',', '.')) * 100) : null;
   if (preco && (!/^\d+(?:[,.]\d{1,2})?$/.test(preco) || !Number.isSafeInteger(centavos) ||
     centavos! <= 0 || centavos! > 100_000_000_000)) throw new Error('Confira o preço: até duas casas decimais e maior que zero.');
-  if (!['kg', 'cx', 't'].includes(campos.unidade)) throw new Error('Unidade inválida.');
-  for (const campo of ['padrao', 'calibre', 'embalagem'] as const) {
-    if ((campos[campo]?.trim().length ?? 0) > 120) throw new Error('Os campos de qualidade aceitam até 120 caracteres.');
+  if (!['kg', 'cx', 't', 'sc'].includes(campos.unidade)) throw new Error('Unidade inválida.');
+  // D09: com o segmento conhecido, padrão/calibre/embalagem saem dos atributos do segmento.
+  const qualidade = campos.segmento
+    ? atributosParaServidor(campos.segmento, campos.unidade, campos.atributos ?? {})
+    : { p_atributos: {}, p_padrao: campos.padrao ?? '', p_calibre: campos.calibre ?? '', p_embalagem: campos.embalagem ?? '' };
+  for (const campo of ['p_padrao', 'p_calibre', 'p_embalagem'] as const) {
+    if (qualidade[campo].trim().length > 120) throw new Error('Os campos de qualidade aceitam até 120 caracteres.');
   }
   if (campos.condicoes.trim().length > 2000) throw new Error('As condições aceitam até 2000 caracteres.');
   const retirada = campos.retirada.trim() ? lerPeriodo(campos.retirada.trim()) : null;
@@ -38,7 +43,7 @@ export function validarRascunho(campos: LoteDraft) {
   const iso = (data: Date) => `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}-${String(data.getDate()).padStart(2, '0')}`;
   return {
     p_quantidade: quantidade, p_unidade: campos.unidade, p_preco_centavos: centavos,
-    p_padrao: campos.padrao ?? '', p_calibre: campos.calibre ?? '', p_embalagem: campos.embalagem ?? '',
+    ...qualidade,
     p_condicoes: campos.condicoes, p_colheita: dataISO(campos.dataColheita),
     p_retirada_inicio: retirada ? iso(retirada[0]) : null,
     p_retirada_fim: retirada ? iso(retirada[1]) : null, p_validade: dataISO(campos.validade),
@@ -60,15 +65,15 @@ export async function enviarRascunho(id: string, etapa: EtapaLote, campos: LoteD
 type Linha = {
   rascunho_id: string; etapa: EtapaLote; cultura_id: string; propriedade_id: string;
   quantidade: number | null; unidade: Unidade; preco_centavos: number | null;
-  padrao: string; calibre: string; embalagem: string; condicoes: string;
+  padrao: string; calibre: string; embalagem: string; condicoes: string; atributos: Record<string, unknown> | null;
   colheita: string | null; retirada_inicio: string | null; retirada_fim: string | null; validade: string | null;
   propriedades: { nome: string } | null;
-  culturas: { variedade: string; catalogo_culturas: { nome: string } | null } | null;
+  culturas: { variedade: string; catalogo_culturas: { nome: string; segmento: Segmento } | null } | null;
 };
 
 export async function lerRascunhosRemotos(): Promise<RascunhoSalvo[]> {
   const { data, error } = await cliente().from('rascunhos_lote').select(
-    'rascunho_id,etapa,cultura_id,propriedade_id,quantidade,unidade,preco_centavos,padrao,calibre,embalagem,condicoes,colheita,retirada_inicio,retirada_fim,validade,propriedades(nome),culturas(variedade,catalogo_culturas(nome))',
+    'rascunho_id,etapa,cultura_id,propriedade_id,quantidade,unidade,preco_centavos,padrao,calibre,embalagem,condicoes,atributos,colheita,retirada_inicio,retirada_fim,validade,propriedades(nome),culturas(variedade,catalogo_culturas(nome,segmento))',
   ).order('atualizado_em', { ascending: false }).returns<Linha[]>();
   if (error) throw error;
   const dataLocal = (texto: string) => new Date(`${texto}T12:00:00`);
@@ -81,6 +86,8 @@ export async function lerRascunhosRemotos(): Promise<RascunhoSalvo[]> {
       quantidade: r.quantidade === null ? '' : String(r.quantidade).replace('.', ','), unidade: r.unidade,
       precoUnitario: r.preco_centavos === null ? '' : (Number(r.preco_centavos) / 100).toFixed(2).replace('.', ','),
       padrao: r.padrao, calibre: r.calibre, embalagem: r.embalagem, condicoes: r.condicoes,
+      segmento: r.culturas?.catalogo_culturas?.segmento,
+      atributos: Object.fromEntries(Object.entries(r.atributos ?? {}).map(([k, v]) => [k, String(v).replace('.', ',')])),
       dataColheita: dataBR(r.colheita), validade: dataBR(r.validade),
       retirada: r.retirada_inicio && r.retirada_fim ? formatarPeriodo(dataLocal(r.retirada_inicio), dataLocal(r.retirada_fim)) : '',
       evidencias: [],
